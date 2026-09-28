@@ -48,6 +48,14 @@ def test_custom_dimensions():
     assert "100vh" in html
 
 
+def test_default_dimensions_are_hd():
+    from tools.render import _DEFAULT_WIDTH, _DEFAULT_HEIGHT
+    assert (_DEFAULT_WIDTH, _DEFAULT_HEIGHT) == (1280, 720)
+    assert _DEFAULT_WIDTH * 9 == _DEFAULT_HEIGHT * 16
+    for html in (_x3dom_page("<box></box>"), _x3dom_starter()):
+        assert 'width="1280px" height="720px"' in html
+
+
 def test_show_stats():
     html = _x3dom_page("<box></box>", show_stats=True)
     assert 'showStat="true"' in html

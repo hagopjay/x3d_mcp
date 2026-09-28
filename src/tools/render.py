@@ -29,6 +29,14 @@ _X3DOM_CDN_JS = "https://www.x3dom.org/download/1.8.2/x3dom.js"
 # swiftshader (X3DOM only clears the background there).
 _XITE_CDN_JS = "https://cdn.jsdelivr.net/npm/x_ite@latest/dist/x_ite.min.js"
 
+# Default render size for both X_ITE (render_image) and X3DOM (x3dom_page):
+# HD 720p, 16:9. Viewpoint fieldOfView spans the smaller dimension (height),
+# so callers reasoning about the view frustum need the same aspect ratio.
+_DEFAULT_WIDTH = 1280
+_DEFAULT_HEIGHT = 720
+_DEFAULT_CSS_WIDTH = f"{_DEFAULT_WIDTH}px"
+_DEFAULT_CSS_HEIGHT = f"{_DEFAULT_HEIGHT}px"
+
 # Software-GL flags so headless Chromium renders WebGL without a real GPU.
 _RENDER_ARGS = [
     "--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader",
@@ -232,8 +240,8 @@ def _extract_scene_content(x3d_content: str) -> str:
 def _x3dom_page(
     content: str,
     title: str = "X3DOM Scene",
-    width: str = "800px",
-    height: str = "600px",
+    width: str = _DEFAULT_CSS_WIDTH,
+    height: str = _DEFAULT_CSS_HEIGHT,
     show_stats: bool = False,
     show_log: bool = False,
 ) -> str:
@@ -283,8 +291,8 @@ def _x3dom_page(
 
 def _x3dom_starter(
     title: str = "X3DOM Scene",
-    width: str = "800px",
-    height: str = "600px",
+    width: str = _DEFAULT_CSS_WIDTH,
+    height: str = _DEFAULT_CSS_HEIGHT,
 ) -> str:
     """Return a starter X3DOM HTML page with a small example scene."""
     scene_content = (
@@ -308,8 +316,8 @@ def register(mcp: FastMCP):
     def x3dom_page(
         content: str,
         title: str = "X3DOM Scene",
-        width: str = "800px",
-        height: str = "600px",
+        width: str = _DEFAULT_CSS_WIDTH,
+        height: str = _DEFAULT_CSS_HEIGHT,
         show_stats: bool = False,
         show_log: bool = False,
     ) -> str:
@@ -323,8 +331,8 @@ def register(mcp: FastMCP):
         Args:
             content: X3D XML (full document or scene fragment).
             title: Page title.
-            width: x3d element width (e.g. "800px", "100%").
-            height: x3d element height (e.g. "600px", "100vh").
+            width: x3d element width (default "1280px", HD 16:9; or e.g. "100%").
+            height: x3d element height (default "720px"; or e.g. "100vh").
             show_stats: Show X3DOM frame stats overlay.
             show_log: Show X3DOM log panel.
         """
@@ -334,8 +342,8 @@ def register(mcp: FastMCP):
     async def render_image(
         content: str = "",
         path: str = "",
-        width: int = 720,
-        height: int = 540,
+        width: int = _DEFAULT_WIDTH,
+        height: int = _DEFAULT_HEIGHT,
         wait_ms: int = 6000,
         save_path: str = "",
     ):
@@ -358,8 +366,8 @@ def register(mcp: FastMCP):
             content: X3D XML (full document or scene fragment), inline.
             path: Path to an X3D file to render instead of inline content.
                   Provide exactly one of `content` or `path`.
-            width: Render width in pixels.
-            height: Render height in pixels.
+            width: Render width in pixels (default 1280, HD 16:9).
+            height: Render height in pixels (default 720).
             wait_ms: Milliseconds to wait for X_ITE to initialise and draw.
             save_path: Optional path to also write the PNG to disk.
         """
@@ -387,7 +395,7 @@ def register(mcp: FastMCP):
         return Image(data=png, format="png")
 
     @mcp.tool()
-    async def render_current_scene(width: int = 720, height: int = 540,
+    async def render_current_scene(width: int = _DEFAULT_WIDTH, height: int = _DEFAULT_HEIGHT,
                                    wait_ms: int = 6000, save_path: str = ""):
         """Render the current granular (in-memory) scene to a PNG you can inspect.
 
@@ -395,8 +403,8 @@ def register(mcp: FastMCP):
         add_child, then SEE the result before declaring done. Uses X_ITE.
 
         Args:
-            width: Render width in pixels.
-            height: Render height in pixels.
+            width: Render width in pixels (default 1280, HD 16:9).
+            height: Render height in pixels (default 720).
             wait_ms: Milliseconds to wait for X_ITE to initialise and draw.
             save_path: Optional path to also write the PNG to disk.
         """
@@ -419,8 +427,8 @@ def register(mcp: FastMCP):
     @mcp.tool()
     def x3dom_starter(
         title: str = "X3DOM Scene",
-        width: str = "800px",
-        height: str = "600px",
+        width: str = _DEFAULT_CSS_WIDTH,
+        height: str = _DEFAULT_CSS_HEIGHT,
     ) -> str:
         """Return a starter X3DOM HTML page with a simple example scene.
 
