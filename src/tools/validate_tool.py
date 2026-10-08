@@ -10,6 +10,7 @@ from validation.validate import validate_xml, validate_json
 from validation.semantic import validate_semantic as _validate_semantic
 from mcp.server.fastmcp import Context
 from validation.autofix import autofix_containerfields
+from validation.repair import repair_x3d as _repair_x3d
 from tools.granular import _scene_for
 from x3d_utils.source import load_x3d_source
 
@@ -111,3 +112,35 @@ def register(mcp: FastMCP):
         except ValueError as exc:
             return json.dumps({"error": str(exc)}, indent=2)
         return json.dumps(autofix_containerfields(text), indent=2)
+
+    @mcp.tool()
+    def repair_x3d(content: str = "", path: str = "") -> str:
+        """Apply the fixes validate_x3d and validate_semantic name, and return the FIXED document.
+
+        One call instead of a read-diagnose-edit loop. In order: containerField
+        corrections (as autofix_x3d); a missing profile or version; a version raised
+        to the lowest X3D version that has every node used (a 4.0 document using
+        EnvironmentLight becomes 4.1 -- content is never removed); the <component>
+        statements the profile check asks for, added to <head> or raised in level;
+        the DOCTYPE and noNamespaceSchemaLocation updated to match; the https
+        XMLSchema-instance namespace x3d.py writes replaced by the correct one.
+
+        Returns JSON {fixed, changes, unfixable, remaining}. `changes` lists each
+        edit with its kind (containerField, profile, version, component, xsi,
+        doctype), old and new value, and reason -- read it and revert any edit you
+        disagree with. `unfixable` names what needs a human decision (USE before
+        DEF, nodes in a parent that accepts no such type, unknown nodes).
+        `remaining` is the re-validation of `fixed`: schema_valid, schema_errors,
+        profile_ok. If remaining.schema_valid is false, the errors are structural;
+        fix them by hand, then validate again.
+
+        Args:
+            content: The X3D XML content string to repair (inline).
+            path: Path to an X3D file to repair instead of inline content.
+                  Provide exactly one of `content` or `path`.
+        """
+        try:
+            text = load_x3d_source(content, path)
+        except ValueError as exc:
+            return json.dumps({"error": str(exc)}, indent=2)
+        return json.dumps(_repair_x3d(text), indent=2)
