@@ -27,7 +27,22 @@ _X3DOM_CDN_JS = "https://www.x3dom.org/download/1.8.2/x3dom.js"
 # X_ITE is the render engine: unlike X3DOM it renders HAnim and X3D 4.0
 # PhysicalMaterial (PBR), and it actually draws geometry under headless
 # swiftshader (X3DOM only clears the background there).
-_XITE_CDN_JS = "https://cdn.jsdelivr.net/npm/x_ite@latest/dist/x_ite.min.js"
+# Pinned: X_ITE loads its component modules (assets/components/*.js) lazily
+# from the same base URL as the script, so a floating "latest" tag can change
+# how a scene renders, or stop rendering, between two calls on the same server.
+# Bump deliberately after checking the changelog.
+_XITE_VERSION = "16.4.3"
+_XITE_CDN_JS = f"https://cdn.jsdelivr.net/npm/x_ite@{_XITE_VERSION}/dist/x_ite.min.js"
+# Override for offline or air-gapped hosts: the URL of a locally served
+# x_ite.min.js whose dist/assets directory sits beside it, e.g.
+#   npm install x_ite@16.4.3 && npx serve node_modules/x_ite/dist
+#   export X3D_MCP_XITE_JS=http://127.0.0.1:3000/x_ite.min.js
+_XITE_ENV = "X3D_MCP_XITE_JS"
+
+
+def _xite_js_url() -> str:
+    """The X_ITE script URL the render page loads: env override, else pinned CDN."""
+    return os.environ.get(_XITE_ENV, "").strip() or _XITE_CDN_JS
 
 # Software-GL flags so headless Chromium renders WebGL without a real GPU.
 _RENDER_ARGS = [
@@ -70,7 +85,7 @@ def _xite_page(width: int, height: int, src: str = "scene.x3d") -> str:
     """A minimal X_ITE page that loads `src` (relative to the served directory)."""
     return (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
-        f'<script src="{_XITE_CDN_JS}"></script>'
+        f'<script src="{_xite_js_url()}"></script>'
         '<style>html,body{margin:0;background:#0a0a0c}'
         f'x3d-canvas,canvas{{width:{width}px;height:{height}px;display:block}}</style>'
         f'</head><body><x3d-canvas src="{src}"></x3d-canvas></body></html>'
@@ -350,6 +365,8 @@ def register(mcp: FastMCP):
         light, or geometry outside the view -- not a render failure. Add a
         Viewpoint and a DirectionalLight and re-render. If it's still blank, bump
         wait_ms (X_ITE fetches its library from a CDN and needs a moment to draw).
+        Offline hosts: set X3D_MCP_XITE_JS to the URL of a locally served
+        x_ite.min.js (see README, Rendering offline).
 
         When `path` is given, the file's own directory is served, so relative
         assets (textures, inlined .x3d) resolve as they do in a browser.
