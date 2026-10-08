@@ -240,3 +240,31 @@ def test_unknown_version_falls_back_with_note():
     result = validate_xml(_scene_with("<Shape><Box/></Shape>", "9.9"))
     assert result["schema_version"] == "4.1"
     assert any("Unknown version" in n for n in result["notes"])
+
+
+_GEOLOD = ("<GeoLOD geoSystem='&quot;GD&quot; &quot;WE&quot;' center='37.2 -80.4 630' "
+           "range='200' child1Url='&quot;a.x3d&quot;'>"
+           "<Group containerField='rootNode'><Shape><Box/></Shape></Group></GeoLOD>")
+
+
+def test_geolod_missing_child_error_gets_content_model_hint():
+    doc = ('<X3D profile="Immersive" version="4.0"><head>'
+           '<component name="Geospatial" level="1"/></head>'
+           f'<Scene>{_GEOLOD}</Scene></X3D>')
+    res = validate_xml(doc)
+    assert res["valid"] is False
+    assert any("Missing child element" in e and "GeoLOD" in e for e in res["errors"])
+    hint = next(n for n in res["notes"] if n.startswith("GeoLOD at line"))
+    assert "GeoOrigin" in hint and "rootUrl" in hint
+    assert "geoCoords='37.2 -80.4 630'" in hint        # taken from the GeoLOD's center
+
+
+def test_geolod_with_geoorigin_validates_without_hint():
+    doc = ('<X3D profile="Immersive" version="4.0"><head>'
+           '<component name="Geospatial" level="1"/></head><Scene>'
+           + _GEOLOD.replace("</GeoLOD>",
+                             "<GeoOrigin containerField='geoOrigin' geoCoords='37.2 -80.4 630'/></GeoLOD>")
+           + '</Scene></X3D>')
+    res = validate_xml(doc)
+    assert res["valid"] is True
+    assert "notes" not in res

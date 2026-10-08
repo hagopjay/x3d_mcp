@@ -16,7 +16,8 @@ order an author would, and re-validates so the caller sees what is left:
 
 Each change is recorded so an agent can explain, or decline, what was done.
 Structural problems (USE before DEF, a node in a parent that accepts no such
-type, unknown nodes) are reported under ``unfixable`` and left alone.
+type, unknown nodes, a GeoLOD whose inline children need a GeoOrigin) are
+reported under ``unfixable`` with the options, and left alone.
 """
 
 import re
@@ -165,6 +166,25 @@ def repair_x3d(xml_string: str) -> dict:
     for tag in report.unknown:
         unfixable.append({"kind": "unknown-node", "node": tag,
                           "reason": "not an X3D node in any bundled X3DUOM"})
+
+    for el in root.iter():
+        if _local_tag(el) != "GeoLOD":
+            continue
+        kids = [c for c in el if isinstance(c.tag, str)]
+        if kids and not any(_local_tag(c) == "GeoOrigin" for c in kids):
+            unfixable.append({
+                "kind": "geolod-content-model", "node": "GeoLOD", "line": el.sourceline,
+                "reason": "the XSD requires a GeoOrigin between inline rootNode children "
+                          "of GeoLOD (the specification does not); adding one re-anchors "
+                          "the local frame, so it is left for you to decide",
+                "options": [
+                    f"<GeoOrigin containerField='geoOrigin' "
+                    f"geoSystem='{el.get('geoSystem', chr(34) + 'GD' + chr(34) + ' ' + chr(34) + 'WE' + chr(34))}' "
+                    f"geoCoords='{el.get('center', '0 0 0')}'/> as a child of the GeoLOD, "
+                    "and the same GeoOrigin (by USE) in every geospatial node",
+                    "move the inline low-detail children to a file named by rootUrl",
+                ],
+            })
 
     version = root.get("version")
     doctype = None
