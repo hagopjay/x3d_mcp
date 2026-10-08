@@ -18,7 +18,13 @@ def register(mcp: FastMCP):
 
     @mcp.tool()
     def validate_x3d(content: str = "", encoding: str = "xml", path: str = "") -> str:
-        """Validate X3D against the X3D 4.1 schema (inline content OR a file path).
+        """Validate X3D against the XSD schema for its declared version (inline content OR a file path).
+
+        XML is checked against the schema matching the document's `version`
+        attribute: 4.0 (ratified) or 4.1 (draft, the default when no version is
+        given). A node that exists only in a later version (EnvironmentLight,
+        GaussianSplats, HAnimPose, ...) is named in `notes` with the version
+        that has it. JSON is checked against the X3D 4.0 JSON Schema.
 
         Args:
             content: The X3D content string to validate (inline).
@@ -42,7 +48,7 @@ def register(mcp: FastMCP):
     def validate_current_scene(ctx: Context = None) -> str:
         """Validate the current granular (in-memory) scene -- BOTH schema and semantic.
 
-        Runs the X3D 4.1 XSD check and the semantic checks (containerField, USE-order,
+        Runs the XSD check for the scene's declared version and the semantic checks (containerField, USE-order,
         ROUTEs, Shape completeness, ...) on the scene built via create_node/add_child,
         so granular-mode authoring gets the same safety net as content-based tools.
         """

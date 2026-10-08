@@ -178,3 +178,65 @@ def test_json_error_format_includes_path():
     assert result["valid"] is False
     assert any(":" in e for e in result["errors"])
     assert any(e.startswith("X3D/head") or "head" in e for e in result["errors"])
+
+
+def _scene_with(node_xml: str, version: str | None) -> str:
+    version_attr = f' version="{version}"' if version is not None else ""
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
+<X3D profile="Immersive"{version_attr}>
+  <Scene>
+    {node_xml}
+  </Scene>
+</X3D>"""
+
+
+def test_version_40_uses_40_schema():
+    result = validate_xml(_scene_with("<Shape><Box/></Shape>", "4.0"))
+    assert result["valid"] is True
+    assert result["schema_version"] == "4.0"
+    assert "notes" not in result
+
+
+def test_version_41_uses_41_schema():
+    result = validate_xml(_scene_with("<Shape><Box/></Shape>", "4.1"))
+    assert result["valid"] is True
+    assert result["schema_version"] == "4.1"
+
+
+def test_41_only_node_rejected_under_40_with_hint():
+    # EnvironmentLight exists only in the X3D 4.1 draft.
+    result = validate_xml(_scene_with('<EnvironmentLight intensity="0.4"/>', "4.0"))
+    assert result["valid"] is False
+    assert result["schema_version"] == "4.0"
+    assert any("EnvironmentLight" in e for e in result["errors"])
+    assert any("added in X3D 4.1" in n for n in result["notes"])
+
+
+def test_41_only_node_accepted_under_41():
+    result = validate_xml(_scene_with('<EnvironmentLight intensity="0.4"/>', "4.1"))
+    assert result["valid"] is True
+    assert result["schema_version"] == "4.1"
+
+
+def test_version_override_argument_wins():
+    xml = _scene_with('<EnvironmentLight intensity="0.4"/>', "4.0")
+    assert validate_xml(xml, version="4.1")["valid"] is True
+
+
+def test_missing_version_defaults_to_41_with_note():
+    result = validate_xml(_scene_with("<Shape><Box/></Shape>", None))
+    assert result["schema_version"] == "4.1"
+    assert any("No version attribute" in n for n in result["notes"])
+
+
+def test_legacy_33_validated_against_40_with_note():
+    result = validate_xml(_scene_with("<Shape><Box/></Shape>", "3.3"))
+    assert result["valid"] is True
+    assert result["schema_version"] == "4.0"
+    assert any("X3D 3.3" in n for n in result["notes"])
+
+
+def test_unknown_version_falls_back_with_note():
+    result = validate_xml(_scene_with("<Shape><Box/></Shape>", "9.9"))
+    assert result["schema_version"] == "4.1"
+    assert any("Unknown version" in n for n in result["notes"])
