@@ -7,6 +7,7 @@ jsonschema (Draft 2020-12).
 """
 
 import json
+import re
 from pathlib import Path
 from lxml import etree
 from jsonschema import Draft202012Validator
@@ -113,6 +114,47 @@ def _version_hints(doc: etree._Element, schema_version: str) -> list[str]:
     return hints
 
 
+_MISSING_CHILD_RE = re.compile(r"Element '([A-Za-z0-9_]+)': Missing child element")
+
+
+def _geolod_hint(el: etree._Element) -> str:
+    geo_system = el.get("geoSystem", '"GD" "WE"')
+    center = el.get("center", "0 0 0")
+    return (
+        f"GeoLOD at line {el.sourceline}: the bundled XSD's content model is "
+        "(rootNode children, GeoOrigin, rootNode children), so any inline rootNode "
+        "child requires a GeoOrigin sibling, although ISO/IEC 19775-1 makes geoOrigin "
+        "optional. Either add <GeoOrigin containerField='geoOrigin' "
+        f"geoSystem='{geo_system}' geoCoords='{center}'/> inside the GeoLOD (a "
+        "GeoOrigin re-anchors the local frame, so give every geospatial node the same "
+        "one by USE), or remove the inline children and load the low-detail model "
+        "through rootUrl."
+    )
+
+
+# Elements whose XSD "Missing child element(s)" error misleads: lxml lists only
+# the first ten expected names, so the one that matters can be left out.
+_CONTENT_MODEL_HINTS = {"GeoLOD": _geolod_hint}
+
+
+def _content_model_hints(doc: etree._Element, errors: list[str]) -> list[str]:
+    """Explain a truncated 'Missing child element(s)' error for known elements."""
+    hints: list[str] = []
+    seen: set[str] = set()
+    for err in errors:
+        m = _MISSING_CHILD_RE.search(err)
+        if not m or m.group(1) in seen or m.group(1) not in _CONTENT_MODEL_HINTS:
+            continue
+        seen.add(m.group(1))
+        tag = m.group(1)
+        for el in doc.iter():
+            name = el.tag if isinstance(el.tag, str) else ""
+            if name.split("}", 1)[-1] == tag:
+                hints.append(_CONTENT_MODEL_HINTS[tag](el))
+                break
+    return hints
+
+
 def _strip_xsi(root: etree._Element) -> None:
     """Remove xsi namespace attributes that x3d.py injects."""
     for attr in list(root.attrib):
@@ -157,6 +199,7 @@ def validate_xml(xml_string: str, version: str | None = None) -> dict:
         for entry in schema.error_log:
             errors.append(f"Line {entry.line}: {entry.message}")
         notes.extend(_version_hints(doc, schema_version))
+        notes.extend(_content_model_hints(doc, errors))
 
     result = {"valid": valid, "errors": errors, "schema_version": schema_version}
     if notes:

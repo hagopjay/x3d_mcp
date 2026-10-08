@@ -153,3 +153,26 @@ def test_experiment_scene_a_round_trip():
                                 "profile_ok": True, "unfixable": 0}
     names = sorted((c["name"], c["to"]) for c in res["changes"] if c["kind"] == "component")
     assert names == [("Geometry2D", "1"), ("Lighting", "2"), ("Shape", "2")]
+
+
+def test_geolod_without_geoorigin_reported_with_options_not_changed():
+    body = ("<GeoLOD geoSystem='&quot;GD&quot; &quot;WE&quot;' center='37.2 -80.4 630' "
+            "range='200' child1Url='&quot;a.x3d&quot;'>"
+            "<Group containerField='rootNode'><Shape><Box/></Shape></Group></GeoLOD>")
+    res = repair_x3d(_doc(body, profile="Immersive",
+                          head="<head><component name='Geospatial' level='1'/></head>"))
+    entry = next(u for u in res["unfixable"] if u["kind"] == "geolod-content-model")
+    assert "geoCoords='37.2 -80.4 630'" in entry["options"][0]
+    assert "rootUrl" in entry["options"][1]
+    assert "<GeoOrigin" not in res["fixed"]                 # nothing inserted
+    assert res["remaining"]["schema_valid"] is False       # still a human decision
+
+
+def test_geolod_with_geoorigin_not_reported():
+    body = ("<GeoLOD geoSystem='&quot;GD&quot; &quot;WE&quot;' center='0 0 0' range='200'>"
+            "<Group containerField='rootNode'><Shape><Box/></Shape></Group>"
+            "<GeoOrigin containerField='geoOrigin'/></GeoLOD>")
+    res = repair_x3d(_doc(body, profile="Immersive",
+                          head="<head><component name='Geospatial' level='1'/></head>"))
+    assert not any(u["kind"] == "geolod-content-model" for u in res["unfixable"])
+    assert res["remaining"]["schema_valid"] is True
