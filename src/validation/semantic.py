@@ -124,6 +124,7 @@ def _check_def_use_consistency(scene: etree._Element) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
     defs: dict[str, str] = {}
     uses: set[str] = set()
+    referenced: set[str] = set()   # DEFs named by ROUTE, IMPORT/EXPORT or Script fields
     for el in scene.iter():
         tag = _local_tag(el)
         def_name = el.get("DEF")
@@ -132,6 +133,15 @@ def _check_def_use_consistency(scene: etree._Element) -> list[Diagnostic]:
         use_name = el.get("USE")
         if use_name:
             uses.add(use_name)
+        if tag == "ROUTE":
+            referenced.update(n for n in (el.get("fromNode"), el.get("toNode")) if n)
+        elif tag == "EXPORT":
+            if el.get("localDEF"):
+                referenced.add(el.get("localDEF"))
+        elif tag == "IMPORT":
+            # IMPORT names the Inline by DEF (inlineDEF), e.g. <IMPORT inlineDEF='Inl' importedDEF='X'/>
+            if el.get("inlineDEF"):
+                referenced.add(el.get("inlineDEF"))
 
     for use_name in sorted(uses):
         if use_name not in defs:
@@ -144,12 +154,13 @@ def _check_def_use_consistency(scene: etree._Element) -> list[Diagnostic]:
                 def_name=use_name,
             ))
 
-    for def_name in sorted(set(defs.keys()) - uses):
+    for def_name in sorted(set(defs.keys()) - uses - referenced):
         diagnostics.append(Diagnostic(
             level="info",
             check="unused-def",
-            message=f"DEF='{def_name}' ({defs[def_name]}) is defined but never USE'd. "
-                    f"This is fine if you reference it via ROUTE or externally.",
+            message=f"DEF='{def_name}' ({defs[def_name]}) is defined but never USE'd "
+                    f"and no ROUTE, IMPORT or EXPORT names it. "
+                    f"This is fine if you reference it externally (Script, SAI).",
             node_tag=defs[def_name],
             def_name=def_name,
         ))

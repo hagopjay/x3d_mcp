@@ -283,3 +283,42 @@ def test_clean_names_not_flagged():
         '<Appearance><Material/></Appearance><Box/></Shape></Transform>'
         '<Viewpoint description="v"/>'))
     assert "naming-convention" not in report
+
+
+# ---- ROUTE-aware unused-DEF ----
+
+def test_routed_def_is_not_reported_unused():
+    xml = _wrap(
+        '<TimeSensor DEF="Clock" cycleInterval="2" loop="true"/>'
+        '<OrientationInterpolator DEF="Spin" key="0 1" keyValue="0 1 0 0 0 1 0 3.14"/>'
+        '<Transform DEF="Spinner"><Shape><Box/></Shape></Transform>'
+        '<ROUTE fromNode="Clock" fromField="fraction_changed" '
+        'toNode="Spin" toField="set_fraction"/>'
+        '<ROUTE fromNode="Spin" fromField="value_changed" '
+        'toNode="Spinner" toField="set_rotation"/>'
+    )
+    report = validate_semantic(xml)
+    assert "unused-def" not in report
+
+
+def test_unrouted_def_still_reported_beside_routed_ones():
+    xml = _wrap(
+        '<TimeSensor DEF="Clock" cycleInterval="2" loop="true"/>'
+        '<Transform DEF="Spinner"><Shape><Box/></Shape></Transform>'
+        '<Transform DEF="Lonely"><Shape><Box/></Shape></Transform>'
+        '<ROUTE fromNode="Clock" fromField="cycleTime" '
+        'toNode="Spinner" toField="rotation"/>'
+    )
+    report = validate_semantic(xml)
+    assert "unused-def" in report
+    assert "Lonely" in report
+    assert "'Clock'" not in report
+    assert "'Spinner'" not in report
+
+
+def test_exported_def_is_not_reported_unused():
+    xml = _wrap(
+        '<Transform DEF="Shared"><Shape><Box/></Shape></Transform>'
+        '<EXPORT localDEF="Shared" AS="SharedOut"/>'
+    )
+    assert "unused-def" not in validate_semantic(xml)
