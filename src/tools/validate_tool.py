@@ -67,6 +67,8 @@ def register(mcp: FastMCP):
         """Run semantic checks on X3D beyond XSD schema validation (content OR path).
 
         Detects authoring issues XSD cannot catch and that silently break rendering:
+        nodes outside the declared profile and component statements (X_ITE refuses
+        such scenes; the fix lists the component statements to add),
         wrong/defaulted containerField (with the correct field suggested),
         USE-before-DEF ordering, ROUTE field/type/access-type problems, Shapes
         without geometry, empty grouping nodes, duplicate DEFs, and missing
