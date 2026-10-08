@@ -1,8 +1,9 @@
 """Semantic validation for X3D scenes beyond XSD schema checks.
 
-Detects common authoring issues that XSD cannot catch: missing geometry,
-unused DEFs, broken ROUTE references, empty groups, duplicate DEF names,
-and missing viewpoints.
+Detects common authoring issues that XSD cannot catch: nodes outside the
+declared profile and component statements, missing geometry, unused DEFs,
+broken ROUTE references, empty groups, duplicate DEF names, and missing
+viewpoints.
 
 Adapted from semantic_check.py in https://github.com/niknarra/x3d-mcp by
 Nikhil Narra and Nicholas Polys (Virginia Tech / Web3D Consortium).
@@ -634,6 +635,40 @@ def _check_missing_viewpoint(scene: etree._Element) -> list[Diagnostic]:
     )]
 
 
+def _check_profile_components(root: etree._Element) -> list[Diagnostic]:
+    """Every node must be covered by the declared profile or a component statement.
+
+    Runs on the document root (the profile and component statements live in the
+    X3D element and its head), unlike the scene-level checks below. X_ITE and
+    x3d-tidy refuse to load a scene that fails this, even though the XSD passes it.
+    """
+    from validation.profile import check_profile, component_statements
+
+    report = check_profile(root)
+    diagnostics: list[Diagnostic] = []
+    if report.ok:
+        return diagnostics
+    fixes = " ".join(component_statements(report))
+    for m in report.missing:
+        have = (f"declared at level {m['declared_level']}" if m["declared_level"]
+                else "not declared")
+        diagnostics.append(Diagnostic(
+            level="error",
+            check="profile-component",
+            message=f"{m['node']} (component {m['component']} level {m['level']}, "
+                    f"{have}) is outside profile '{report.profile}'. Browsers that "
+                    f"enforce the header (X_ITE, x3d-tidy) refuse to load it.",
+            node_tag=m["node"],
+        ))
+    diagnostics.append(Diagnostic(
+        level="info",
+        check="profile-component-fix",
+        message=f"Add to <head>: {fixes} -- or raise the profile "
+                f"(Immersive covers most content, Full covers everything).",
+    ))
+    return diagnostics
+
+
 _ALL_CHECKS = [
     _check_duplicate_defs,
     _check_def_use_consistency,
@@ -669,7 +704,7 @@ def validate_semantic(xml_string: str) -> str:
     if scene is None:
         return "# Semantic Check: No Scene\n\nNo Scene element found in the X3D document."
 
-    all_diagnostics: list[Diagnostic] = []
+    all_diagnostics: list[Diagnostic] = _check_profile_components(root)
     for check_fn in _ALL_CHECKS:
         all_diagnostics.extend(check_fn(scene))
 
