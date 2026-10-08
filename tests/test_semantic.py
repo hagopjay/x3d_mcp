@@ -283,3 +283,22 @@ def test_clean_names_not_flagged():
         '<Appearance><Material/></Appearance><Box/></Shape></Transform>'
         '<Viewpoint description="v"/>'))
     assert "naming-convention" not in report
+
+
+def test_shape_use_reference_is_not_incomplete():
+    """A <Shape USE='x'/> reuses the DEF'd Shape; it must not be reported as
+    missing geometry or appearance (a chess board of USEd tiles produced 62
+    warnings before this)."""
+    src = _wrap(
+        "<Shape DEF='Tile'><Appearance><Material/></Appearance><Box size='1 0.1 1'/></Shape>"
+        + "".join(f"<Transform translation='{i} 0 0'><Shape USE='Tile'/></Transform>"
+                  for i in range(1, 8))
+    )
+    report = validate_semantic(src)
+    assert "shape-no-geometry" not in report
+    assert "shape-no-appearance" not in report
+
+
+def test_shape_with_def_and_no_geometry_still_reported():
+    src = _wrap("<Shape DEF='Empty'><Appearance><Material/></Appearance></Shape>")
+    assert "shape-no-geometry" in validate_semantic(src)
