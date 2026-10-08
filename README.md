@@ -388,7 +388,7 @@ Full node reference: [docs/x3d-node-reference.md](docs/x3d-node-reference.md)
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `mcp` | >=1.7 | MCP SDK (FastMCP) |
+| `mcp` | >=1.7,<2 | MCP SDK (FastMCP). The 2.x SDK renamed FastMCP to MCPServer and moved the import path, so the server does not start on it |
 | `x3d` | >=4.0.65.5,<5 | Official X3D scene construction and type validation |
 | `lxml` | >=6.0 | XSD validation, Schematron validation, XSLT transforms |
 | `xmlschema` | >=4.3 | Pure-Python XSD validation (fallback) |
