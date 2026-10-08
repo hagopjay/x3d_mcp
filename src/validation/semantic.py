@@ -172,6 +172,10 @@ def _check_shape_completeness(scene: etree._Element) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
     geometry_nodes = _get_geometry_nodes()
     for shape in scene.iter("Shape"):
+        if shape.get("USE"):
+            # A USE reference reuses the DEF'd Shape wholesale, geometry and
+            # appearance included; it is childless by definition.
+            continue
         def_name = shape.get("DEF", "")
         child_tags = {_local_tag(child) for child in shape}
         has_geometry = bool(child_tags & geometry_nodes)
