@@ -396,6 +396,19 @@ Full node reference: [docs/x3d-node-reference.md](docs/x3d-node-reference.md)
 | `jsonschema` | >=4.26 | JSON Schema validation for X3D JSON encoding |
 | `rdflib` | >=7.0 | SPARQL queries over the bundled X3D Ontology |
 | `playwright` | >=1.40 (optional `[render]` extra) | Headless Chromium for `render_image` / `render_current_scene` |
+| X\_ITE | 16.4.3, pinned, loaded from jsDelivr at render time | WebGL engine behind `render_image`; set `X3D_MCP_XITE_JS` to a locally served `x_ite.min.js` for offline use (see Rendering offline) |
+
+### Rendering offline
+
+`render_image` loads X\_ITE from jsDelivr, pinned to one version so renders do not change under a running server. X\_ITE fetches its component modules lazily relative to that script URL, so on a host without internet access serve the package locally and point the server at it:
+
+```bash
+npm install x_ite@16.4.3
+npx serve node_modules/x_ite/dist          # serves x_ite.min.js and assets/
+export X3D_MCP_XITE_JS=http://127.0.0.1:3000/x_ite.min.js
+```
+
+Any URL that serves `x_ite.min.js` with its `assets/` directory beside it works, including a path on the same server.
 
 ## Docker
 
