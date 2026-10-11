@@ -253,9 +253,16 @@ def _resolve_route_field(fields: dict, field_name: str, direction: str) -> dict 
     return None
 
 
+# Nodes whose interface is extended by user-declared <field> children: Script and
+# the programmable shaders (X3DProgrammableShaderObject: ComposedShader,
+# PackagedShader, ShaderProgram), whose fields become GLSL uniforms.
+_DECLARED_FIELD_NODES = ("Script", "ComposedShader", "PackagedShader", "ShaderProgram")
+
+
 def _script_fields(el: etree._Element) -> dict:
-    """A Script's interface is user-declared via <field> children (name/type/
-    accessType), not in X3DUOM. Extract it so ROUTEs to/from Script fields validate."""
+    """A Script's or shader's interface is user-declared via <field> children
+    (name/type/accessType), not in X3DUOM. Extract it so ROUTEs to/from those
+    fields validate."""
     out: dict[str, dict] = {}
     for child in el:
         if _local_tag(child) == "field" and child.get("name"):
@@ -291,9 +298,9 @@ def _proto_interfaces(scene: etree._Element) -> dict:
 
 def _endpoint_fields(el: etree._Element, tag: str, nodes: dict, protos: dict) -> dict:
     """Resolve a ROUTE endpoint's fields, honoring the DYNAMIC interfaces X3DUOM
-    misses: a Script's declared <field>s and a ProtoInstance's interface."""
+    misses: a Script's or shader's declared <field>s and a ProtoInstance's interface."""
     fields = {f["name"]: f for f in nodes.get(tag, {}).get("fields", [])}
-    if tag == "Script":
+    if tag in _DECLARED_FIELD_NODES:
         fields.update(_script_fields(el))     # declared fields augment the built-ins
     elif tag in protos:
         fields = {**protos[tag], **fields}     # a proto instance == its interface

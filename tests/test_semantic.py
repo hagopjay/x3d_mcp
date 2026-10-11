@@ -8,6 +8,8 @@ https://github.com/niknarra/x3d-mcp/blob/main/tests/test_semantic_check.py
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from validation.semantic import validate_semantic
@@ -240,6 +242,35 @@ def test_route_to_truly_missing_script_field_still_flagged():
         '<ROUTE fromNode="T" fromField="cycleTime" toNode="S" toField="nonexistent"/>')
     report = validate_semantic(xml)
     assert "route-invalid-to-field" in report        # a real typo is still caught
+
+
+@pytest.mark.parametrize("shader", ["ComposedShader", "PackagedShader", "ShaderProgram"])
+def test_route_to_shader_declared_field_is_valid(shader):
+    # A shader's <field>s are its uniforms; animating one by ROUTE is the
+    # standard way to drive GPU effects declaratively.
+    xml = _wrap(
+        '<TimeSensor DEF="T" cycleInterval="4" loop="true"/>'
+        '<ScalarInterpolator DEF="SI" key="0 1" keyValue="0 1"/>'
+        '<Shape><Appearance><Material/>'
+        f'<{shader} DEF="S" language="GLSL">'
+        '<field name="glow" type="SFFloat" accessType="inputOutput" value="0"/>'
+        f'</{shader}></Appearance><Sphere/></Shape>'
+        '<ROUTE fromNode="T" fromField="fraction_changed" toNode="SI" toField="set_fraction"/>'
+        '<ROUTE fromNode="SI" fromField="value_changed" toNode="S" toField="glow"/>')
+    report = validate_semantic(xml)
+    assert "route-invalid-to-field" not in report   # 'glow' is a declared uniform
+
+
+def test_route_to_missing_shader_field_still_flagged():
+    xml = _wrap(
+        '<TimeSensor DEF="T" cycleInterval="4" loop="true"/>'
+        '<Shape><Appearance><Material/>'
+        '<ComposedShader DEF="S" language="GLSL">'
+        '<field name="glow" type="SFFloat" accessType="inputOutput" value="0"/>'
+        '</ComposedShader></Appearance><Sphere/></Shape>'
+        '<ROUTE fromNode="T" fromField="fraction_changed" toNode="S" toField="glw"/>')
+    report = validate_semantic(xml)
+    assert "route-invalid-to-field" in report        # a typo is still caught
 
 
 # ---- Naming conventions (X3D Scene Authoring Hints) ----
