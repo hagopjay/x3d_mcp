@@ -493,3 +493,69 @@ def test_input_negate_into_integer_trigger_ok():
 def test_input_false_into_integer_trigger_ok_in_3_3():
     # X3D 3.3 browsers (X_ITE for files declared <= 3.3) trigger on any set_boolean value.
     assert "route-never-fires" not in validate_semantic(_toggle("inputFalse", version="3.3"))
+
+
+# ---- Regression: false positives found auditing the X3DJSONLD example mirror ----
+# (audit: research/x3d-archive-audit). ProtoInstance is a stand-in for any node,
+# Metadata* nodes are X3DMetadataObject via AdditionalInheritance, and a
+# <ProtoInstance name="P"> exposes the interface of ProtoDeclare P.
+
+_PROTO = ('<ProtoDeclare name="MyBox"><ProtoInterface>'
+          '<field name="set_go" type="SFBool" accessType="inputOnly"/>'
+          '<field name="done" type="SFBool" accessType="outputOnly"/>'
+          '<field name="size" type="SFVec3f" accessType="inputOutput" value="1 1 1"/>'
+          '</ProtoInterface><ProtoBody><Shape><Box/></Shape></ProtoBody></ProtoDeclare>')
+
+
+def test_protoinstance_is_accepted_wherever_a_node_goes():
+    xml = _wrap(_PROTO + '<Transform><ProtoInstance DEF="PI" name="MyBox"/></Transform>')
+    assert "containerfield-type-mismatch" not in validate_semantic(xml)
+
+
+def test_protoinstance_accepted_in_layer_children_and_shape_appearance():
+    xml = _wrap(_PROTO + '<LayerSet activeLayer="1" order="0 1"><Layer>'
+                '<ProtoInstance name="MyBox"/></Layer></LayerSet>')
+    assert "containerfield-type-mismatch" not in validate_semantic(xml)
+
+
+def test_route_to_and_from_protoinstance_element_form_is_valid():
+    xml = _wrap(_PROTO + '<ProtoInstance DEF="PI" name="MyBox"/>'
+                '<BooleanFilter DEF="BF"/><BooleanToggle DEF="BT"/>'
+                '<ROUTE fromNode="BF" fromField="inputTrue" toNode="PI" toField="set_go"/>'
+                '<ROUTE fromNode="PI" fromField="done" toNode="BT" toField="set_boolean"/>'
+                '<ROUTE fromNode="BF" fromField="inputTrue" toNode="PI" toField="size"/>')
+    report = validate_semantic(xml)
+    assert "route-invalid-to-field" not in report
+    assert "route-invalid-from-field" not in report
+
+
+def test_route_to_protoinstance_missing_field_still_flagged():
+    xml = _wrap(_PROTO + '<ProtoInstance DEF="PI" name="MyBox"/><BooleanFilter DEF="BF"/>'
+                '<ROUTE fromNode="BF" fromField="inputTrue" toNode="PI" toField="nope"/>')
+    assert "route-invalid-to-field" in validate_semantic(xml)
+
+
+def test_route_to_protoinstance_with_unknown_proto_not_flagged():
+    # ExternProto/unresolvable interface: cannot know the fields, so stay quiet.
+    xml = _wrap('<ProtoInstance DEF="PI" name="NotDeclaredHere"/><BooleanFilter DEF="BF"/>'
+                '<ROUTE fromNode="BF" fromField="inputTrue" toNode="PI" toField="whatever"/>')
+    assert "route-invalid" not in validate_semantic(xml)
+
+
+@pytest.mark.parametrize("meta", ["MetadataString", "MetadataInteger", "MetadataFloat",
+                                  "MetadataDouble", "MetadataBoolean", "MetadataSet"])
+def test_metadata_nodes_are_x3dmetadataobject(meta):
+    xml = _wrap(f'<WorldInfo><{meta} containerField="metadata" name="m"/></WorldInfo>')
+    assert "containerfield-type-mismatch" not in validate_semantic(xml)
+
+
+def test_metadataset_value_accepts_nested_metadata():
+    xml = _wrap('<WorldInfo><MetadataSet containerField="metadata" name="outer">'
+                '<MetadataString containerField="value" name="s" value="&quot;x&quot;"/>'
+                '<MetadataSet containerField="value" name="inner"/></MetadataSet></WorldInfo>')
+    assert "containerfield-type-mismatch" not in validate_semantic(xml)
+
+
+def test_real_containerfield_mismatch_still_flagged():
+    xml = _wrap('<Shape><Box containerField="appearance"/></Shape>')   # Box is not an appearance
+    assert "containerfield-type-mismatch" in validate_semantic(xml)
