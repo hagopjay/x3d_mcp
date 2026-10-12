@@ -435,6 +435,24 @@ def test_gaussian_splats_zero_quaternion():
     assert "splat-quaternion-norm" in validate_semantic(_splats(orientations="0 0 0 0 0 0 0 1"))
 
 
+def _many_splats(quat: str, n: int = 120) -> str:
+    return _splats(positions=" ".join(f"{i} 0 0" for i in range(n)), scales=" ".join(["0.1 0.1 0.1"] * n),
+                   orientations=" ".join([quat] * n), opacities=" ".join(["0.5"] * n),
+                   sphericalHarmonicsDegree0Coef0=" ".join(["0.5 0.5 0.5"] * n))
+
+
+def test_gaussian_splats_quaternion_order_wxyz():
+    assert "splat-quaternion-order" in validate_semantic(_many_splats("0.99 0.1 0.05 0.02"))
+
+
+def test_gaussian_splats_quaternion_order_xyzw_ok():
+    assert "splat-quaternion-order" not in validate_semantic(_many_splats("0.1 0.05 0.02 0.99"))
+
+
+def test_gaussian_splats_quaternion_order_needs_enough_splats():
+    assert "splat-quaternion-order" not in validate_semantic(_many_splats("0.99 0.1 0.05 0.02", n=10))
+
+
 def test_gaussian_splats_no_base_colour():
     assert "splat-no-color" in validate_semantic(_splats(sphericalHarmonicsDegree0Coef0=None))
 
