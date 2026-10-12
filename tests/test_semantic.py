@@ -445,3 +445,33 @@ def test_attribute_over_10_mb_parses():
     xml = _wrap(f'<Viewpoint/><WorldInfo title="big" info=\'"{"x" * 10_500_000}"\'/>')
     report = validate_semantic(xml)
     assert "Parse Error" not in report
+
+
+# ---- Routes that can never fire ----
+
+_TOGGLE = (
+    '<Shape><Box/></Shape><TouchSensor DEF="Touch"/>'
+    '<BooleanToggle DEF="Toggle"/><BooleanFilter DEF="Filter"/>'
+    '<IntegerTrigger DEF="Trigger" integerKey="0"/><Switch DEF="Pick" whichChoice="0"><Group/></Switch>'
+    '<ROUTE fromNode="Touch" fromField="isActive" toNode="Toggle" toField="set_boolean"/>'
+    '<ROUTE fromNode="Toggle" fromField="toggle_changed" toNode="Filter" toField="set_boolean"/>'
+    '<ROUTE fromNode="Filter" fromField="{field}" toNode="Trigger" toField="set_boolean"/>'
+    '<ROUTE fromNode="Trigger" fromField="triggerValue" toNode="Pick" toField="set_whichChoice"/>'
+)
+
+
+def _toggle(field: str, version: str = "4.1") -> str:
+    return _wrap(_TOGGLE.format(field=field)).replace('version="4.1"', f'version="{version}"')
+
+
+def test_input_false_into_integer_trigger_never_fires():
+    assert "route-never-fires" in validate_semantic(_toggle("inputFalse"))
+
+
+def test_input_negate_into_integer_trigger_ok():
+    assert "route-never-fires" not in validate_semantic(_toggle("inputNegate"))
+
+
+def test_input_false_into_integer_trigger_ok_in_3_3():
+    # X3D 3.3 browsers (X_ITE for files declared <= 3.3) trigger on any set_boolean value.
+    assert "route-never-fires" not in validate_semantic(_toggle("inputFalse", version="3.3"))

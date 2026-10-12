@@ -615,6 +615,45 @@ def _check_tuple_counts(scene: etree._Element) -> list[Diagnostic]:
     return diagnostics
 
 
+_ALWAYS_FALSE = {("BooleanFilter", "inputFalse")}
+_TRUE_ONLY = {("IntegerTrigger", "set_boolean"), ("TimeTrigger", "set_boolean"),
+              ("BooleanToggle", "set_boolean")}
+
+
+def _check_dead_boolean_routes(scene: etree._Element) -> list[Diagnostic]:
+    """A ROUTE from BooleanFilter.inputFalse into a set_boolean that acts only on TRUE never fires.
+
+    inputFalse only ever sends FALSE. In X3D 4.0 IntegerTrigger and TimeTrigger fire
+    only when set_boolean is TRUE (X_ITE keeps any-value triggering for files declared
+    3.3 or earlier), and BooleanToggle only toggles on TRUE. The scene validates and a
+    still frame looks right, but the "off" half of a toggle or hover never happens.
+    Found by the X3D-Bench behaviour harness in two writers' toggle and hover scenes.
+    """
+    version = scene.getroottree().getroot().get("version", "")
+    try:
+        legacy = float(version) <= 3.3
+    except ValueError:
+        legacy = False
+    defs = {el.get("DEF"): _local_tag(el) for el in scene.iter()
+            if isinstance(el.tag, str) and el.get("DEF")}
+    diagnostics: list[Diagnostic] = []
+    for route in scene.iter("ROUTE", "{*}ROUTE"):
+        src = (defs.get(route.get("fromNode")), route.get("fromField"))
+        dst = (defs.get(route.get("toNode")), route.get("toField"))
+        if src not in _ALWAYS_FALSE or dst not in _TRUE_ONLY:
+            continue
+        if legacy and dst[0] != "BooleanToggle":
+            continue
+        diagnostics.append(Diagnostic(
+            level="warning", check="route-never-fires",
+            message=f"ROUTE {route.get('fromNode')}.inputFalse -> {route.get('toNode')}.set_boolean "
+                    f"never fires: inputFalse only sends FALSE and {dst[0]} acts only on TRUE"
+                    f"{' in X3D 4.0' if dst[0] != 'BooleanToggle' else ''}. To react when the input "
+                    f"turns FALSE, route inputNegate instead.",
+            node_tag="ROUTE", def_name=route.get("toNode", "")))
+    return diagnostics
+
+
 _SPLAT_ARRAYS = {"positions": 3, "scales": 3, "orientations": 4, "opacities": 1}
 _SPLAT_SH = {(d, c): f"sphericalHarmonicsDegree{d}Coef{c}" for d in range(4) for c in range(2 * d + 1)}
 
@@ -820,6 +859,7 @@ _ALL_CHECKS = [
     _check_interpolator_keys,
     _check_tuple_counts,
     _check_gaussian_splats,
+    _check_dead_boolean_routes,
     _check_missing_viewpoint,
 ]
 
