@@ -656,6 +656,7 @@ def _check_dead_boolean_routes(scene: etree._Element) -> list[Diagnostic]:
 
 _SPLAT_ARRAYS = {"positions": 3, "scales": 3, "orientations": 4, "opacities": 1}
 _SPLAT_SH = {(d, c): f"sphericalHarmonicsDegree{d}Coef{c}" for d in range(4) for c in range(2 * d + 1)}
+_SPLAT_ORDER_MIN = 100  # too few splats to guess the quaternion order below this
 
 
 def _floats(attr: str) -> list[float]:
@@ -672,8 +673,10 @@ def _check_gaussian_splats(scene: etree._Element) -> list[Diagnostic]:
     orientations, opacities and each sphericalHarmonicsDegree{d}Coef{c} field.
     Neither the XSD nor X3DUOM ties those lengths together, and the classic
     writer mistakes (ln(scale) or logit(opacity) copied straight from a 3DGS PLY,
-    a partly written SH degree) all validate. These checks catch them; the
-    quaternion order (x y z w versus w x y z) cannot be checked from the data.
+    a partly written SH degree) all validate. These checks catch them. The
+    quaternion order (x y z w versus w x y z) can only be guessed from the data:
+    trainers start every splat at the identity, so a trained file usually keeps w
+    as the largest component, and a w x y z file shows it in the first slot instead.
     """
     diagnostics: list[Diagnostic] = []
     for el in scene.iter("GaussianSplats", "{*}GaussianSplats"):
@@ -736,6 +739,16 @@ def _check_gaussian_splats(scene: etree._Element) -> list[Diagnostic]:
                 report("warning", "splat-quaternion-norm",
                        f"{off} of {len(norms)} orientations are not unit length (|q| off by more than 1e-3); "
                        "renderers normalise them, but a unit quaternion round-trips exactly.")
+            if len(norms) >= _SPLAT_ORDER_MIN:
+                lead = [0, 0, 0, 0]
+                for i in range(0, 4 * len(norms), 4):
+                    q = [abs(v) for v in quats[i:i + 4]]
+                    lead[q.index(max(q))] += 1
+                if lead[0] > 0.6 * len(norms) and lead[3] < 0.2 * len(norms):
+                    report("warning", "splat-quaternion-order",
+                           f"{lead[0]} of {len(norms)} orientations have their largest component first and "
+                           f"only {lead[3]} last. Trained splats usually stay near the identity (0 0 0 1), "
+                           "so these look written w x y z; X3D 4.1 reads x y z w.")
     return diagnostics
 
 
