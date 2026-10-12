@@ -302,8 +302,12 @@ def _endpoint_fields(el: etree._Element, tag: str, nodes: dict, protos: dict) ->
     fields = {f["name"]: f for f in nodes.get(tag, {}).get("fields", [])}
     if tag in _DECLARED_FIELD_NODES:
         fields.update(_script_fields(el))     # declared fields augment the built-ins
-    elif tag in protos:
-        fields = {**protos[tag], **fields}     # a proto instance == its interface
+    else:
+        # <ProtoInstance name="P"> exposes ProtoDeclare P's interface; the shorthand
+        # <P .../> element form is kept for hand-written scenes.
+        pname = el.get("name") if tag == "ProtoInstance" else tag
+        if pname in protos:
+            fields = {**protos[pname], **fields}   # a proto instance == its interface
     return fields
 
 
@@ -347,6 +351,12 @@ def _check_route_validity(scene: etree._Element) -> list[Diagnostic]:
 
         from_el, from_type = def_map[from_node]
         to_el, to_type = def_map[to_node]
+
+        # A ProtoInstance whose ProtoDeclare/ExternProtoDeclare is not in this file
+        # (e.g. an unresolved EXTERNPROTO) has an interface we cannot know: skip.
+        if any(t == "ProtoInstance" and e.get("name") not in proto_ifaces
+               for e, t in ((from_el, from_type), (to_el, to_type))):
+            continue
 
         from_fields = _endpoint_fields(from_el, from_type, nodes, proto_ifaces)
         to_fields = _endpoint_fields(to_el, to_type, nodes, proto_ifaces)
@@ -409,15 +419,20 @@ _NODE_FIELD_TYPES = {"SFNode", "MFNode"}
 
 
 def _type_ancestry(typename: str, nodes: dict, abstracts: dict) -> set[str]:
-    """Return {typename} plus every abstract base it inherits from."""
+    """Return {typename} plus every abstract base it inherits from, including the
+    X3DUOM AdditionalInheritance interfaces (MetadataString is an X3DMetadataObject
+    only that way)."""
     chain = {typename}
-    cur = nodes.get(typename) or abstracts.get(typename)
-    while cur:
-        base = cur.get("baseType")
-        if not base or base in chain:
-            break
-        chain.add(base)
-        cur = nodes.get(base) or abstracts.get(base)
+    todo = [typename]
+    while todo:
+        name = todo.pop()
+        info = nodes.get(name) or abstracts.get(name)
+        if not info:
+            continue
+        for base in [info.get("baseType"), *info.get("additionalBaseTypes", [])]:
+            if base and base not in chain:
+                chain.add(base)
+                todo.append(base)
     return chain
 
 
@@ -459,6 +474,8 @@ def _check_containerfield(scene: etree._Element) -> list[Diagnostic]:
         for child in parent:
             ctag = _local_tag(child)
             if ctag not in nodes:        # skip ROUTE/field/IS/meta/comments
+                continue
+            if ctag == "ProtoInstance":  # a prototype instance stands in for any node type
                 continue
             cf = child.get("containerField") or nodes[ctag]["containerField"]
             if not cf:

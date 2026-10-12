@@ -54,10 +54,12 @@ class X3DUOM:
                         component = None
                         level = None
                         fields = []
+                        extra_bases = []
                         if idef is not None:
                             inh = idef.find("Inheritance")
                             if inh is not None:
                                 base_type = inh.get("baseType")
+                            extra_bases = [a.get("baseType") for a in idef.findall("AdditionalInheritance") if a.get("baseType")]
                             comp = idef.find("componentInfo")
                             if comp is not None:
                                 component = comp.get("name")
@@ -65,6 +67,7 @@ class X3DUOM:
                             fields = self._parse_fields(idef)
                         result[name] = {
                             "baseType": base_type,
+                            "additionalBaseTypes": extra_bases,
                             "component": component,
                             "level": level,
                             "fields": fields,
@@ -85,10 +88,12 @@ class X3DUOM:
             level = None
             container_field = None
             fields = []
+            extra_bases = []
             if idef is not None:
                 inh = idef.find("Inheritance")
                 if inh is not None:
                     base_type = inh.get("baseType")
+                extra_bases = [a.get("baseType") for a in idef.findall("AdditionalInheritance") if a.get("baseType")]
                 comp = idef.find("componentInfo")
                 if comp is not None:
                     component = comp.get("name")
@@ -101,6 +106,7 @@ class X3DUOM:
                 "component": component,
                 "level": level,
                 "baseType": base_type,
+                "additionalBaseTypes": extra_bases,
                 "fields": fields,
                 "containerField": container_field,
             }
