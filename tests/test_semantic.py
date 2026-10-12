@@ -372,3 +372,106 @@ def test_shape_use_reference_is_not_incomplete():
 def test_shape_with_def_and_no_geometry_still_reported():
     src = _wrap("<Shape DEF='Empty'><Appearance><Material/></Appearance></Shape>")
     assert "shape-no-geometry" in validate_semantic(src)
+
+
+# ---- MF tuple counts (the XSD pattern accepts "1 2 34 5 6" as two SFVec3f) ----
+
+def test_tuple_count_split_digits():
+    xml = _wrap('<Shape><IndexedLineSet coordIndex="0 1 -1"><Coordinate point="1 2 34 5 6"/></IndexedLineSet></Shape>')
+    assert "tuple-count" in validate_semantic(xml)
+
+
+def test_tuple_count_whole_tuples_ok():
+    xml = _wrap('<Shape><IndexedLineSet coordIndex="0 1 -1"><Coordinate point="1 2 3, 4 5 6"/></IndexedLineSet></Shape>'
+                '<OrientationInterpolator key="0 1" keyValue="0 1 0 0 0 1 0 3.14"/>')
+    assert "tuple-count" not in validate_semantic(xml)
+
+
+# ---- GaussianSplats (X3D 4.1 draft) ----
+
+def _splats(**attrs) -> str:
+    base = {
+        "positions": "0 0 0 1 1 1",
+        "scales": "0.1 0.1 0.1 0.2 0.2 0.2",
+        "orientations": "0 0 0 1 0 0 0.707107 0.707107",
+        "opacities": "0.5 1",
+        "sphericalHarmonicsDegree0Coef0": "0.5 0.5 0.5 1 0 0",
+    }
+    base.update(attrs)
+    body = " ".join(f'{k}="{v}"' for k, v in base.items() if v is not None)
+    return _wrap(f'<Viewpoint/><GaussianSplats DEF="Splats" {body}/>')
+
+
+def test_gaussian_splats_consistent_ok():
+    report = validate_semantic(_splats())
+    for check in ("splat-", "tuple-count"):
+        assert check not in report, report
+
+
+def test_gaussian_splats_array_length_mismatch():
+    report = validate_semantic(_splats(opacities="0.5 1 0.25"))
+    assert "splat-array-length" in report and "opacities holds 3 splats" in report
+
+
+def test_gaussian_splats_split_digit_positions():
+    assert "tuple-count" in validate_semantic(_splats(positions="0 0 0 11 1"))
+
+
+def test_gaussian_splats_log_scales():
+    assert "splat-scale-space" in validate_semantic(_splats(scales="-2.3 -2.3 -2.3 -1.6 -1.6 -1.6"))
+
+
+def test_gaussian_splats_logit_opacity():
+    assert "splat-opacity-space" in validate_semantic(_splats(opacities="2.2 -4.6"))
+
+
+def test_gaussian_splats_partial_sh_degree():
+    report = validate_semantic(_splats(sphericalHarmonicsDegree1Coef0="0 0 0 0 0 0",
+                                       sphericalHarmonicsDegree1Coef1="0 0 0 0 0 0"))
+    assert "splat-sh-partial" in report and "sphericalHarmonicsDegree1Coef2" in report
+
+
+def test_gaussian_splats_zero_quaternion():
+    assert "splat-quaternion-norm" in validate_semantic(_splats(orientations="0 0 0 0 0 0 0 1"))
+
+
+def test_gaussian_splats_no_base_colour():
+    assert "splat-no-color" in validate_semantic(_splats(sphericalHarmonicsDegree0Coef0=None))
+
+
+def test_attribute_over_10_mb_parses():
+    # libxml2 refuses one attribute over 10,000,000 bytes unless huge_tree is set;
+    # a GaussianSplats node passes that at about 18,000 SH degree 3 splats.
+    xml = _wrap(f'<Viewpoint/><WorldInfo title="big" info=\'"{"x" * 10_500_000}"\'/>')
+    report = validate_semantic(xml)
+    assert "Parse Error" not in report
+
+
+# ---- Routes that can never fire ----
+
+_TOGGLE = (
+    '<Shape><Box/></Shape><TouchSensor DEF="Touch"/>'
+    '<BooleanToggle DEF="Toggle"/><BooleanFilter DEF="Filter"/>'
+    '<IntegerTrigger DEF="Trigger" integerKey="0"/><Switch DEF="Pick" whichChoice="0"><Group/></Switch>'
+    '<ROUTE fromNode="Touch" fromField="isActive" toNode="Toggle" toField="set_boolean"/>'
+    '<ROUTE fromNode="Toggle" fromField="toggle_changed" toNode="Filter" toField="set_boolean"/>'
+    '<ROUTE fromNode="Filter" fromField="{field}" toNode="Trigger" toField="set_boolean"/>'
+    '<ROUTE fromNode="Trigger" fromField="triggerValue" toNode="Pick" toField="set_whichChoice"/>'
+)
+
+
+def _toggle(field: str, version: str = "4.1") -> str:
+    return _wrap(_TOGGLE.format(field=field)).replace('version="4.1"', f'version="{version}"')
+
+
+def test_input_false_into_integer_trigger_never_fires():
+    assert "route-never-fires" in validate_semantic(_toggle("inputFalse"))
+
+
+def test_input_negate_into_integer_trigger_ok():
+    assert "route-never-fires" not in validate_semantic(_toggle("inputNegate"))
+
+
+def test_input_false_into_integer_trigger_ok_in_3_3():
+    # X3D 3.3 browsers (X_ITE for files declared <= 3.3) trigger on any set_boolean value.
+    assert "route-never-fires" not in validate_semantic(_toggle("inputFalse", version="3.3"))

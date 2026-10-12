@@ -583,6 +583,162 @@ def _check_interpolator_keys(scene: etree._Element) -> list[Diagnostic]:
     return diagnostics
 
 
+def _check_tuple_counts(scene: etree._Element) -> list[Diagnostic]:
+    """Each MF tuple field (MFVec3f, MFRotation, MFColor, ...) needs a whole number of tuples.
+
+    The X3D 4.0 and 4.1 XSD patterns allow an empty separator between tuples, so a
+    digit run can be split across two tuples: point="1 2 34 5 6" (five numbers)
+    validates as two SFVec3f values. Counting the numbers catches it.
+    GaussianSplats is skipped here; _check_gaussian_splats counts its arrays.
+    """
+    uom = get_x3duom()
+    nodes, types = uom.get_concrete_nodes(), uom.get_field_types()
+    diagnostics: list[Diagnostic] = []
+    for el in scene.iter():
+        tag = _local_tag(el)
+        if tag not in nodes or tag == "GaussianSplats":
+            continue
+        fields = _node_field_map(tag, nodes)
+        for name, value in el.attrib.items():
+            info = types.get(fields.get(name, {}).get("type", ""))
+            if not info or not info["isArray"] or info["tupleSize"] < 2:
+                continue
+            n, size = _count(value), info["tupleSize"]
+            if n % size:
+                label = f" (DEF={el.get('DEF')!r})" if el.get("DEF") else ""
+                diagnostics.append(Diagnostic(
+                    level="error", check="tuple-count",
+                    message=f"{tag}{label} {name}: {n} numbers is not a whole number of "
+                            f"{fields[name]['type']} values ({size} numbers each). The XSD "
+                            f"pattern lets this through when a number splits across two tuples.",
+                    node_tag=tag, def_name=el.get("DEF", "")))
+    return diagnostics
+
+
+_ALWAYS_FALSE = {("BooleanFilter", "inputFalse")}
+_TRUE_ONLY = {("IntegerTrigger", "set_boolean"), ("TimeTrigger", "set_boolean"),
+              ("BooleanToggle", "set_boolean")}
+
+
+def _check_dead_boolean_routes(scene: etree._Element) -> list[Diagnostic]:
+    """A ROUTE from BooleanFilter.inputFalse into a set_boolean that acts only on TRUE never fires.
+
+    inputFalse only ever sends FALSE. In X3D 4.0 IntegerTrigger and TimeTrigger fire
+    only when set_boolean is TRUE (X_ITE keeps any-value triggering for files declared
+    3.3 or earlier), and BooleanToggle only toggles on TRUE. The scene validates and a
+    still frame looks right, but the "off" half of a toggle or hover never happens.
+    Found by the X3D-Bench behaviour harness in two writers' toggle and hover scenes.
+    """
+    version = scene.getroottree().getroot().get("version", "")
+    try:
+        legacy = float(version) <= 3.3
+    except ValueError:
+        legacy = False
+    defs = {el.get("DEF"): _local_tag(el) for el in scene.iter()
+            if isinstance(el.tag, str) and el.get("DEF")}
+    diagnostics: list[Diagnostic] = []
+    for route in scene.iter("ROUTE", "{*}ROUTE"):
+        src = (defs.get(route.get("fromNode")), route.get("fromField"))
+        dst = (defs.get(route.get("toNode")), route.get("toField"))
+        if src not in _ALWAYS_FALSE or dst not in _TRUE_ONLY:
+            continue
+        if legacy and dst[0] != "BooleanToggle":
+            continue
+        diagnostics.append(Diagnostic(
+            level="warning", check="route-never-fires",
+            message=f"ROUTE {route.get('fromNode')}.inputFalse -> {route.get('toNode')}.set_boolean "
+                    f"never fires: inputFalse only sends FALSE and {dst[0]} acts only on TRUE"
+                    f"{' in X3D 4.0' if dst[0] != 'BooleanToggle' else ''}. To react when the input "
+                    f"turns FALSE, route inputNegate instead.",
+            node_tag="ROUTE", def_name=route.get("toNode", "")))
+    return diagnostics
+
+
+_SPLAT_ARRAYS = {"positions": 3, "scales": 3, "orientations": 4, "opacities": 1}
+_SPLAT_SH = {(d, c): f"sphericalHarmonicsDegree{d}Coef{c}" for d in range(4) for c in range(2 * d + 1)}
+
+
+def _floats(attr: str) -> list[float]:
+    try:
+        return [float(x) for x in re.split(r"[\s,]+", attr.strip()) if x]
+    except ValueError:
+        return []
+
+
+def _check_gaussian_splats(scene: etree._Element) -> list[Diagnostic]:
+    """GaussianSplats arrays must agree on the splat count, and hold values in the right space.
+
+    The X3D 4.1 draft node stores one splat per entry of positions, scales,
+    orientations, opacities and each sphericalHarmonicsDegree{d}Coef{c} field.
+    Neither the XSD nor X3DUOM ties those lengths together, and the classic
+    writer mistakes (ln(scale) or logit(opacity) copied straight from a 3DGS PLY,
+    a partly written SH degree) all validate. These checks catch them; the
+    quaternion order (x y z w versus w x y z) cannot be checked from the data.
+    """
+    diagnostics: list[Diagnostic] = []
+    for el in scene.iter("GaussianSplats", "{*}GaussianSplats"):
+        label = f" (DEF={el.get('DEF')!r})" if el.get("DEF") else ""
+
+        def report(level: str, check: str, message: str) -> None:
+            diagnostics.append(Diagnostic(level=level, check=check,
+                                          message=f"GaussianSplats{label}: {message}",
+                                          node_tag="GaussianSplats", def_name=el.get("DEF", "")))
+
+        arrays = dict(_SPLAT_ARRAYS, **{name: 3 for name in _SPLAT_SH.values()})
+        counts = {}
+        for name, size in arrays.items():
+            if el.get(name) is None:
+                continue
+            n = _count(el.get(name))
+            if n % size:
+                report("error", "tuple-count", f"{name} has {n} numbers, not a multiple of {size}.")
+            counts[name] = n // size
+        if not counts:
+            continue
+        expected = counts.get("positions", max(counts.values()))
+        for name, n in counts.items():
+            if n != expected:
+                report("error", "splat-array-length",
+                       f"{name} holds {n} splats but positions holds {expected}. "
+                       "Every per-splat array needs one entry per splat.")
+        present = {d for (d, c), name in _SPLAT_SH.items() if name in counts}
+        for d in sorted(present):
+            missing = [name for (dd, c), name in _SPLAT_SH.items() if dd == d and name not in counts]
+            if missing:
+                report("warning", "splat-sh-partial",
+                       f"SH degree {d} is missing {', '.join(missing)}. Renderers drop a partial "
+                       "degree (X_ITE 16.4.3 treats it as absent), so write all 2d+1 coefficients or none.")
+            elif d and d - 1 not in present:
+                report("warning", "splat-sh-partial", f"SH degree {d} is written but degree {d - 1} is not.")
+        if 0 not in present:
+            report("warning", "splat-no-color", "no sphericalHarmonicsDegree0Coef0, so the splats have no base colour.")
+        scales = _floats(el.get("scales", ""))
+        if scales and min(scales) < 0:
+            neg = sum(v < 0 for v in scales)
+            report("error", "splat-scale-space",
+                   f"{neg} of {len(scales)} scale values are negative. X3D scales are linear "
+                   "standard deviations; a 3DGS PLY stores ln(scale), so apply exp() when converting.")
+        opacities = _floats(el.get("opacities", ""))
+        if opacities and (min(opacities) < 0 or max(opacities) > 1):
+            bad = sum(not 0 <= v <= 1 for v in opacities)
+            report("error", "splat-opacity-space",
+                   f"{bad} of {len(opacities)} opacities are outside 0 to 1. A 3DGS PLY stores "
+                   "logit(opacity), so apply the sigmoid when converting.")
+        quats = _floats(el.get("orientations", ""))
+        if len(quats) >= 4:
+            norms = [(quats[i] ** 2 + quats[i + 1] ** 2 + quats[i + 2] ** 2 + quats[i + 3] ** 2) ** 0.5
+                     for i in range(0, len(quats) - 3, 4)]
+            zero = sum(n == 0 for n in norms)
+            off = sum(abs(n - 1) > 1e-3 for n in norms) - zero
+            if zero:
+                report("error", "splat-quaternion-norm", f"{zero} orientations are all zero (no rotation is defined).")
+            if off:
+                report("warning", "splat-quaternion-norm",
+                       f"{off} of {len(norms)} orientations are not unit length (|q| off by more than 1e-3); "
+                       "renderers normalise them, but a unit quaternion round-trips exactly.")
+    return diagnostics
+
+
 _NAMING_HINTS_URL = (
     "https://www.web3d.org/x3d/content/examples/"
     "X3dSceneAuthoringHints.html#NamingConventions"
@@ -701,6 +857,9 @@ _ALL_CHECKS = [
     _check_route_validity,
     _check_naming_conventions,
     _check_interpolator_keys,
+    _check_tuple_counts,
+    _check_gaussian_splats,
+    _check_dead_boolean_routes,
     _check_missing_viewpoint,
 ]
 
@@ -715,10 +874,16 @@ def _find_scene(root: etree._Element) -> etree._Element | None:
     return None
 
 
+# huge_tree lifts libxml2's 10 MB limit on one text node or attribute, which a
+# GaussianSplats node passes at about 18,000 SH degree 3 splats. Entities stay
+# unresolved and nothing is fetched, so a large document cannot expand or reach out.
+_PARSER = etree.XMLParser(huge_tree=True, resolve_entities=False, no_network=True)
+
+
 def validate_semantic(xml_string: str) -> str:
     """Run all semantic checks on an X3D XML string and return a markdown report."""
     try:
-        root = etree.fromstring(xml_string.encode("utf-8"))
+        root = etree.fromstring(xml_string.encode("utf-8"), _PARSER)
     except etree.XMLSyntaxError as e:
         return f"# Semantic Check: Parse Error\n\n{e}"
 
