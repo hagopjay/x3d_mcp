@@ -20,7 +20,7 @@ from x3d_utils.ontology import get_ontology
 def register(mcp: FastMCP):
 
     @mcp.tool()
-    def query_ontology(sparql: str) -> str:
+    def query_ontology(sparql: str, include_extensions: bool = False) -> str:
         """Run a SPARQL SELECT or ASK query against the X3D Ontology.
 
         Standard prefixes are pre-declared: x3d, owl, rdf, rdfs, dcterms.
@@ -29,12 +29,19 @@ def register(mcp: FastMCP):
         x3d:hasChild / x3d:hasParent with per-field subproperties
         carrying rdfs:domain and rdfs:range.
 
+        Extension ontologies (e.g. the spatial-cognition ontology of
+        3D_perspective_skill, prefix `sc:`) are loaded into a separate graph
+        only when the server is started with X3D_MCP_EXTRA_ONTOLOGIES set;
+        pass include_extensions=True to query the union with them. Default
+        queries are unaffected.
+
         Args:
             sparql: The SPARQL query text (SELECT or ASK).
+            include_extensions: Also query the loaded extension ontologies.
         """
         onto = get_ontology()
         try:
-            rows = onto.query(sparql)
+            rows = onto.query(sparql, include_extensions=include_extensions)
         except Exception as e:
             return json.dumps({"error": f"SPARQL error: {e}"})
         return json.dumps({"rows": rows, "count": len(rows)}, indent=2)

@@ -266,9 +266,24 @@ Backed by the bundled X3D Ontology (`X3dOntology4.0.ttl`, 17,736 triples, parsed
 
 | Tool | Description |
 |------|-------------|
-| `query_ontology` | Run a SPARQL SELECT or ASK query against the X3D Ontology. Standard prefixes (x3d, owl, rdf, rdfs, dcterms) are pre-declared. |
+| `query_ontology` | Run a SPARQL SELECT or ASK query against the X3D Ontology. Standard prefixes (x3d, owl, rdf, rdfs, dcterms, and `sc` for the optional spatial-cognition extension) are pre-declared. `include_extensions=true` also queries any [extension ontologies](#optional-extension-ontologies). |
 | `node_parents` | List the node types whose fields may legally contain a given node type, naming the admitting field -- a relationship query the X3DUOM index cannot answer. |
 | `describe_ontology_term` | Describe an ontology class or property: labels, super/sub classes and properties, domains, ranges, inverses. |
+
+#### Optional extension ontologies
+
+Extra Turtle ontologies can be loaded into a graph that is **separate** from the bundled one. Nothing changes unless you ask: with no configuration, or with `include_extensions=false`, queries see only the bundled X3D Ontology.
+
+```bash
+# files and/or directories of .ttl, separated by the OS path separator
+export X3D_MCP_EXTRA_ONTOLOGIES=/path/to/3D_perspective_skill/ontology
+```
+
+Extensions that ground their concepts in X3D Ontology **4.1** are rewritten to the bundled **4.0** namespace as they load, so a query can join them to bundled classes. Terms that exist only in 4.1 have no 4.0 class; they are listed by `X3DOntology.extension_status()["unresolved_x3d_terms"]`. Example (spatial relations grounded in X3D nodes):
+
+```sparql
+SELECT ?concept ?node WHERE { ?concept sc:x3dNode ?node }
+```
 
 ### Render Tools
 

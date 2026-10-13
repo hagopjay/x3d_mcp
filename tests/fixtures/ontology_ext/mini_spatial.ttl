@@ -1,0 +1,11 @@
+@prefix : <https://w3id.org/spatial-cognition#> .
+@prefix x3d: <https://www.web3d.org/specifications/X3dOntology4.1#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+:EyeHeight a :Concept ;
+    rdfs:label "eye height"@en ;
+    :x3dNode x3d:NavigationInfo ;
+    :x3dField x3d:avatarSize .
+
+:Bridging a :Concept ;
+    :x3dNode x3d:NoSuchNodeInFourZero .
