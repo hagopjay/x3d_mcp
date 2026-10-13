@@ -136,3 +136,63 @@ def test_render_xite_path_smoke(tmp_path):
     assert len(png) > 500
     # the temp preview page is cleaned up
     assert not list(tmp_path.glob("._x3d_render_*.html"))
+
+
+# ---- blank / near-empty frame detection (no browser needed) ----
+
+def _png(size, fill, rect=None, rect_fill=(200, 40, 40)):
+    PIL = pytest.importorskip("PIL.Image")
+    import io
+    im = PIL.new("RGB", size, fill)
+    if rect:
+        im.paste(rect_fill, rect)
+    buf = io.BytesIO()
+    im.save(buf, format="PNG")
+    return buf.getvalue()
+
+
+def test_analyze_frame_blank_background_only():
+    from tools.render import analyze_frame, frame_warning
+    stats = analyze_frame(_png((320, 180), (10, 10, 12)))
+    assert stats["status"] == "blank"
+    assert stats["background_rgb"] == [10, 10, 12]
+    assert stats["bbox"] is None
+    assert "viewer fell" in frame_warning(stats)
+
+
+def test_analyze_frame_ok_with_visible_object():
+    from tools.render import analyze_frame, frame_warning
+    stats = analyze_frame(_png((320, 180), (10, 10, 12), rect=(100, 50, 220, 130)))
+    assert stats["status"] == "ok"
+    assert stats["bbox"] == (100, 50, 220, 130)
+    assert frame_warning(stats) == ""
+
+
+def test_analyze_frame_sparse_for_tiny_object():
+    from tools.render import analyze_frame, frame_warning
+    # 8x8 px in a 320x180 frame is ~0.11% of pixels: present but tiny.
+    stats = analyze_frame(_png((320, 180), (10, 10, 12), rect=(10, 10, 18, 18)))
+    assert stats["status"] == "sparse"
+    assert frame_warning(stats).startswith("NOTE")
+
+
+def test_analyze_frame_ignores_dither_noise():
+    from tools.render import analyze_frame
+    # a one-level difference is below the tolerance and must not count
+    stats = analyze_frame(_png((320, 180), (10, 10, 12), rect=(0, 0, 160, 180),
+                               rect_fill=(11, 11, 13)))
+    assert stats["status"] == "blank"
+
+
+def test_analyze_frame_rejects_garbage():
+    from tools.render import analyze_frame, frame_warning
+    assert analyze_frame(b"not a png") is None
+    assert frame_warning(None) == ""
+
+
+def test_image_result_attaches_warning_only_when_needed():
+    from tools.render import _image_result
+    blank = _image_result(_png((320, 180), (10, 10, 12)))
+    assert isinstance(blank, list) and len(blank) == 2
+    ok = _image_result(_png((320, 180), (10, 10, 12), rect=(100, 50, 220, 130)))
+    assert not isinstance(ok, list)

@@ -24,6 +24,7 @@ dev = [
 #   pip install 'x3d-mcp[render]' && python -m playwright install chromium
 render = [
     "playwright>=1.40",
+    "pillow>=10",  # blank/near-empty frame detection; optional at runtime
 ]
 
 [tool.pytest.ini_options]

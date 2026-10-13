@@ -133,6 +133,93 @@ async def _render_xite_path_async(x3d_path: str, width: int, height: int,
         page.unlink(missing_ok=True)
 
 
+# ---- Blank / near-empty frame detection ----------------------------------
+#
+# A render can succeed technically and still show nothing: the PNG is large
+# enough, the browser reported no error, yet every pixel is the Background.
+# Under a WALK NavigationInfo this is the classic "viewer fell" case (gravity
+# pulls the eye through a scene with no support, leaving only the Background
+# in view); other causes are a camera facing away from the content, content
+# clipped by the near/far plane, or geometry that is hidden or unlit. None of
+# those is a render *failure*, so they must be reported, not raised.
+#
+# Heuristic: the Background dominates a frame, so take the most common colour
+# in a coarse sample as "background", then measure what fraction of full-
+# resolution pixels differ from it by more than a small per-channel tolerance
+# (which absorbs dithering and anti-aliasing noise). Below ~0.05% the frame
+# is effectively uniform ("blank"); below ~1% it is "sparse" (something is
+# there, but it is tiny, distant or mostly clipped).
+_BLANK_FRACTION = 0.0005
+_SPARSE_FRACTION = 0.01
+_BG_TOLERANCE = 12
+
+
+def analyze_frame(png: bytes) -> dict | None:
+    """Classify a rendered PNG as ``blank``, ``sparse`` or ``ok``.
+
+    Returns None when the frame cannot be analysed (Pillow missing or the
+    bytes are not a decodable image); analysis is advisory, never fatal.
+    Keys: ``status``, ``non_background_fraction``, ``background_rgb`` and
+    ``bbox`` (left, top, right, bottom of the non-background pixels, or None).
+    """
+    try:
+        import io
+        from PIL import Image as PILImage, ImageChops
+        im = PILImage.open(io.BytesIO(png)).convert("RGB")
+    except Exception:
+        return None
+    w, h = im.size
+    if w == 0 or h == 0:
+        return None
+    # Mode of a coarse nearest-neighbour sample = the background colour.
+    sample = im.resize((64, 36), PILImage.NEAREST)
+    colors = sample.getcolors(maxcolors=64 * 36)
+    bg = max(colors, key=lambda c: c[0])[1]
+    diff = ImageChops.difference(im, PILImage.new("RGB", im.size, bg)).convert("L")
+    mask = diff.point(lambda v: 255 if v > _BG_TOLERANCE else 0)
+    hist = mask.histogram()
+    fraction = hist[255] / (w * h)
+    status = ("blank" if fraction < _BLANK_FRACTION
+              else "sparse" if fraction < _SPARSE_FRACTION else "ok")
+    return {
+        "status": status,
+        "non_background_fraction": round(fraction, 6),
+        "background_rgb": list(bg),
+        "bbox": mask.getbbox(),
+    }
+
+
+def frame_warning(stats: dict | None) -> str:
+    """Human/agent-readable explanation for a blank or sparse frame, else ''."""
+    if not stats or stats["status"] == "ok":
+        return ""
+    pct = stats["non_background_fraction"] * 100
+    if stats["status"] == "blank":
+        head = (f"WARNING: the frame is blank: {pct:.3f}% of pixels differ from "
+                f"the background {tuple(stats['background_rgb'])}.")
+    else:
+        head = (f"NOTE: the frame is nearly empty: only {pct:.2f}% of pixels differ "
+                f"from the background {tuple(stats['background_rgb'])}.")
+    return (
+        head + " The render itself did not fail. Likely causes, most common "
+        "first: (1) the viewer fell: a WALK NavigationInfo applies gravity, so "
+        "with no geometry under the eye the view drops out of the scene; check "
+        "NavigationInfo type, avatarSize and any floor; (2) the camera faces "
+        "away from the content or sits inside it: check the bound Viewpoint "
+        "position/orientation; (3) content is clipped by the near plane "
+        "(avatarSize[0]/2) or the far plane (visibilityLimit); (4) geometry has "
+        "no Appearance, is hidden by visible=false or scale 0, or is unlit "
+        "(headlight off and no lights)."
+    )
+
+
+def _image_result(png: bytes):
+    """The PNG, plus a text warning when the frame is blank or nearly empty."""
+    warning = frame_warning(analyze_frame(png))
+    image = Image(data=png, format="png")
+    return [image, warning] if warning else image
+
+
 def _escape_html(text: str) -> str:
     return (
         text.replace("&", "&amp;")
@@ -354,6 +441,9 @@ def register(mcp: FastMCP):
         Renders with X_ITE in headless Chromium (software WebGL) -- X_ITE draws
         HAnim humanoids and PhysicalMaterial (PBR) that X3DOM cannot.
 
+        Blank or nearly empty frames are detected and reported in a text note
+        returned with the image (the render itself did not fail).
+
         Tip: if the image is blank, the usual causes are no/!bound Viewpoint, no
         light, or geometry outside the view -- not a render failure. Add a
         Viewpoint and a DirectionalLight and re-render. If it's still blank, bump
@@ -392,7 +482,7 @@ def register(mcp: FastMCP):
             return f"Render failed: {exc}"
         if save_path:
             Path(save_path).expanduser().write_bytes(png)
-        return Image(data=png, format="png")
+        return _image_result(png)
 
     @mcp.tool()
     async def render_current_scene(width: int = _DEFAULT_WIDTH, height: int = _DEFAULT_HEIGHT,
@@ -422,7 +512,7 @@ def register(mcp: FastMCP):
             return f"Render failed: {exc}"
         if save_path:
             Path(save_path).expanduser().write_bytes(png)
-        return Image(data=png, format="png")
+        return _image_result(png)
 
     @mcp.tool()
     def x3dom_starter(
