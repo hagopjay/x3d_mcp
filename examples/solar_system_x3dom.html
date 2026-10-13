@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Solar System Model (X3DOM)</title>
+  <link rel="stylesheet" href="https://www.x3dom.org/download/1.8.2/x3dom.css">
+  <script src="https://www.x3dom.org/download/1.8.2/x3dom.js"></script>
+  <style>
+    html, body { margin: 0; height: 100%; background: #05050f; overflow: hidden;
+                 font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    x3d { display: block; width: 100%; height: 100%; border: 0; }
+    .hud { position: fixed; top: 12px; left: 12px; z-index: 10; color: #e6e6f0;
+            background: rgba(10,10,30,.65); border: 1px solid #2a2a4a; border-radius: 8px;
+            padding: 10px 14px; max-width: 260px; }
+    .hud h1 { margin: 0 0 4px; font-size: 16px; }
+    .hud p { margin: 0 0 8px; font-size: 12px; color: #a8a8c0; line-height: 1.4; }
+    .hud button { background: #1c1c3a; color: #e6e6f0; border: 1px solid #3a3a66;
+                   border-radius: 6px; padding: 5px 10px; margin-right: 6px; cursor: pointer; font-size: 12px; }
+    .hud button:hover { background: #2a2a55; }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <h1>Solar System</h1>
+    <p>Drag to rotate, scroll to zoom. Sizes and distances are scaled for viewing, not to true scale.</p>
+    <button onclick="document.getElementById('sys').runtime.nextView()">Next view</button>
+    <button onclick="document.getElementById('sys').runtime.showAll()">Show all</button>
+  </div>
+  <x3d id="sys">
+    <scene>
+      <NavigationInfo type='"EXAMINE" "ANY"' headlight='false'></NavigationInfo>
+      <Background skyColor='0 0 0.03'></Background>
+      <Viewpoint description='Overview' position='0 30 60' orientation='1 0 0 -0.45'></Viewpoint>
+      <Viewpoint description='Top down' position='0 75 0' orientation='1 0 0 -1.5708'></Viewpoint>
+      <PointLight location='0 0 0' color='1 1 0.9' intensity='1.2' ambientIntensity='0.15' radius='200'></PointLight>
+      <Transform DEF='Sun'>
+      <Shape><Appearance><Material diffuseColor='0 0 0' emissiveColor='1 0.8 0.15'></Material></Appearance><Sphere radius='3'></Sphere></Shape>
+      </Transform>
+      <Transform rotation='1 0 0 1.5708'>
+      <Shape><Appearance><Material emissiveColor='0.25 0.25 0.3' diffuseColor='0 0 0'></Material></Appearance><Circle2D radius='5'></Circle2D></Shape>
+      <Shape><Appearance><Material emissiveColor='0.25 0.25 0.3' diffuseColor='0 0 0'></Material></Appearance><Circle2D radius='7'></Circle2D></Shape>
+      <Shape><Appearance><Material emissiveColor='0.25 0.25 0.3' diffuseColor='0 0 0'></Material></Appearance><Circle2D radius='9.5'></Circle2D></Shape>
+      <Shape><Appearance><Material emissiveColor='0.25 0.25 0.3' diffuseColor='0 0 0'></Material></Appearance><Circle2D radius='12'></Circle2D></Shape>
+      <Shape><Appearance><Material emissiveColor='0.25 0.25 0.3' diffuseColor='0 0 0'></Material></Appearance><Circle2D radius='16'></Circle2D></Shape>
+      <Shape><Appearance><Material emissiveColor='0.25 0.25 0.3' diffuseColor='0 0 0'></Material></Appearance><Circle2D radius='21'></Circle2D></Shape>
+      <Shape><Appearance><Material emissiveColor='0.25 0.25 0.3' diffuseColor='0 0 0'></Material></Appearance><Circle2D radius='25'></Circle2D></Shape>
+      <Shape><Appearance><Material emissiveColor='0.25 0.25 0.3' diffuseColor='0 0 0'></Material></Appearance><Circle2D radius='28.5'></Circle2D></Shape>
+      </Transform>
+      <Transform DEF='MercuryOrbit'>
+      <Transform translation='5 0 0'>
+      <Shape><Appearance><Material diffuseColor='0.6 0.57 0.55'></Material></Appearance><Sphere radius='0.25'></Sphere></Shape>
+      </Transform>
+      </Transform>
+      <Transform DEF='VenusOrbit'>
+      <Transform translation='7 0 0'>
+      <Shape><Appearance><Material diffuseColor='0.9 0.75 0.5'></Material></Appearance><Sphere radius='0.45'></Sphere></Shape>
+      </Transform>
+      </Transform>
+      <Transform DEF='EarthOrbit'>
+      <Transform translation='9.5 0 0'>
+      <Shape><Appearance><Material diffuseColor='0.2 0.45 0.9'></Material></Appearance><Sphere radius='0.5'></Sphere></Shape>
+      <Transform DEF='MoonOrbit'>
+      <Transform translation='1.1 0 0'>
+      <Shape><Appearance><Material diffuseColor='0.75 0.75 0.75'></Material></Appearance><Sphere radius='0.13'></Sphere></Shape>
+      </Transform>
+      </Transform>
+      </Transform>
+      </Transform>
+      <Transform DEF='MarsOrbit'>
+      <Transform translation='12 0 0'>
+      <Shape><Appearance><Material diffuseColor='0.85 0.35 0.2'></Material></Appearance><Sphere radius='0.35'></Sphere></Shape>
+      </Transform>
+      </Transform>
+      <Transform DEF='JupiterOrbit'>
+      <Transform translation='16 0 0'>
+      <Shape><Appearance><Material diffuseColor='0.85 0.65 0.45'></Material></Appearance><Sphere radius='1.4'></Sphere></Shape>
+      </Transform>
+      </Transform>
+      <Transform DEF='SaturnOrbit'>
+      <Transform translation='21 0 0'>
+      <Shape><Appearance><Material diffuseColor='0.9 0.8 0.55'></Material></Appearance><Sphere radius='1.2'></Sphere></Shape>
+      <Transform rotation='1 0 0 0.45'>
+      <Shape><Appearance><Material diffuseColor='0.8 0.7 0.5' transparency='0.35'></Material></Appearance><Cylinder radius='2.4' height='0.04' top='true' bottom='true'></Cylinder></Shape>
+      </Transform>
+      </Transform>
+      </Transform>
+      <Transform DEF='UranusOrbit'>
+      <Transform translation='25 0 0'>
+      <Shape><Appearance><Material diffuseColor='0.6 0.85 0.9'></Material></Appearance><Sphere radius='0.8'></Sphere></Shape>
+      </Transform>
+      </Transform>
+      <Transform DEF='NeptuneOrbit'>
+      <Transform translation='28.5 0 0'>
+      <Shape><Appearance><Material diffuseColor='0.2 0.3 0.85'></Material></Appearance><Sphere radius='0.8'></Sphere></Shape>
+      </Transform>
+      </Transform>
+      <TimeSensor DEF='MercuryClock' cycleInterval='6' loop='true'></TimeSensor>
+      <TimeSensor DEF='VenusClock' cycleInterval='10' loop='true'></TimeSensor>
+      <TimeSensor DEF='EarthClock' cycleInterval='14' loop='true'></TimeSensor>
+      <TimeSensor DEF='MoonClock' cycleInterval='3' loop='true'></TimeSensor>
+      <TimeSensor DEF='MarsClock' cycleInterval='22' loop='true'></TimeSensor>
+      <TimeSensor DEF='JupiterClock' cycleInterval='45' loop='true'></TimeSensor>
+      <TimeSensor DEF='SaturnClock' cycleInterval='65' loop='true'></TimeSensor>
+      <TimeSensor DEF='UranusClock' cycleInterval='90' loop='true'></TimeSensor>
+      <TimeSensor DEF='NeptuneClock' cycleInterval='120' loop='true'></TimeSensor>
+      <OrientationInterpolator DEF='MercuryPath' key='0 0.25 0.5 0.75 1' keyValue='0 1 0 0  0 1 0 1.5708  0 1 0 3.1416  0 1 0 4.7124  0 1 0 6.2832'></OrientationInterpolator>
+      <OrientationInterpolator DEF='VenusPath' key='0 0.25 0.5 0.75 1' keyValue='0 1 0 0  0 1 0 1.5708  0 1 0 3.1416  0 1 0 4.7124  0 1 0 6.2832'></OrientationInterpolator>
+      <OrientationInterpolator DEF='EarthPath' key='0 0.25 0.5 0.75 1' keyValue='0 1 0 0  0 1 0 1.5708  0 1 0 3.1416  0 1 0 4.7124  0 1 0 6.2832'></OrientationInterpolator>
+      <OrientationInterpolator DEF='MoonPath' key='0 0.25 0.5 0.75 1' keyValue='0 1 0 0  0 1 0 1.5708  0 1 0 3.1416  0 1 0 4.7124  0 1 0 6.2832'></OrientationInterpolator>
+      <OrientationInterpolator DEF='MarsPath' key='0 0.25 0.5 0.75 1' keyValue='0 1 0 0  0 1 0 1.5708  0 1 0 3.1416  0 1 0 4.7124  0 1 0 6.2832'></OrientationInterpolator>
+      <OrientationInterpolator DEF='JupiterPath' key='0 0.25 0.5 0.75 1' keyValue='0 1 0 0  0 1 0 1.5708  0 1 0 3.1416  0 1 0 4.7124  0 1 0 6.2832'></OrientationInterpolator>
+      <OrientationInterpolator DEF='SaturnPath' key='0 0.25 0.5 0.75 1' keyValue='0 1 0 0  0 1 0 1.5708  0 1 0 3.1416  0 1 0 4.7124  0 1 0 6.2832'></OrientationInterpolator>
+      <OrientationInterpolator DEF='UranusPath' key='0 0.25 0.5 0.75 1' keyValue='0 1 0 0  0 1 0 1.5708  0 1 0 3.1416  0 1 0 4.7124  0 1 0 6.2832'></OrientationInterpolator>
+      <OrientationInterpolator DEF='NeptunePath' key='0 0.25 0.5 0.75 1' keyValue='0 1 0 0  0 1 0 1.5708  0 1 0 3.1416  0 1 0 4.7124  0 1 0 6.2832'></OrientationInterpolator>
+      <ROUTE fromNode='MercuryClock' fromField='fraction_changed' toNode='MercuryPath' toField='set_fraction'></ROUTE>
+      <ROUTE fromNode='MercuryPath' fromField='value_changed' toNode='MercuryOrbit' toField='rotation'></ROUTE>
+      <ROUTE fromNode='VenusClock' fromField='fraction_changed' toNode='VenusPath' toField='set_fraction'></ROUTE>
+      <ROUTE fromNode='VenusPath' fromField='value_changed' toNode='VenusOrbit' toField='rotation'></ROUTE>
+      <ROUTE fromNode='EarthClock' fromField='fraction_changed' toNode='EarthPath' toField='set_fraction'></ROUTE>
+      <ROUTE fromNode='EarthPath' fromField='value_changed' toNode='EarthOrbit' toField='rotation'></ROUTE>
+      <ROUTE fromNode='MoonClock' fromField='fraction_changed' toNode='MoonPath' toField='set_fraction'></ROUTE>
+      <ROUTE fromNode='MoonPath' fromField='value_changed' toNode='MoonOrbit' toField='rotation'></ROUTE>
+      <ROUTE fromNode='MarsClock' fromField='fraction_changed' toNode='MarsPath' toField='set_fraction'></ROUTE>
+      <ROUTE fromNode='MarsPath' fromField='value_changed' toNode='MarsOrbit' toField='rotation'></ROUTE>
+      <ROUTE fromNode='JupiterClock' fromField='fraction_changed' toNode='JupiterPath' toField='set_fraction'></ROUTE>
+      <ROUTE fromNode='JupiterPath' fromField='value_changed' toNode='JupiterOrbit' toField='rotation'></ROUTE>
+      <ROUTE fromNode='SaturnClock' fromField='fraction_changed' toNode='SaturnPath' toField='set_fraction'></ROUTE>
+      <ROUTE fromNode='SaturnPath' fromField='value_changed' toNode='SaturnOrbit' toField='rotation'></ROUTE>
+      <ROUTE fromNode='UranusClock' fromField='fraction_changed' toNode='UranusPath' toField='set_fraction'></ROUTE>
+      <ROUTE fromNode='UranusPath' fromField='value_changed' toNode='UranusOrbit' toField='rotation'></ROUTE>
+      <ROUTE fromNode='NeptuneClock' fromField='fraction_changed' toNode='NeptunePath' toField='set_fraction'></ROUTE>
+      <ROUTE fromNode='NeptunePath' fromField='value_changed' toNode='NeptuneOrbit' toField='rotation'></ROUTE>
+    </scene>
+  </x3d>
+</body>
+</html>
