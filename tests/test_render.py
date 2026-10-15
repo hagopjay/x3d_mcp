@@ -196,3 +196,22 @@ def test_image_result_attaches_warning_only_when_needed():
     assert isinstance(blank, list) and len(blank) == 2
     ok = _image_result(_png((320, 180), (10, 10, 12), rect=(100, 50, 220, 130)))
     assert not isinstance(ok, list)
+
+
+# ---- X_ITE script URL: pinned by default, overridable for offline hosts ----
+
+def test_xite_url_is_pinned_not_latest():
+    from tools.render import _xite_js_url, _XITE_VERSION
+    url = _xite_js_url()
+    assert "@latest" not in url
+    assert f"x_ite@{_XITE_VERSION}/" in url
+    assert url.endswith("/x_ite.min.js")
+
+
+def test_xite_url_env_override(monkeypatch):
+    from tools.render import _xite_js_url, _xite_page, _XITE_ENV
+    monkeypatch.setenv(_XITE_ENV, "http://127.0.0.1:3000/x_ite.min.js")
+    assert _xite_js_url() == "http://127.0.0.1:3000/x_ite.min.js"
+    assert 'src="http://127.0.0.1:3000/x_ite.min.js"' in _xite_page(320, 240)
+    monkeypatch.setenv(_XITE_ENV, "   ")
+    assert "jsdelivr" in _xite_js_url()          # blank override falls back

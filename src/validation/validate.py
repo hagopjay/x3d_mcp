@@ -1,36 +1,158 @@
 """X3D validation pipeline.
 
-Validates X3D content against the X3D 4.1 XSD schema using lxml,
-and X3D JSON content against the Web3D Consortium X3D 4.0 JSON Schema
-using jsonschema (Draft 2020-12).
+Validates X3D XML content against the XSD schema matching the document's
+declared `version` (X3D 4.0 ratified or X3D 4.1 draft) using lxml, and X3D
+JSON content against the Web3D Consortium X3D 4.0 JSON Schema using
+jsonschema (Draft 2020-12).
 """
 
 import json
+import re
 from pathlib import Path
 from lxml import etree
 from jsonschema import Draft202012Validator
 
 
 SCHEMAS_DIR = Path(__file__).resolve().parent / "schemas"
-XSD_PATH = SCHEMAS_DIR / "x3d-4.1.xsd"
 JSON_SCHEMA_PATH = SCHEMAS_DIR / "x3d-4.0-JSONSchema.json"
+
+# Schema used when the document declares no version or an unknown one.
+DEFAULT_XSD_VERSION = "4.1"
+
+# Bundled XSD schemas, keyed by the X3D `version` attribute they validate.
+# X3D 3.x documents are checked against 4.0: X3D 4 is a superset of 3.3
+# (ISO/IEC 19775-1:2023 clause 4.3.1), so a 3.x document that passes is
+# conformant, and the 3.x schemas are not bundled.
+XSD_PATHS = {
+    "4.0": SCHEMAS_DIR / "x3d-4.0.xsd",
+    "4.1": SCHEMAS_DIR / "x3d-4.1.xsd",
+}
+_LEGACY_VERSIONS = {"3.0", "3.1", "3.2", "3.3"}
+
+# Kept for callers that import the old name; always the default schema.
+XSD_PATH = XSD_PATHS[DEFAULT_XSD_VERSION]
 
 # XSI namespace attribute that x3d.py adds -- must be stripped before validation
 XSI_NS = "https://www.w3.org/2001/XMLSchema-instance"
 
-_schema = None
+_schemas: dict[str, etree.XMLSchema] = {}
 _json_validator: Draft202012Validator | None = None
+_version_nodes: dict[str, set[str]] | None = None
 
 
-def _get_schema() -> etree.XMLSchema:
-    """Load and cache the X3D 4.1 XSD schema."""
-    global _schema
-    if _schema is not None:
-        return _schema
+def resolve_xsd_version(declared: str | None) -> tuple[str, str | None]:
+    """Map a document's `version` attribute to a bundled schema version.
+
+    Returns (schema_version, note). `note` explains any substitution so the
+    caller can surface it; it is None when the declared version has its own
+    bundled schema.
+    """
+    if declared in XSD_PATHS:
+        return declared, None
+    if declared in _LEGACY_VERSIONS:
+        return "4.0", (
+            f"X3D {declared} has no bundled schema; validated against X3D 4.0, "
+            f"of which X3D {declared} is a subset."
+        )
+    if declared is None or declared == "":
+        return DEFAULT_XSD_VERSION, (
+            f"No version attribute; validated against X3D {DEFAULT_XSD_VERSION}."
+        )
+    return DEFAULT_XSD_VERSION, (
+        f"Unknown version '{declared}'; validated against X3D {DEFAULT_XSD_VERSION}."
+    )
+
+
+def _get_schema(version: str = DEFAULT_XSD_VERSION) -> etree.XMLSchema:
+    """Load and cache the X3D XSD schema for a bundled version ("4.0" or "4.1")."""
+    schema = _schemas.get(version)
+    if schema is not None:
+        return schema
     # Parse with the schemas dir as base so includes resolve correctly
-    schema_doc = etree.parse(str(XSD_PATH))
-    _schema = etree.XMLSchema(schema_doc)
-    return _schema
+    schema_doc = etree.parse(str(XSD_PATHS[version]))
+    schema = etree.XMLSchema(schema_doc)
+    _schemas[version] = schema
+    return schema
+
+
+def _nodes_by_version() -> dict[str, set[str]]:
+    """Concrete node names per bundled X3DUOM version, for version hints."""
+    global _version_nodes
+    if _version_nodes is None:
+        from x3d_utils.x3duom import X3DUOM
+        _version_nodes = {
+            v: set(X3DUOM(SCHEMAS_DIR / f"X3dUnifiedObjectModel-{v}.xml").get_concrete_nodes())
+            for v in XSD_PATHS
+        }
+    return _version_nodes
+
+
+def _version_hints(doc: etree._Element, schema_version: str) -> list[str]:
+    """Explain failures caused by nodes that only exist in a later X3D version.
+
+    A model trained on mixed-era examples reaches for 4.1 nodes (EnvironmentLight,
+    GaussianSplats, ...) in a document declaring version 4.0. The XSD only says
+    "element not expected"; this names the node and the version that has it.
+    """
+    nodes = _nodes_by_version()
+    known_here = nodes[schema_version]
+    hints = []
+    seen: set[str] = set()
+    for el in doc.iter():
+        tag = el.tag if isinstance(el.tag, str) else ""
+        if "}" in tag:
+            tag = tag.split("}", 1)[1]
+        if not tag or tag in known_here or tag in seen:
+            continue
+        later = sorted(v for v, names in nodes.items() if tag in names and v > schema_version)
+        if later:
+            seen.add(tag)
+            hints.append(
+                f"Node '{tag}' is not in X3D {schema_version}; it was added in X3D "
+                f"{later[0]}. Declare version='{later[0]}' or remove the node."
+            )
+    return hints
+
+
+_MISSING_CHILD_RE = re.compile(r"Element '([A-Za-z0-9_]+)': Missing child element")
+
+
+def _geolod_hint(el: etree._Element) -> str:
+    geo_system = el.get("geoSystem", '"GD" "WE"')
+    center = el.get("center", "0 0 0")
+    return (
+        f"GeoLOD at line {el.sourceline}: the bundled XSD's content model is "
+        "(rootNode children, GeoOrigin, rootNode children), so any inline rootNode "
+        "child requires a GeoOrigin sibling, although ISO/IEC 19775-1 makes geoOrigin "
+        "optional. Either add <GeoOrigin containerField='geoOrigin' "
+        f"geoSystem='{geo_system}' geoCoords='{center}'/> inside the GeoLOD (a "
+        "GeoOrigin re-anchors the local frame, so give every geospatial node the same "
+        "one by USE), or remove the inline children and load the low-detail model "
+        "through rootUrl."
+    )
+
+
+# Elements whose XSD "Missing child element(s)" error misleads: lxml lists only
+# the first ten expected names, so the one that matters can be left out.
+_CONTENT_MODEL_HINTS = {"GeoLOD": _geolod_hint}
+
+
+def _content_model_hints(doc: etree._Element, errors: list[str]) -> list[str]:
+    """Explain a truncated 'Missing child element(s)' error for known elements."""
+    hints: list[str] = []
+    seen: set[str] = set()
+    for err in errors:
+        m = _MISSING_CHILD_RE.search(err)
+        if not m or m.group(1) in seen or m.group(1) not in _CONTENT_MODEL_HINTS:
+            continue
+        seen.add(m.group(1))
+        tag = m.group(1)
+        for el in doc.iter():
+            name = el.tag if isinstance(el.tag, str) else ""
+            if name.split("}", 1)[-1] == tag:
+                hints.append(_CONTENT_MODEL_HINTS[tag](el))
+                break
+    return hints
 
 
 def _strip_xsi(root: etree._Element) -> None:
@@ -45,10 +167,14 @@ def _strip_xsi(root: etree._Element) -> None:
         pass
 
 
-def validate_xml(xml_string: str) -> dict:
-    """Validate X3D XML content against the XSD schema.
+def validate_xml(xml_string: str, version: str | None = None) -> dict:
+    """Validate X3D XML content against the XSD schema for its declared version.
 
-    Returns {"valid": bool, "errors": list[str]}.
+    The schema is chosen from the document's `version` attribute (4.0 ratified,
+    4.1 draft), or from `version` when given, which overrides the document.
+
+    Returns {"valid": bool, "errors": list[str], "schema_version": str} plus
+    "notes" when a substitution or a version hint applies.
     """
     errors = []
 
@@ -61,14 +187,24 @@ def validate_xml(xml_string: str) -> dict:
     # Step 2: Strip xsi attributes that x3d.py adds
     _strip_xsi(doc)
 
-    # Step 3: Validate against XSD
-    schema = _get_schema()
+    # Step 3: Pick the schema the document asks for
+    declared = version if version else doc.get("version")
+    schema_version, note = resolve_xsd_version(declared)
+    notes = [note] if note else []
+
+    # Step 4: Validate against XSD
+    schema = _get_schema(schema_version)
     valid = schema.validate(doc)
     if not valid:
         for entry in schema.error_log:
             errors.append(f"Line {entry.line}: {entry.message}")
+        notes.extend(_version_hints(doc, schema_version))
+        notes.extend(_content_model_hints(doc, errors))
 
-    return {"valid": valid, "errors": errors}
+    result = {"valid": valid, "errors": errors, "schema_version": schema_version}
+    if notes:
+        result["notes"] = notes
+    return result
 
 
 def validate_scene(scene_manager) -> dict:

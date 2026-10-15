@@ -149,9 +149,9 @@ JSON and ClassicVRML encoding uses `x3d.py`'s built-in `.JSON()` and `.VRML()` s
 Four layers, matching the X3D specification's own validation hierarchy:
 
 1. **Type checking at generation time** -- `x3d.py` enforces field types, ranges, and enumerations during scene construction
-2. **XSD validation** -- `lxml.etree.XMLSchema` against `x3d-4.1.xsd` (bundled with companion schemas)
+2. **XSD validation** -- `lxml.etree.XMLSchema` against the bundled schema matching the document's `version` attribute: `x3d-4.0.xsd` for 4.0 (ratified), `x3d-4.1.xsd` for 4.1 (draft) and for documents with no version. X3D 3.x documents are checked against 4.0 (a superset of 3.3). When validation fails because a node exists only in a later version, the result's `notes` name the node and the version that has it (e.g. "EnvironmentLight ... added in X3D 4.1").
 3. **JSON Schema validation** -- `jsonschema.Draft202012Validator` against `x3d-4.0-JSONSchema.json` (Web3D Consortium, 364 `$defs`). Catches misspelled keys (`head`/`meta`/etc.), unknown node names inside `Scene`, missing required fields (`encoding`, `@version`, `@profile`, `Scene`), and wrong-type values. Web3D has not yet published a 4.1 JSON Schema, so the 4.0 schema is bundled in the meantime.
-4. **Semantic checks** -- imperative Python checks for authoring-level bugs XSD cannot express: missing geometry/appearance on Shapes, empty grouping nodes, duplicate DEFs, USE/DEF consistency and USE-before-DEF ordering, wrong or defaulted containerField (with the canonical field suggested), ROUTE field/access-type/type validity (honoring Script and ProtoInstance declared interfaces and the spec's set_X/X_changed aliases), interpolator key/keyValue length mismatches, naming conventions (periods and hyphens in DEF/USE/name values), and missing Viewpoints. Adapted from [niknarra/x3d-mcp](https://github.com/niknarra/x3d-mcp) (Nikhil Narra, Nicholas Polys -- Virginia Tech / Web3D Consortium).
+4. **Semantic checks** -- imperative Python checks for authoring-level bugs XSD cannot express: nodes outside the declared profile and `<component>` statements (ISO/IEC 19775-1 clause 7.2.5; membership comes from the X3DUOM profile and componentInfo data, and the report lists the component statements that would fix it), missing geometry/appearance on Shapes, empty grouping nodes, duplicate DEFs, USE/DEF consistency (a DEF named by a ROUTE, IMPORT or EXPORT counts as used) and USE-before-DEF ordering, wrong or defaulted containerField (with the canonical field suggested), ROUTE field/access-type/type validity (honoring Script and ProtoInstance declared interfaces and the spec's set_X/X_changed aliases), interpolator key/keyValue length mismatches, naming conventions (periods and hyphens in DEF/USE/name values), and missing Viewpoints. Adapted from [niknarra/x3d-mcp](https://github.com/niknarra/x3d-mcp) (Nikhil Narra, Nicholas Polys -- Virginia Tech / Web3D Consortium).
 
 ### X3DUOM as Foundation
 
@@ -242,8 +242,9 @@ x3d_mcp/
 |------|-------------|
 | `validate_x3d` | Validate an X3D document (XML or JSON) against the XSD schema. Accepts inline `content` or a `path` (stdio transport only). Returns pass/fail with detailed error messages. |
 | `validate_current_scene` | Validate the current granular scene -- both the XSD schema check and the semantic checks. |
-| `validate_semantic` | Run semantic checks beyond XSD: Shape completeness, empty groups, duplicate DEFs, USE/DEF consistency and ordering, containerField correctness, ROUTE validity (including Script/ProtoInstance interfaces and set_X/X_changed aliases), interpolator key lengths, naming conventions, missing Viewpoints. Returns a markdown report. |
+| `validate_semantic` | Run semantic checks beyond XSD: profile and component conformance (with the component statements to add), Shape completeness, empty groups, duplicate DEFs, USE/DEF consistency and ordering, containerField correctness, ROUTE validity (including Script/ProtoInstance interfaces and set_X/X_changed aliases), interpolator key lengths, naming conventions, missing Viewpoints. Returns a markdown report. |
 | `autofix_x3d` | Rewrite wrong or defaulted containerField values to the canonical field and return the corrected document. |
+| `repair_x3d` | Apply every fix the validators name and return the repaired document: containerField corrections, a missing profile or version, the version raised to the lowest one that has every node used, the `<component>` statements the profile check asks for, DOCTYPE and schema location updated, the `https` XMLSchema-instance namespace corrected. Returns the list of changes with reasons, what is left for a human (`unfixable`), and the re-validation of the result. |
 
 ### Conversion Tools
 
@@ -403,13 +404,26 @@ Full node reference: [docs/x3d-node-reference.md](docs/x3d-node-reference.md)
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `mcp` | >=1.7 | MCP SDK (FastMCP) |
+| `mcp` | >=1.7,<2 | MCP SDK (FastMCP). The 2.x SDK renamed FastMCP to MCPServer and moved the import path, so the server does not start on it |
 | `x3d` | >=4.0.65.5,<5 | Official X3D scene construction and type validation |
 | `lxml` | >=6.0 | XSD validation, Schematron validation, XSLT transforms |
 | `xmlschema` | >=4.3 | Pure-Python XSD validation (fallback) |
 | `jsonschema` | >=4.26 | JSON Schema validation for X3D JSON encoding |
 | `rdflib` | >=7.0 | SPARQL queries over the bundled X3D Ontology |
 | `playwright` | >=1.40 (optional `[render]` extra) | Headless Chromium for `render_image` / `render_current_scene` |
+| X\_ITE | 16.4.3, pinned, loaded from jsDelivr at render time | WebGL engine behind `render_image`; set `X3D_MCP_XITE_JS` to a locally served `x_ite.min.js` for offline use (see Rendering offline) |
+
+### Rendering offline
+
+`render_image` loads X\_ITE from jsDelivr, pinned to one version so renders do not change under a running server. X\_ITE fetches its component modules lazily relative to that script URL, so on a host without internet access serve the package locally and point the server at it:
+
+```bash
+npm install x_ite@16.4.3
+npx serve node_modules/x_ite/dist          # serves x_ite.min.js and assets/
+export X3D_MCP_XITE_JS=http://127.0.0.1:3000/x_ite.min.js
+```
+
+Any URL that serves `x_ite.min.js` with its `assets/` directory beside it works, including a path on the same server.
 
 ## Docker
 
