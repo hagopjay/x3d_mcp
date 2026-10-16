@@ -1,0 +1,13 @@
+# What playground/deploy.sh leaves out of the Cloud Build upload.
+.git/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+playground/vendor/
+docs/
+dataset/
+evaluation/
+examples/
+output/
+tests/

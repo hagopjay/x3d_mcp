@@ -45,7 +45,8 @@ discovers nodes. Never guess field or containerField names.
 create_node / set_field / add_child / add_route).
 3. VALIDATE -- always BOTH: `validate_x3d` (XSD schema) and `validate_semantic` (the errors that \
 pass the schema but still break rendering -- wrong containerField, USE-before-DEF, broken ROUTEs). \
-validate_semantic names the exact fix; apply it.
+validate_semantic names the exact fix; `repair_x3d` applies all of them (containerField, profile, \
+version, component statements) and returns the repaired document with each change explained.
 4. RENDER and LOOK before declaring done: `render_image(content|path)` returns a PNG you \
 inspect directly; `x3dom_page` gives an interactive browser page. A scene that validates can \
 still be visually wrong (off-camera, unlit, mis-scaled).

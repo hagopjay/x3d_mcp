@@ -1,0 +1,12 @@
+# Used by playground/deploy.sh: builds playground/Dockerfile from the repo root.
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-f", "playground/Dockerfile",
+           "--build-arg", "VALIDATOR_COMMIT=${_COMMIT}",
+           "-t", "${_IMAGE}", "."]
+images: ["${_IMAGE}"]
+substitutions:
+  _IMAGE: ""
+  _COMMIT: "unknown"
+options:
+  logging: CLOUD_LOGGING_ONLY

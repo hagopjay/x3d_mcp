@@ -5,3 +5,5 @@ __pycache__/
 dist/
 build/
 .env
+# X_ITE is fetched at build time (python -m playground.fetch_xite)
+playground/vendor/

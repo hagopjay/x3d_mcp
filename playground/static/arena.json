@@ -1,0 +1,91 @@
+{
+ "source": "Judge bench v2, 13 Oct 2026: 20 scenes, 3 repeats per judge; truth is the XSD check of x3d_mcp 74da0ec. Right = share of parsed answers; judges with under half their answers parseable are left out. Right panel: verdicts that agreed with the validator once its report was shown. Judge numbers are not the writer letters.",
+ "reviewers": [
+  {
+   "name": "Judge 1",
+   "right": 0.967,
+   "missed": 0.0,
+   "parsed": "60/60"
+  },
+  {
+   "name": "Judge 2",
+   "right": 0.926,
+   "missed": 0.167,
+   "parsed": "54/60"
+  },
+  {
+   "name": "Judge 3",
+   "right": 0.883,
+   "missed": 0.233,
+   "parsed": "60/60"
+  },
+  {
+   "name": "Judge 4",
+   "right": 0.867,
+   "missed": 0.2,
+   "parsed": "60/60"
+  },
+  {
+   "name": "Judge 5",
+   "right": 0.732,
+   "missed": 0.077,
+   "parsed": "56/60"
+  },
+  {
+   "name": "Judge 6",
+   "right": 0.717,
+   "missed": 0.433,
+   "parsed": "60/60"
+  },
+  {
+   "name": "Judge 7",
+   "right": 0.61,
+   "missed": 0.276,
+   "parsed": "59/60"
+  }
+ ],
+ "with_report": [
+  {
+   "name": "Judge 1",
+   "agreed": 0.895,
+   "agreed_n": "17/19",
+   "repairs_pass": "8/9"
+  },
+  {
+   "name": "Judge 2",
+   "agreed": 0.95,
+   "agreed_n": "19/20",
+   "repairs_pass": "8/10"
+  },
+  {
+   "name": "Judge 3",
+   "agreed": 1.0,
+   "agreed_n": "20/20",
+   "repairs_pass": "10/10"
+  },
+  {
+   "name": "Judge 4",
+   "agreed": 0.8,
+   "agreed_n": "16/20",
+   "repairs_pass": "8/10"
+  },
+  {
+   "name": "Judge 5",
+   "agreed": 1.0,
+   "agreed_n": "19/19",
+   "repairs_pass": "7/9"
+  },
+  {
+   "name": "Judge 6",
+   "agreed": 1.0,
+   "agreed_n": "20/20",
+   "repairs_pass": "7/10"
+  },
+  {
+   "name": "Judge 7",
+   "agreed": 1.0,
+   "agreed_n": "20/20",
+   "repairs_pass": "7/10"
+  }
+ ]
+}
