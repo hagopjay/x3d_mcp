@@ -910,20 +910,35 @@ def _find_scene(root: etree._Element) -> etree._Element | None:
 _PARSER = etree.XMLParser(huge_tree=True, resolve_entities=False, no_network=True)
 
 
+class NoSceneError(ValueError):
+    """The document parsed but has no Scene element."""
+
+
+def semantic_diagnostics(xml_string: str) -> list[Diagnostic]:
+    """Run every semantic check and return the diagnostics as data.
+
+    The structured counterpart of validate_semantic, for callers that render
+    or count the findings themselves. Raises etree.XMLSyntaxError when the
+    document is not well-formed and NoSceneError when it has no Scene.
+    """
+    root = etree.fromstring(xml_string.encode("utf-8"), _PARSER)
+    scene = _find_scene(root)
+    if scene is None:
+        raise NoSceneError("No Scene element found in the X3D document.")
+    diagnostics: list[Diagnostic] = _check_profile_components(root)
+    for check_fn in _ALL_CHECKS:
+        diagnostics.extend(check_fn(scene))
+    return diagnostics
+
+
 def validate_semantic(xml_string: str) -> str:
     """Run all semantic checks on an X3D XML string and return a markdown report."""
     try:
-        root = etree.fromstring(xml_string.encode("utf-8"), _PARSER)
+        all_diagnostics = semantic_diagnostics(xml_string)
     except etree.XMLSyntaxError as e:
         return f"# Semantic Check: Parse Error\n\n{e}"
-
-    scene = _find_scene(root)
-    if scene is None:
-        return "# Semantic Check: No Scene\n\nNo Scene element found in the X3D document."
-
-    all_diagnostics: list[Diagnostic] = _check_profile_components(root)
-    for check_fn in _ALL_CHECKS:
-        all_diagnostics.extend(check_fn(scene))
+    except NoSceneError as e:
+        return f"# Semantic Check: No Scene\n\n{e}"
 
     if not all_diagnostics:
         return (
