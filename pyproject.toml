@@ -27,5 +27,15 @@ render = [
     "pillow>=10",  # blank/near-empty frame detection; optional at runtime
 ]
 
+# The Accountability Playground web service (playground/): Google sign-in and
+# Vertex AI credentials. Firestore is only for running more than one instance.
+playground = [
+    "google-auth>=2.30",
+    "requests>=2.31",
+]
+playground-firestore = [
+    "google-cloud-firestore>=2.16",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

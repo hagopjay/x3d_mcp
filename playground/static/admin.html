@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Playground Admin</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><b>Playground admin</b><span>Who gets in, how much they can run, and what happened.</span></div>
+  <div class="grow"></div>
+  <span class="badge">validator <span id="b-validator">…</span></span>
+  <span class="badge">X_ITE <span id="b-xite">…</span></span>
+  <span class="badge" id="b-store">…</span>
+  <span class="badge" id="b-updated">…</span>
+  <a class="chip-btn" href="/">Playground</a>
+</header>
+<div class="admin-grid">
+  <div class="panel" style="grid-column:1/-1">
+    <div class="row"><h3 class="grow" style="margin:0">Live, refreshed every 10 s</h3>
+      <label class="toggle"><input type="checkbox" id="paused"> Pause all model runs</label></div>
+    <div class="stat" id="stats" style="margin-top:8px"></div>
+    <svg id="spark" viewBox="0 0 600 70" style="width:100%;height:70px;margin-top:10px"></svg>
+    <div class="tiny faint">Runs per hour, last 48 hours, from the 60 most recent runs. Costs are estimates from token counts at rounded-up prices.</div>
+  </div>
+
+  <div class="panel">
+    <h3>Who gets in</h3>
+    <div class="field"><label class="lbl">Domains: one per line. <code>vt.edu</code> admits any verified address at vt.edu or a subdomain.</label><textarea id="domains" rows="4" class="code"></textarea></div>
+    <div class="field"><label class="lbl">Addresses: one per line</label><textarea id="emails" rows="5" class="code"></textarea></div>
+    <div class="field"><label class="lbl">Blocked addresses or domains, checked first</label><textarea id="blocked" rows="2" class="code"></textarea></div>
+    <div class="field"><label class="lbl">Admins (this page), in addition to the deploy setting</label><textarea id="admins" rows="2" class="code"></textarea></div>
+    <div class="field"><label class="lbl">Google OAuth client ID (turns on Sign in with Google)</label><input type="text" id="oauth" placeholder="…apps.googleusercontent.com"></div>
+    <button class="go alt" id="save-access">Save who gets in</button>
+  </div>
+
+  <div class="panel">
+    <h3>Limits and writers</h3>
+    <div id="limits" class="kv" style="grid-template-columns: 1fr 120px; gap: 6px 10px"></div>
+    <div class="field"><label class="lbl">Writers switched on</label><div id="writers-on" class="row"></div></div>
+    <button class="go alt" id="save-limits">Save limits and writers</button>
+    <div class="tiny faint" style="margin-top:6px">Per-person limits apply to each Google address and to each pass; a pass can carry its own.</div>
+  </div>
+
+  <div class="panel">
+    <h3>Passes (links for people without a listed address)</h3>
+    <div class="row"><input type="text" id="p-label" placeholder="Who is it for (shown here only)" style="flex:2"><input type="text" id="p-email" placeholder="their address (optional)" style="flex:2"></div>
+    <div class="row" style="margin-top:6px">
+      <label class="small muted">days <input type="number" id="p-days" value="30" min="0" style="width:70px"></label>
+      <label class="small muted">per hour <input type="number" id="p-hour" placeholder="default" style="width:80px"></label>
+      <label class="small muted">per day <input type="number" id="p-day" placeholder="default" style="width:80px"></label>
+      <label class="toggle small"><input type="checkbox" id="p-admin"> admin</label>
+    </div>
+    <button class="go alt" id="make-pass">Create a pass link</button>
+    <div id="new-pass" class="small mono" style="margin-top:8px;word-break:break-all"></div>
+    <div class="scroll" style="margin-top:8px"><table class="f" id="passes"></table></div>
+  </div>
+
+  <div class="panel">
+    <h3>Writers: how the loop is doing</h3>
+    <table class="f" id="by-writer"></table>
+    <div class="tiny faint" style="margin-top:6px">From the 60 most recent runs. First = draft 1 passed the validator; final = the loop's last draft passed.</div>
+  </div>
+
+  <div class="panel" style="grid-column:1/-1">
+    <h3>Recent runs</h3>
+    <div class="scroll"><table class="f" id="runs"></table></div>
+  </div>
+  <div class="panel">
+    <h3>People</h3>
+    <div class="scroll"><table class="f" id="users"></table></div>
+  </div>
+  <div class="panel">
+    <div class="row"><h3 class="grow" style="margin:0">Access and abuse log</h3><label class="toggle small"><input type="checkbox" id="only-denied"> refusals only</label></div>
+    <div class="scroll" style="margin-top:6px"><table class="f" id="events"></table></div>
+  </div>
+</div>
+<div class="toast hidden" id="toast"></div>
+<script src="/static/admin.js"></script>
+</body>
+</html>

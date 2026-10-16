@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accountability Playground</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <b>X3D Accountability Playground</b>
+    <span>X3D is the 3D format an AI can be held accountable to.</span>
+  </div>
+  <div class="grow"></div>
+  <span class="badge" title="The validator behind every verdict on this page"><i style="background:var(--xsd)"></i>validator <span id="b-validator">…</span></span>
+  <span class="badge" title="The X3D browser that renders every scene"><i style="background:var(--browser)"></i>X_ITE <span id="b-xite">…</span></span>
+  <span class="meter small" title="Your runs this hour"><span class="muted tiny" id="m-hour">hour</span><span class="bar"><span id="m-hour-bar" style="width:0"></span></span></span>
+  <span class="meter small" title="Your runs today"><span class="muted tiny" id="m-day">day</span><span class="bar"><span id="m-day-bar" style="width:0"></span></span></span>
+  <span class="badge" id="who">…</span>
+  <a class="chip-btn hidden" id="admin-link" href="/admin">Admin</a>
+  <button class="chip-btn" id="signout">Sign out</button>
+</header>
+
+<main class="grid">
+  <!-- left: what to run -->
+  <section class="col-left">
+    <div class="panel">
+      <div class="tabs" role="tablist">
+        <button class="on" data-mode="prompt">Prompt</button>
+        <button data-mode="paste">Paste X3D</button>
+        <button data-mode="break">Break it</button>
+      </div>
+
+      <div data-pane="prompt">
+        <textarea id="prompt" rows="5" placeholder="Describe a scene. A model writes it as X3D; the validator says exactly what is wrong; the model repairs; your browser shows it."></textarea>
+        <div class="row small muted"><span id="pchars">0</span>/<span id="pmax">1200</span><span class="grow"></span><span class="faint">Ctrl+Enter runs</span></div>
+        <div class="examples" id="examples"></div>
+      </div>
+
+      <div data-pane="paste" class="hidden">
+        <textarea id="paste" class="code" rows="12" placeholder="Paste an X3D (XML) document. Validation is free and calls no model."></textarea>
+        <div class="row" style="margin-top:6px">
+          <select id="paste-example" style="flex:1"><option value="">Load a broken example…</option></select>
+        </div>
+        <button class="go alt" id="validate-btn">Validate only (no model)</button>
+      </div>
+
+      <div data-pane="break" class="hidden">
+        <p class="small muted" style="margin:0 0 8px">Take the current scene, inject one known defect, and see which test catches it. Green-edged ones leave the scene <b>valid</b>: only the browser can tell.</p>
+        <div class="ops" id="ops"></div>
+        <div class="small muted" style="margin-top:8px" id="break-score">Caught this session: validator 0 of 0, browser 0 of 0.</div>
+      </div>
+
+      <div class="field" id="writer-field">
+        <label class="lbl">Writer (the model that writes and repairs)</label>
+        <div class="writers" id="writers"></div>
+      </div>
+      <div class="field row">
+        <div class="grow">
+          <label class="lbl">Model repairs</label>
+          <div class="seg" id="repairs"><button data-v="0">0</button><button data-v="1">1</button><button class="on" data-v="2">2</button><button data-v="3">3</button></div>
+        </div>
+        <div>
+          <label class="lbl">X3D version</label>
+          <div class="seg" id="version"><button class="on" data-v="4.0">4.0</button><button data-v="4.1">4.1</button></div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="toggle"><input type="checkbox" id="autofix" checked> The validator applies its own exact fixes first</label>
+        <label class="toggle" style="margin-top:6px"><input type="checkbox" id="judge-on" checked> Judge alone: a model from another family reviews draft 1 without the validator</label>
+        <label class="toggle" style="margin-top:6px"><input type="checkbox" id="auto-visible" checked> Close the loop: if the browser sees nothing, ask for one visibility repair</label>
+      </div>
+      <button class="go" id="run-btn">Run the loop</button>
+      <div class="small muted" style="margin-top:6px" id="paused-note"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Your recent runs</h3>
+      <div id="history" class="scroll"><div class="empty">No runs yet.</div></div>
+    </div>
+  </section>
+
+  <!-- middle: the loop -->
+  <section class="col-mid">
+    <div class="panel loop">
+      <div class="row"><h3 class="grow" style="margin:0">The loop, live</h3><span class="small mono muted" id="run-id"></span></div>
+      <svg viewBox="0 0 860 190" id="loopsvg" aria-label="The accountability loop">
+        <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5d6579"/></marker></defs>
+        <path class="edge" id="e-wv" d="M150,70 H205" marker-end="url(#ah)"/>
+        <path class="edge" id="e-vf" d="M345,70 H400" marker-end="url(#ah)"/>
+        <path class="edge" id="e-fr" d="M540,70 H595" marker-end="url(#ah)"/>
+        <path class="edge" id="e-rv" d="M665,95 V150 H275 V97" marker-end="url(#ah)"/>
+        <path class="edge" id="e-vb" d="M275,43 V18 H770 V43" marker-end="url(#ah)"/>
+        <path class="edge" id="e-wj" d="M80,97 V150 H40 V160" />
+        <text class="elabel" id="l-vf" x="350" y="62"></text>
+        <text class="elabel" id="l-rv" x="420" y="166">defects go back to the writer, exactly as reported</text>
+        <text class="elabel" id="l-vb" x="420" y="13" text-anchor="middle">pass: the browser renders it</text>
+        <g class="st model" id="s-write"><rect x="10" y="43" width="140" height="54" rx="9"/><text x="80" y="66" text-anchor="middle">1 · Writer writes</text><text class="sub" x="80" y="84" text-anchor="middle" id="s-write-sub">model</text></g>
+        <g class="st val" id="s-validate"><rect x="205" y="43" width="140" height="54" rx="9"/><text x="275" y="66" text-anchor="middle">2 · Validator checks</text><text class="sub" x="275" y="84" text-anchor="middle" id="s-validate-sub">XML · XSD · semantic</text></g>
+        <g class="st fixs" id="s-fix"><rect x="400" y="43" width="140" height="54" rx="9"/><text x="470" y="66" text-anchor="middle">3 · Validator fixes</text><text class="sub" x="470" y="84" text-anchor="middle" id="s-fix-sub">exact, mechanical</text></g>
+        <g class="st model" id="s-repair"><rect x="595" y="43" width="140" height="54" rx="9"/><text x="665" y="66" text-anchor="middle">4 · Writer repairs</text><text class="sub" x="665" y="84" text-anchor="middle" id="s-repair-sub">from the report</text></g>
+        <g class="st br" id="s-browser"><rect x="745" y="43" width="105" height="54" rx="9"/><text x="797" y="66" text-anchor="middle">5 · Browser</text><text class="sub" x="797" y="84" text-anchor="middle" id="s-browser-sub">visible?</text></g>
+        <g class="st jd" id="s-judge"><rect x="10" y="160" width="190" height="26" rx="7"/><text x="105" y="178" text-anchor="middle" id="s-judge-t">Judge alone (no validator)</text></g>
+      </svg>
+      <div class="legend">
+        <span><i style="background:var(--model)"></i>a model acted</span>
+        <span><i style="background:var(--fix)"></i>the validator acted</span>
+        <span><i style="background:var(--xml)"></i>XML</span><span><i style="background:var(--xsd)"></i>XSD schema</span>
+        <span><i style="background:var(--sem)"></i>semantic</span><span><i style="background:var(--browser)"></i>browser</span>
+        <span><i style="background:var(--judge)"></i>judge</span>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Every step, with what changed and who changed it</h3>
+      <div class="steps" id="steps"><div class="empty">Run the loop to see each draft, the exact defects, and each repair.</div></div>
+    </div>
+    <div class="panel">
+      <div class="row"><h3 class="grow" style="margin:0">Judge arena: would a model alone have caught it?</h3></div>
+      <div id="judge-live" class="small muted" style="margin:8px 0 10px">The live judge appears here after a run.</div>
+      <div class="row" style="align-items:flex-start;gap:18px">
+        <div class="grow" style="min-width:260px">
+          <div class="small muted" style="margin-bottom:6px">Judges alone, 20 scenes × 3 repeats: share of verdicts right, and share of invalid scenes they called valid</div>
+          <div class="bars" id="arena-bars"></div>
+        </div>
+        <div style="min-width:220px;max-width:300px">
+          <div class="small muted" style="margin-bottom:6px">With the validator's report shown</div>
+          <div class="bars" id="arena-b"></div>
+          <div class="tiny faint" style="margin-top:8px" id="arena-src"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- right: what the browser sees -->
+  <section class="col-right">
+    <div class="panel">
+      <div class="row"><h3 class="grow" style="margin:0">What your browser sees</h3><span class="small muted mono" id="view-label"></span></div>
+      <div class="viewer" style="margin-top:8px"><iframe id="viewer" src="/viewer" sandbox="allow-scripts" title="X3D viewer" referrerpolicy="no-referrer"></iframe><div class="ov" id="view-ov">waiting for a scene</div></div>
+      <div class="verdicts">
+        <div class="vtile" id="v-valid"><div class="k">Valid · validator</div><div class="v">—</div><div class="d">XML, XSD, semantic</div></div>
+        <div class="vtile" id="v-visible"><div class="k">Visible · browser</div><div class="v">—</div><div class="d">pixels that differ from the background</div></div>
+      </div>
+      <p class="stage-line">Valid is not the same as visible, and X3D is the only format that gives an AI both tests.</p>
+      <div class="row" style="margin-top:6px">
+        <button class="chip-btn" id="dl-x3d" disabled>Download .x3d</button>
+        <button class="chip-btn" id="dl-report" disabled>Download report</button>
+        <button class="chip-btn" id="copy-receipt" disabled>Copy receipt</button>
+        <button class="chip-btn hidden" id="fix-visible">Repair for visibility</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Receipt</h3>
+      <dl class="kv" id="receipt"><dt>status</dt><dd class="muted">no run yet</dd></dl>
+    </div>
+    <div class="panel">
+      <h3>Browser messages</h3>
+      <div id="browser-msgs" class="small mono muted">None yet.</div>
+    </div>
+  </section>
+</main>
+<div class="toast hidden" id="toast"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>

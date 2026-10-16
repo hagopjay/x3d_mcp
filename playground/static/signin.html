@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accountability Playground</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<div class="center">
+  <div class="card">
+    <div class="muted small">X3D Accountability Playground · private</div>
+    <h1>Hold an AI to account, in 3D.</h1>
+    <p class="tether">X3D is the 3D format an AI can be held accountable to.</p>
+    <div class="loopline"><span>model writes</span><span>validator says exactly what is wrong</span><span>model repairs</span><span>your browser shows it</span></div>
+    <div id="google" class="hidden">
+      <p class="small muted">Sign in with your Google account. Addresses on the owner's list (for example a whole university domain) get in at once.</p>
+      <div id="gbtn"></div>
+    </div>
+    <p class="small muted" id="nogoogle">Open the pass link the owner sent you to sign in.</p>
+    <p class="small" id="denied" style="color:var(--fail)"></p>
+    <p class="tiny faint" style="margin-top:18px">Runs are logged with the prompt, the scenes and the verdicts so the project can learn from them. Do not type anything private. Runs are rate limited.</p>
+  </div>
+</div>
+<script src="/static/signin.js"></script>
+</body>
+</html>
