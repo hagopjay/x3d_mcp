@@ -104,7 +104,9 @@ async def lifespan(app):
                 "label": "Owner", "email": "", "created": time.time(), "created_by": "bootstrap",
                 "expires": 0, "revoked": False, "admin": True, "per_hour": None, "per_day": None,
                 "uses": 0})
-    asyncio.get_running_loop().run_in_executor(None, _warm)
+    # Before serving: on Cloud Run the CPU is throttled between requests, so a
+    # background warm-up would stall and the first person would pay for it.
+    await asyncio.to_thread(_warm)
     yield
     await S.llm.close()
 
