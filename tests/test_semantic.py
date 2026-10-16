@@ -635,3 +635,66 @@ def test_interpolator_keys_out_of_order_flagged():
 def test_interpolator_repeated_keys_ok():
     xml = _wrap('<ScalarInterpolator key="0 0.5 0.5 1" keyValue="0 1 2 3"/>')
     assert "interpolator-key-order" not in validate_semantic(xml)
+
+
+# ---- spine-mut v2 blind spots: attribute indices and tied array counts ----
+
+@pytest.mark.parametrize("ifs", [
+    '<IndexedFaceSet coordIndex="0 1 2 -1" texCoordIndex="0 1 7 -1"><Coordinate point="0 0 0 1 0 0 0 1 0"/>'
+    '<TextureCoordinate point="0 0 1 0 0 1"/></IndexedFaceSet>',
+    '<IndexedFaceSet colorPerVertex="false" coordIndex="0 1 2 -1" colorIndex="4"><Coordinate point="0 0 0 1 0 0 0 1 0"/>'
+    '<Color color="1 0 0"/></IndexedFaceSet>',
+    '<IndexedFaceSet coordIndex="0 1 2 -1" normalIndex="0 0 9 -1"><Coordinate point="0 0 0 1 0 0 0 1 0"/>'
+    '<Normal vector="0 0 1"/></IndexedFaceSet>',
+])
+def test_attribute_index_past_end_flagged(ifs):
+    assert "index-out-of-range" in validate_semantic(_wrap(f"<Shape>{ifs}</Shape>"))
+
+
+def test_attribute_indices_in_range_ok():
+    xml = _wrap('<Shape><IndexedFaceSet coordIndex="0 1 2 -1" texCoordIndex="0 1 2 -1" colorIndex="0 0 1 -1" '
+                'normalIndex="0 0 0 -1"><Coordinate point="0 0 0 1 0 0 0 1 0"/><TextureCoordinate point="0 0 1 0 0 1"/>'
+                '<ColorRGBA color="1 0 0 1 0 1 0 1"/><Normal vector="0 0 1"/></IndexedFaceSet></Shape>'
+                '<Shape><IndexedLineSet coordIndex="0 1 -1" colorIndex="0 0 -1"><Coordinate point="0 0 0 1 0 0"/>'
+                '<Color DEF="K" color="1 1 1"/></IndexedLineSet></Shape>')
+    assert "index-out-of-range" not in validate_semantic(xml)
+
+
+@pytest.mark.parametrize("node", [
+    '<Shape><ElevationGrid xDimension="3" zDimension="3" height="0 0 0 0 1 0 0 0"/></Shape>',
+    '<Shape><IndexedTriangleSet index="0 1 2 0"><Coordinate point="0 0 0 1 0 0 0 1 0"/></IndexedTriangleSet></Shape>',
+    '<Background skyAngle="0.8 1.4" skyColor="0 0 1 0.5 0.5 1"/>',
+    '<Background groundAngle="1.5" groundColor="0.2 0.2 0.2"/>',
+    '<Background skyAngle="1.2" skyColor="0 0 1"/>',
+])
+def test_tied_array_counts_flagged(node):
+    assert "array-count" in validate_semantic(_wrap(node))
+
+
+def test_tied_array_counts_ok():
+    xml = _wrap('<Shape><ElevationGrid xDimension="2" zDimension="2" height="0 1 1 0"/></Shape>'
+                '<Shape><IndexedTriangleSet index="0 1 2"><Coordinate point="0 0 0 1 0 0 0 1 0"/></IndexedTriangleSet></Shape>'
+                '<Background skyAngle="0.8 1.4" skyColor="0 0 1 0.5 0.5 1 1 1 1" groundAngle="1.5" '
+                'groundColor="0.1 0.1 0.1 0.2 0.2 0.2"/><Background/>')
+    assert "array-count" not in validate_semantic(xml)
+
+
+def test_lod_range_decreasing_flagged():
+    assert "lod-range-order" in validate_semantic(_wrap(
+        '<LOD range="50 10"><Shape><Box/></Shape><Shape><Sphere/></Shape><Group/></LOD>'))
+
+
+def test_lod_range_increasing_ok():
+    assert "lod-range-order" not in validate_semantic(_wrap(
+        '<LOD range="10 50"><Shape><Box/></Shape><Shape><Sphere/></Shape><Group/></LOD>'))
+
+
+def test_extra_sky_colours_only_warn():
+    report = validate_semantic(_wrap('<Background skyColor="0 0 1 0.5 0.5 1 1 1 1"/>'))
+    assert "array-count-extra" in report and "[array-count]" not in report
+
+
+def test_per_face_minus_one_tolerated():
+    xml = _wrap('<Shape><IndexedFaceSet normalPerVertex="false" coordIndex="0 1 2 -1" normalIndex="0 -1">'
+                '<Coordinate point="0 0 0 1 0 0 0 1 0"/><Normal vector="0 0 1"/></IndexedFaceSet></Shape>')
+    assert "index-out-of-range" not in validate_semantic(xml)
