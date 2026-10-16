@@ -559,3 +559,79 @@ def test_metadataset_value_accepts_nested_metadata():
 def test_real_containerfield_mismatch_still_flagged():
     xml = _wrap('<Shape><Box containerField="appearance"/></Shape>')   # Box is not an appearance
     assert "containerfield-type-mismatch" in validate_semantic(xml)
+
+
+# ---- Spec value checks found by the data-spine mutation sweep (spine-mut v1) ----
+
+def test_undeclared_proto_instance_flagged():
+    assert "proto-undeclared" in validate_semantic(_wrap('<ProtoInstance name="Nowhere"/>'))
+
+
+def test_declared_and_extern_protos_not_flagged():
+    xml = _wrap(_PROTO + '<ExternProtoDeclare name="Far" url=\'"far.x3d#Far"\'/>'
+                '<ProtoInstance name="MyBox"/><ProtoInstance name="Far"/>')
+    assert "proto-undeclared" not in validate_semantic(xml)
+
+
+def test_zero_axis_rotation_flagged_only_with_an_angle():
+    assert "rotation-zero-axis" in validate_semantic(_wrap('<Transform rotation="0 0 0 1.57"><Group/></Transform>'))
+    assert "rotation-zero-axis" not in validate_semantic(_wrap('<Transform rotation="0 0 0 0"><Group/></Transform>'))
+    assert "rotation-zero-axis" not in validate_semantic(_wrap('<Transform rotation="0 1 0 1.57"><Group/></Transform>'))
+
+
+def test_cycle_interval_zero_is_a_warning():
+    report = validate_semantic(_wrap('<TimeSensor cycleInterval="0"/>'))
+    assert "cycle-interval-zero" in report and "## Errors" not in report
+
+
+@pytest.mark.parametrize("geom", ['<Box size="-1 2 2"/>', '<Sphere radius="0"/>',
+                                  '<Cylinder height="-2"/>', '<Cone bottomRadius="-1"/>'])
+def test_non_positive_sizes_flagged(geom):
+    assert "value-out-of-range" in validate_semantic(_wrap(f'<Shape>{geom}</Shape>'))
+
+
+def test_positive_sizes_ok():
+    assert "value-out-of-range" not in validate_semantic(_wrap('<Shape><Box size="1 2 3"/></Shape><Shape><Sphere radius="0.5"/></Shape>'))
+
+
+@pytest.mark.parametrize("node", ['<Fog fogType="CLOUDY"/>', '<NavigationInfo transitionType=\'"WARP"\'/>',
+                                  '<Shape><Text string=\'"a"\'><FontStyle justify=\'"CENTRE"\'/></Text></Shape>',
+                                  '<TextureProperties boundaryModeS="WRAP"/>'])
+def test_bad_enum_flagged(node):
+    assert "enum-invalid" in validate_semantic(_wrap(node))
+
+
+def test_good_enums_ok():
+    xml = _wrap('<Fog fogType="EXPONENTIAL"/><NavigationInfo transitionType=\'"ANIMATE" "LINEAR"\'/>'
+                '<Shape><Text string=\'"a"\'><FontStyle justify=\'"MIDDLE" "MIDDLE"\' style="BOLD"/></Text></Shape>')
+    assert "enum-invalid" not in validate_semantic(xml)
+
+
+def test_coord_index_past_end_flagged():
+    xml = _wrap('<Shape><IndexedFaceSet coordIndex="0 1 3 -1"><Coordinate point="0 0 0 1 0 0 0 1 0"/>'
+                '</IndexedFaceSet></Shape>')
+    assert "index-out-of-range" in validate_semantic(xml)
+
+
+def test_coord_index_in_range_and_used_coordinate_ok():
+    xml = _wrap('<Shape><IndexedFaceSet coordIndex="0 1 2 -1"><Coordinate DEF="C" point="0 0 0 1 0 0 0 1 0"/>'
+                '</IndexedFaceSet></Shape><Shape><IndexedLineSet coordIndex="2 0 -1"><Coordinate USE="C"/>'
+                '</IndexedLineSet></Shape>')
+    assert "index-out-of-range" not in validate_semantic(xml)
+
+
+def test_triangle_set_index_cannot_use_minus_one():
+    xml = _wrap('<Shape><IndexedTriangleSet index="0 1 -1"><Coordinate point="0 0 0 1 0 0 0 1 0"/>'
+                '</IndexedTriangleSet></Shape>')
+    assert "index-out-of-range" in validate_semantic(xml)
+
+
+def test_interpolator_keys_out_of_order_flagged():
+    # the pattern found in 13 archive H-Anim files: "0 0.76 0.8 0.82 0.87 0.86 1"
+    xml = _wrap('<OrientationInterpolator key="0 0.87 0.86 1" keyValue="0 1 0 0 0 1 0 1 0 1 0 2 0 1 0 3"/>')
+    assert "interpolator-key-order" in validate_semantic(xml)
+
+
+def test_interpolator_repeated_keys_ok():
+    xml = _wrap('<ScalarInterpolator key="0 0.5 0.5 1" keyValue="0 1 2 3"/>')
+    assert "interpolator-key-order" not in validate_semantic(xml)
