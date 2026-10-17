@@ -539,6 +539,56 @@ def _check_use_before_def(scene: etree._Element) -> list[Diagnostic]:
     return diagnostics
 
 
+def _check_use_type_mismatch(scene: etree._Element) -> list[Diagnostic]:
+    """A USE must be the same node type as the DEF it names.
+
+    A USE reuses the DEF'd node, so `<Sphere USE='Ball'/>` cannot refer to
+    `<Box DEF='Ball'/>`. Neither the XSD nor the other DEF/USE checks catch this:
+    the schema sees a valid empty Sphere, and the DEF exists. Scoping follows the
+    reader: a USE binds to the nearest DEF of that name that precedes it in the
+    same scope (the scene, or one ProtoBody), or, when none precedes it, to the
+    first one after it (use-before-def reports the order separately). Two DEFs
+    that share a name are reported by duplicate-def, not here.
+    """
+    diagnostics: list[Diagnostic] = []
+
+    def scope_of(el: etree._Element):
+        for anc in el.iterancestors():
+            if _local_tag(anc) == "ProtoBody":
+                return anc
+        return None
+
+    defs: dict[tuple, list[tuple[int, str, int | None]]] = {}   # (scope, name) -> [(position, tag, line)]
+    uses: list[tuple[tuple, str, str, int]] = []
+    for pos, el in enumerate(scene.iter()):
+        tag = _local_tag(el)
+        if not tag:
+            continue
+        if el.get("DEF"):
+            defs.setdefault((scope_of(el), el.get("DEF")), []).append((pos, tag, el.sourceline))
+        if el.get("USE"):
+            uses.append(((scope_of(el), el.get("USE")), tag, el.get("USE"), pos))
+
+    reported: set[tuple[str, str, str]] = set()
+    for key, use_tag, name, pos in uses:
+        candidates = defs.get(key)
+        if not candidates:
+            continue          # use-undefined-def covers a name with no DEF
+        preceding = [c for c in candidates if c[0] < pos]
+        _, def_tag, def_line = preceding[-1] if preceding else candidates[0]
+        if def_tag == use_tag or (use_tag, def_tag, name) in reported:
+            continue
+        reported.add((use_tag, def_tag, name))
+        where = f" (line {def_line})" if def_line else ""
+        diagnostics.append(Diagnostic(
+            level="error", check="use-type-mismatch",
+            message=f"USE='{name}' is a {use_tag} but DEF='{name}'{where} is a {def_tag}. A USE reuses the "
+                    f"DEF'd node, so it must be the same node type: write <{def_tag} USE='{name}'/>, or "
+                    f"point this {use_tag} at a DEF that is a {use_tag}.",
+            node_tag=use_tag, def_name=name))
+    return diagnostics
+
+
 # Floats per key for each interpolator's keyValue (None = a variable multiple of
 # the base tuple, e.g. CoordinateInterpolator stores numCoords*3 per key).
 _INTERP_ARITY = {
@@ -881,6 +931,7 @@ _ALL_CHECKS = [
     _check_duplicate_defs,
     _check_def_use_consistency,
     _check_use_before_def,
+    _check_use_type_mismatch,
     _check_containerfield,
     _check_shape_completeness,
     _check_empty_groups,

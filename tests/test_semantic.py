@@ -87,6 +87,64 @@ def test_consistent_def_use():
     assert "unused-def" not in report
 
 
+# ---- USE type must match its DEF ----
+
+def test_use_of_a_different_node_type_is_flagged():
+    xml = _wrap(
+        '<Shape><Appearance DEF="Skin"><Material/></Appearance><Box DEF="Ball"/></Shape>'
+        '<Shape><Appearance USE="Skin"/><Sphere USE="Ball"/></Shape>'
+    )
+    report = validate_semantic(xml)
+    assert "use-type-mismatch" in report
+    assert "USE='Ball' is a Sphere but DEF='Ball'" in report
+    assert "<Box USE='Ball'/>" in report
+
+
+def test_use_of_the_same_node_type_is_not_flagged():
+    xml = _wrap(
+        '<Shape DEF="Master"><Appearance><Material/></Appearance><Box/></Shape>'
+        '<Transform><Shape USE="Master"/></Transform>'
+    )
+    assert "use-type-mismatch" not in validate_semantic(xml)
+
+
+def test_use_type_mismatch_reported_once_per_pair():
+    xml = _wrap(
+        '<Material DEF="M"/>'
+        '<Group><ImageTexture USE="M"/><ImageTexture USE="M"/></Group>'
+    )
+    assert validate_semantic(xml).count("[use-type-mismatch]") == 1
+
+
+def test_use_binds_to_the_nearest_preceding_def_in_scope():
+    # The name is reused for different node types inside two PROTO bodies; each USE sees only its own body.
+    xml = _wrap(
+        '<ProtoDeclare name="A"><ProtoBody><Shape DEF="Part"><Box/></Shape><Shape USE="Part"/></ProtoBody></ProtoDeclare>'
+        '<ProtoDeclare name="B"><ProtoBody><Group DEF="Part"/><Group USE="Part"/></ProtoBody></ProtoDeclare>'
+    )
+    assert "use-type-mismatch" not in validate_semantic(xml)
+
+
+def test_use_type_mismatch_inside_a_proto_body_is_flagged():
+    xml = _wrap(
+        '<ProtoDeclare name="A"><ProtoBody><Shape DEF="Part"><Box/></Shape><Group USE="Part"/></ProtoBody></ProtoDeclare>'
+    )
+    assert "use-type-mismatch" in validate_semantic(xml)
+
+
+def test_use_type_mismatch_ignores_a_name_with_no_def():
+    report = validate_semantic(_wrap('<Shape USE="Ghost"/>'))
+    assert "use-undefined-def" in report
+    assert "use-type-mismatch" not in report
+
+
+def test_use_before_def_of_another_type_is_flagged_as_both():
+    xml = _wrap('<Sphere USE="Ball"/><Box DEF="Ball"/>')
+    report = validate_semantic(xml)
+    assert "use-before-def" in report
+    assert "use-type-mismatch" in report
+
+
 # ---- Duplicate DEFs ----
 
 def test_duplicate_def_names():
