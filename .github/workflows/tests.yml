@@ -1,0 +1,62 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pytest:
+    name: pytest (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      # The playground tests need httpx (they importorskip it) and the render
+      # tests' image checks need pillow; without them those tests skip silently.
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,playground]" httpx pillow
+          pip list | grep -i -E "^(mcp|x3d|xmlschema|lxml|pytest) "
+      - name: Run the suite
+        run: python -m pytest tests -v -ra
+
+  # Real headless X_ITE renders. X_ITE is loaded from a CDN, so this job can fail
+  # on network trouble rather than on a code change; it reports but never blocks.
+  render:
+    name: render smoke (Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,render]"
+          python -m playwright install --with-deps chromium
+      - name: Run the render tests
+        run: python -m pytest tests/test_render.py -v -ra
