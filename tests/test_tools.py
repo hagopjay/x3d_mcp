@@ -178,3 +178,74 @@ def test_convert_xml_to_vrml():
     vrml = model.VRML()
     assert "#VRML" in vrml
     assert "Sphere" in vrml
+
+
+_PHYSICS_XML = """<?xml version="1.0" encoding="UTF-8"?>
+<X3D profile="Immersive" version="4.1">
+  <Scene>
+    <RigidBodyCollection>
+      <RigidBody DEF="B1" mass="2" inertia="2 0 0 0 2 0 0 0 2"/>
+      <RigidBody DEF="B2"/>
+      <BallJoint>
+        <RigidBody USE="B1" containerField="body1"/>
+        <RigidBody USE="B2" containerField="body2"/>
+      </BallJoint>
+      <CollisionCollection/>
+    </RigidBodyCollection>
+  </Scene>
+</X3D>"""
+
+
+def test_convert_physics_scene_keeps_container_fields():
+    """MFNode fields take lists and body1/body2 honor containerField (X-06)."""
+    from tools.convert import _parse_xml_to_model
+    xml = _parse_xml_to_model(_PHYSICS_XML).XML()
+    assert xml.count("<RigidBody DEF=") == 2
+    assert "<RigidBody USE='B1' containerField='body1'/>" in xml
+    assert "<RigidBody USE='B2' containerField='body2'/>" in xml
+    assert "inertia='2.0 0.0 0.0 0.0 2.0 0.0 0.0 0.0 2.0'" in xml
+
+
+def test_convert_physics_scene_to_json_and_vrml():
+    from tools.convert import _parse_xml_to_model
+    model = _parse_xml_to_model(_PHYSICS_XML)
+    assert "RigidBodyCollection" in model.JSON()
+    assert "RigidBodyCollection" in model.VRML()
+
+
+def test_convert_xml_to_xml_orders_defs_before_uses():
+    import asyncio
+    from mcp.server.fastmcp import FastMCP
+    from tools.convert import register
+    from validation.semantic import semantic_diagnostics
+    mcp = FastMCP("t")
+    register(mcp)
+    out = asyncio.run(mcp.call_tool(
+        "convert_x3d", {"content": _PHYSICS_XML, "from_encoding": "xml",
+                        "to_encoding": "xml"}))
+    text = out[0][0].text if isinstance(out, tuple) else out[0].text
+    assert not [d for d in semantic_diagnostics(text) if d.check == "use-before-def"]
+
+
+def test_set_field_tool_accepts_json_bool():
+    """A JSON false must arrive as a bool, not an int pydantic then rejects (X-08)."""
+    import asyncio
+    import re
+    from mcp.server.fastmcp import FastMCP
+    from tools.granular import register, _scene
+    mcp = FastMCP("t")
+    register(mcp)
+
+    def call(name, args):
+        out = asyncio.run(mcp.call_tool(name, args))
+        return (out[0][0] if isinstance(out, tuple) else out[0]).text
+
+    _scene.reset()
+    created = call("create_node", {"node_type": "RigidBody"})
+    node_id = re.search(r"ID: (\S+)", created).group(1)
+    call("set_field", {"node_id": node_id, "field_name": "enabled", "value": False})
+    call("set_field", {"node_id": node_id, "field_name": "useGlobalGravity",
+                       "value": "false"})
+    xml = _scene.to_xml()
+    _scene.reset()
+    assert "enabled='false'" in xml and "useGlobalGravity='false'" in xml

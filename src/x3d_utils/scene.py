@@ -56,7 +56,35 @@ class SceneManager:
         if field_name not in field_names:
             raise SceneError(f"{node_type} has no field '{field_name}'")
 
+        field = next(f for f in node_fields if f["name"] == field_name)
+        # event-only fields have no attribute in the file; x3d.py takes the value
+        # and never writes it, so refuse instead of reporting a set that is lost
+        if field.get("accessType") in ("outputOnly", "inputOnly"):
+            raise SceneError(
+                f"{node_type}.{field_name} is {field['accessType']} and cannot be "
+                f"set; it can only be used as a ROUTE endpoint")
+        ftype = field["type"]
+        if ftype == "SFBool":
+            value = self._as_bool(node_type, field_name, value)
         setattr(node, field_name, value)
+
+    @staticmethod
+    def _as_bool(node_type: str, field_name: str, value) -> bool:
+        """An SFBool value as a real bool.
+
+        x3d.py only omits a bool equal to the default, and a string like 'false'
+        is neither equal to it nor a bool, so it was accepted and then dropped
+        from the XML. Accept bools, 0/1 and the strings 'true'/'false'.
+        """
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str) and value.strip().lower() in ("true", "false"):
+            return value.strip().lower() == "true"
+        if value in (0, 1) and not isinstance(value, str):
+            return bool(value)
+        raise SceneError(
+            f"{node_type}.{field_name} is an SFBool; got {value!r}, expected "
+            f"true or false")
 
     def add_child(self, parent_id: str, child_id: str,
                   container_field: str | None = None) -> None:
@@ -239,11 +267,15 @@ class SceneManager:
         PhysicalMaterial slot, an HAnim skeleton root, skinCoord, ...) would
         serialize ambiguously. Pipe through the containerField auto-fixer so the
         emitted document is always conformant.
+
+        x3d.py also writes a RigidBodyCollection's joints and collider before its
+        bodies, which leaves every USE ahead of its DEF; reorder_defs fixes that.
         """
         from validation.autofix import autofix_containerfields
+        from validation.defuse import reorder_defs_xml
         raw = self.get_model().XML()
         res = autofix_containerfields(raw)
-        return res["fixed"] if res.get("changes") else raw   # only re-emit if fixed
+        return reorder_defs_xml(res["fixed"] if res.get("changes") else raw)
 
     def to_json(self) -> str:
         """Serialize scene to X3D JSON encoding."""

@@ -5,6 +5,7 @@ https://github.com/niknarra/x3d-mcp/blob/main/tests/test_semantic_check.py
 (Nikhil Narra, Nicholas Polys -- Virginia Tech / Web3D Consortium).
 """
 
+import re
 import sys
 from pathlib import Path
 
@@ -559,3 +560,105 @@ def test_metadataset_value_accepts_nested_metadata():
 def test_real_containerfield_mismatch_still_flagged():
     xml = _wrap('<Shape><Box containerField="appearance"/></Shape>')   # Box is not an appearance
     assert "containerfield-type-mismatch" in validate_semantic(xml)
+
+
+# ---- RigidBodyPhysics ----
+
+def _rbc(inner: str, attrs: str = "") -> str:
+    return _wrap(f"<RigidBodyCollection {attrs}>{inner}</RigidBodyCollection>")
+
+
+def _joint(kind: str = "BallJoint", b1: str = "B1", b2: str = "B2", attrs: str = "") -> str:
+    return (f"<{kind} DEF='J' {attrs}>"
+            f"<RigidBody USE='{b1}' containerField='body1'/>"
+            f"<RigidBody USE='{b2}' containerField='body2'/></{kind}>")
+
+
+_TWO_BODIES = "<RigidBody DEF='B1'/><RigidBody DEF='B2'/>"
+
+
+def _checks(report: str) -> set[str]:
+    return set(re.findall(r"\*\*\[(physics-[a-z-]+)\]\*\*", report))
+
+
+def test_physics_clean_scene_passes():
+    report = validate_semantic(_rbc(_TWO_BODIES + _joint(
+        "SingleAxisHingeJoint", attrs="axis='0 0 1'")))
+    assert not _checks(report)
+
+
+@pytest.mark.parametrize("mass", ["-2", "0"])
+def test_physics_nonpositive_mass_is_an_error(mass):
+    assert "physics-mass" in _checks(validate_semantic(
+        _rbc(f"<RigidBody DEF='B1' mass='{mass}'/>")))
+
+
+def test_physics_zero_mass_ok_when_fixed():
+    assert "physics-mass" not in _checks(validate_semantic(
+        _rbc("<RigidBody DEF='B1' mass='0' fixed='true'/>")))
+
+
+def test_physics_negative_mass_is_an_error_even_when_fixed():
+    assert "physics-mass" in _checks(validate_semantic(
+        _rbc("<RigidBody DEF='B1' mass='-1' fixed='true'/>")))
+
+
+@pytest.mark.parametrize("kind,attr", [
+    ("SingleAxisHingeJoint", "axis"), ("SliderJoint", "axis"),
+    ("UniversalJoint", "axis1"), ("DoubleAxisHingeJoint", "axis2"),
+])
+def test_physics_zero_length_joint_axis(kind, attr):
+    report = validate_semantic(_rbc(_TWO_BODIES + _joint(kind, attrs=f"{attr}='0 0 0'")))
+    assert "physics-zero-axis" in _checks(report)
+
+
+def test_physics_zero_axis_body_orientation():
+    assert "physics-zero-axis" in _checks(validate_semantic(
+        _rbc("<RigidBody DEF='B1' orientation='0 0 0 1.5'/>")))
+
+
+def test_physics_joint_missing_body_is_a_warning():
+    report = validate_semantic(_rbc(
+        "<RigidBody DEF='B1'/><BallJoint><RigidBody USE='B1' containerField='body1'/></BallJoint>"))
+    assert "physics-joint-body" in _checks(report)
+    assert "body2" in report
+
+
+def test_physics_joint_same_body_is_an_error():
+    report = validate_semantic(_rbc(_TWO_BODIES + _joint(b2="B1")))
+    assert "to itself" in report and "physics-joint-body" in _checks(report)
+
+
+def test_physics_joint_body_of_wrong_type():
+    report = validate_semantic(_rbc(
+        "<RigidBody DEF='B1'/><CollisionCollection DEF='CC' containerField='collider'/>"
+        + _joint(b2="CC")))
+    assert "not a RigidBody" in report
+
+
+def test_physics_joint_body_in_another_collection():
+    report = validate_semantic(_wrap(
+        "<RigidBodyCollection><RigidBody DEF='BX'/></RigidBodyCollection>"
+        f"<RigidBodyCollection><RigidBody DEF='B1'/>{_joint(b2='BX')}</RigidBodyCollection>"))
+    assert "physics-joint-cross-collection" in _checks(report)
+
+
+def test_physics_body_and_joint_outside_a_collection():
+    report = validate_semantic(_wrap(
+        "<RigidBody DEF='B1'/><RigidBody DEF='B2'/>" + _joint()))
+    checks = _checks(report)
+    assert "physics-not-in-collection" in checks
+    assert report.count("is not a child of a RigidBodyCollection") == 3
+
+
+@pytest.mark.parametrize("attr,value", [
+    ("mass", "nan"), ("position", "0 inf 0"), ("linearVelocity", "1 -Infinity 0"),
+])
+def test_physics_non_finite_field(attr, value):
+    report = validate_semantic(_rbc(f"<RigidBody DEF='B1' {attr}='{value}'/>"))
+    assert "physics-non-finite" in _checks(report)
+
+
+def test_physics_non_finite_in_collection_attribute():
+    assert "physics-non-finite" in _checks(validate_semantic(
+        _rbc("<RigidBody DEF='B1'/>", attrs="gravity='0 nan 0'")))

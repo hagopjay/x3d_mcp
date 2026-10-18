@@ -226,3 +226,77 @@ def test_containerfield_override_rejects_bad_field():
         assert False, "expected SceneError"
     except SceneError:
         pass
+
+
+def _jointed_scene() -> SceneManager:
+    """Two bodies, a joint using both, and a collider: the shape x3d.py misorders."""
+    s = SceneManager()
+    rbc = s.create_node("RigidBodyCollection")
+    b1 = s.create_node("RigidBody")
+    b2 = s.create_node("RigidBody")
+    s.def_node(b1, "B1")
+    s.def_node(b2, "B2")
+    s.add_child(rbc, b1)
+    s.add_child(rbc, b2)
+    s.add_child(rbc, s.create_node("CollisionCollection"))
+    joint = s.create_node("BallJoint")
+    s.add_child(rbc, joint)
+    s.add_child(joint, s.use_node("B1"), "body1")
+    s.add_child(joint, s.use_node("B2"), "body2")
+    return s
+
+
+def test_to_xml_defs_bodies_before_joints():
+    """x3d.py writes joints before bodies; to_xml must put each DEF first (X-05)."""
+    from validation.semantic import semantic_diagnostics
+    xml = _jointed_scene().to_xml()
+    assert xml.index("DEF=\"B1\"") < xml.index("USE=\"B1\"")
+    assert xml.index("DEF=\"B2\"") < xml.index("USE=\"B2\"")
+    assert not [d for d in semantic_diagnostics(xml) if d.check == "use-before-def"]
+
+
+def test_to_xml_keeps_doctype_when_reordering():
+    xml = _jointed_scene().to_xml()
+    assert xml.startswith('<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE X3D')
+
+
+@pytest.mark.parametrize("value", [False, "false", "False", 0])
+def test_set_field_sfbool_false_is_written(sm, value):
+    """A false SFBool must reach the XML: it used to be accepted then dropped (X-08)."""
+    node_id = sm.create_node("RigidBody")
+    sm.set_field(node_id, "enabled", value)
+    assert sm._nodes[node_id].enabled is False
+    assert "enabled='false'" in sm.to_xml()
+
+
+@pytest.mark.parametrize("value", [True, "true", 1])
+def test_set_field_sfbool_true(sm, value):
+    node_id = sm.create_node("RigidBody", enabled=False)
+    sm.set_field(node_id, "enabled", value)
+    assert sm._nodes[node_id].enabled is True
+
+
+def test_set_field_sfbool_rejects_garbage(sm):
+    node_id = sm.create_node("RigidBody")
+    with pytest.raises(SceneError, match="SFBool"):
+        sm.set_field(node_id, "enabled", "maybe")
+    with pytest.raises(SceneError, match="SFBool"):
+        sm.set_field(node_id, "enabled", 2)
+
+
+@pytest.mark.parametrize("node_type,field", [
+    ("BallJoint", "body1AnchorPoint"),      # outputOnly
+    ("SliderJoint", "separation"),          # outputOnly
+    ("Transform", "addChildren"),           # inputOnly
+])
+def test_set_field_rejects_event_only_fields(sm, node_type, field):
+    """outputOnly/inputOnly fields never reach the XML, so say so (X-13)."""
+    node_id = sm.create_node(node_type)
+    with pytest.raises(SceneError, match="ROUTE"):
+        sm.set_field(node_id, field, 1.0)
+
+
+def test_set_field_still_sets_input_output_fields(sm):
+    node_id = sm.create_node("SliderJoint")
+    sm.set_field(node_id, "minSeparation", 0.5)
+    assert sm._nodes[node_id].minSeparation == 0.5

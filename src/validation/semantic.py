@@ -9,6 +9,7 @@ Adapted from semantic_check.py in https://github.com/niknarra/x3d-mcp by
 Nikhil Narra and Nicholas Polys (Virginia Tech / Web3D Consortium).
 """
 
+import math
 import re
 from dataclasses import dataclass
 from lxml import etree
@@ -877,6 +878,114 @@ def _check_profile_components(root: etree._Element) -> list[Diagnostic]:
     return diagnostics
 
 
+_JOINT_AXIS_ATTRS = ("axis", "axis1", "axis2")
+_NUMERIC_FIELD = re.compile(
+    r"^(SF|MF)(Float|Double|Time|Vec\d[fd]|Rotation|Matrix\d[fd]|Color|ColorRGBA|Quaternion)$")
+
+
+def _check_rigid_body_physics(scene: etree._Element) -> list[Diagnostic]:
+    """Catch RigidBodyPhysics defects that validate against the XSD but break a simulation.
+
+    Mass that is not positive, joint axes and body orientations of zero length, NaN or
+    infinity in a field, joints that name no body, the same body twice, or a body from
+    another collection, and bodies or joints that sit outside any RigidBodyCollection.
+    Found by the physics stress test, where 23 of 40 seeded defect classes passed clean.
+    """
+    nodes = get_x3duom().get_concrete_nodes()
+    physics = {t for t, info in nodes.items() if info.get("component") == "RigidBodyPhysics"}
+    joints = {t for t in physics if t.endswith("Joint")}
+    defs: dict[str, etree._Element] = {}
+    for el in scene.iter():
+        if isinstance(el.tag, str) and el.get("DEF") and el.get("DEF") not in defs:
+            defs[el.get("DEF")] = el
+
+    def resolve(el: etree._Element) -> etree._Element | None:
+        return defs.get(el.get("USE")) if el.get("USE") else el
+
+    diagnostics: list[Diagnostic] = []
+
+    def report(level: str, check: str, el: etree._Element, message: str) -> None:
+        diagnostics.append(Diagnostic(
+            level=level, check=check, message=message,
+            node_tag=_local_tag(el), def_name=el.get("DEF") or el.get("USE") or ""))
+
+    def label(el: etree._Element) -> str:
+        name = el.get("DEF") or el.get("USE")
+        return f"{_local_tag(el)} '{name}'" if name else _local_tag(el)
+
+    for el in scene.iter():
+        tag = _local_tag(el)
+        if tag not in physics:
+            continue
+        if not el.get("USE"):
+            fmap = _node_field_map(tag, nodes)
+            for attr, value in el.attrib.items():
+                ftype = fmap.get(attr, {}).get("type", "")
+                if _NUMERIC_FIELD.match(ftype) and not all(
+                        math.isfinite(x) for x in _floats(value)):
+                    report("error", "physics-non-finite", el,
+                           f"{label(el)}.{attr}='{value}' contains NaN or infinity; a "
+                           f"simulation step with it poisons every body it touches.")
+
+        parent = el.getparent()
+        ptag = _local_tag(parent) if parent is not None else ""
+        cf = el.get("containerField") or nodes[tag]["containerField"]
+
+        if tag == "RigidBody" and not el.get("USE"):
+            mass = _floats(el.get("mass", "1"))[:1]
+            if mass and (mass[0] < 0 or (mass[0] == 0 and el.get("fixed") != "true")):
+                report("error", "physics-mass", el,
+                       f"{label(el)} has mass='{el.get('mass')}'; a dynamic body needs a "
+                       f"mass above zero (mass 0 only makes sense with fixed='true').")
+            orient = _floats(el.get("orientation", "0 0 1 0"))
+            if len(orient) == 4 and not any(orient[:3]):
+                report("error", "physics-zero-axis", el,
+                       f"{label(el)} has orientation='{el.get('orientation')}' with a "
+                       f"zero-length axis; the rotation is undefined.")
+            if ptag != "RigidBodyCollection" and not (ptag in joints and cf in ("body1", "body2")):
+                report("warning", "physics-not-in-collection", el,
+                       f"{label(el)} is not a child of a RigidBodyCollection, so no "
+                       f"simulation will include it.")
+
+        if tag in joints:
+            for attr in _JOINT_AXIS_ATTRS:
+                axis = _floats(el.get(attr, "")) if el.get(attr) else []
+                if len(axis) == 3 and not any(axis):
+                    report("error", "physics-zero-axis", el,
+                           f"{label(el)}.{attr}='{el.get(attr)}' has zero length; the "
+                           f"joint axis must be a non-zero vector.")
+            if not el.get("USE") and ptag != "RigidBodyCollection":
+                report("warning", "physics-not-in-collection", el,
+                       f"{label(el)} is not a child of a RigidBodyCollection, so no "
+                       f"simulation will include it.")
+            ends = {c.get("containerField"): c for c in el
+                    if isinstance(c.tag, str) and c.get("containerField") in ("body1", "body2")}
+            for name in ("body1", "body2"):
+                if name not in ends:
+                    report("warning", "physics-joint-body", el,
+                           f"{label(el)} has no {name}; the joint constrains nothing "
+                           f"without two bodies.")
+            bodies = {name: resolve(c) for name, c in ends.items()}
+            for name, body in bodies.items():
+                if body is not None and _local_tag(body) != "RigidBody":
+                    report("error", "physics-joint-body", el,
+                           f"{label(el)}.{name} refers to a {_local_tag(body)}, not a RigidBody.")
+            if len(bodies) == 2 and bodies["body1"] is not None and bodies["body1"] is bodies["body2"]:
+                report("error", "physics-joint-body", el,
+                       f"{label(el)} joins {label(bodies['body1'])} to itself (body1 and "
+                       f"body2 are the same body).")
+            if ptag == "RigidBodyCollection":
+                members = {resolve(c) for c in parent
+                           if _local_tag(c) == "RigidBody"
+                           and (c.get("containerField") or "bodies") == "bodies"}
+                for name, body in bodies.items():
+                    if body is not None and _local_tag(body) == "RigidBody" and body not in members:
+                        report("error", "physics-joint-cross-collection", el,
+                               f"{label(el)}.{name} is {label(body)}, which is not in the "
+                               f"same RigidBodyCollection as the joint.")
+    return diagnostics
+
+
 _ALL_CHECKS = [
     _check_duplicate_defs,
     _check_def_use_consistency,
@@ -890,6 +999,7 @@ _ALL_CHECKS = [
     _check_tuple_counts,
     _check_gaussian_splats,
     _check_dead_boolean_routes,
+    _check_rigid_body_physics,
     _check_missing_viewpoint,
 ]
 
