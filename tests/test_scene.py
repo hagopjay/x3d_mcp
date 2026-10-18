@@ -282,3 +282,21 @@ def test_set_field_sfbool_rejects_garbage(sm):
         sm.set_field(node_id, "enabled", "maybe")
     with pytest.raises(SceneError, match="SFBool"):
         sm.set_field(node_id, "enabled", 2)
+
+
+@pytest.mark.parametrize("node_type,field", [
+    ("BallJoint", "body1AnchorPoint"),      # outputOnly
+    ("SliderJoint", "separation"),          # outputOnly
+    ("Transform", "addChildren"),           # inputOnly
+])
+def test_set_field_rejects_event_only_fields(sm, node_type, field):
+    """outputOnly/inputOnly fields never reach the XML, so say so (X-13)."""
+    node_id = sm.create_node(node_type)
+    with pytest.raises(SceneError, match="ROUTE"):
+        sm.set_field(node_id, field, 1.0)
+
+
+def test_set_field_still_sets_input_output_fields(sm):
+    node_id = sm.create_node("SliderJoint")
+    sm.set_field(node_id, "minSeparation", 0.5)
+    assert sm._nodes[node_id].minSeparation == 0.5

@@ -56,7 +56,14 @@ class SceneManager:
         if field_name not in field_names:
             raise SceneError(f"{node_type} has no field '{field_name}'")
 
-        ftype = next(f["type"] for f in node_fields if f["name"] == field_name)
+        field = next(f for f in node_fields if f["name"] == field_name)
+        # event-only fields have no attribute in the file; x3d.py takes the value
+        # and never writes it, so refuse instead of reporting a set that is lost
+        if field.get("accessType") in ("outputOnly", "inputOnly"):
+            raise SceneError(
+                f"{node_type}.{field_name} is {field['accessType']} and cannot be "
+                f"set; it can only be used as a ROUTE endpoint")
+        ftype = field["type"]
         if ftype == "SFBool":
             value = self._as_bool(node_type, field_name, value)
         setattr(node, field_name, value)
