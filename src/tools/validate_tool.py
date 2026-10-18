@@ -120,16 +120,18 @@ def register(mcp: FastMCP):
         One call instead of a read-diagnose-edit loop. In order: containerField
         corrections (as autofix_x3d); a missing profile or version; a version raised
         to the lowest X3D version that has every node used (a 4.0 document using
-        EnvironmentLight becomes 4.1 -- content is never removed); the <component>
+        EnvironmentLight becomes 4.1 -- content is never removed); a DEF moved
+        ahead of the sibling node whose USE precedes it; the <component>
         statements the profile check asks for, added to <head> or raised in level;
         the DOCTYPE and noNamespaceSchemaLocation updated to match; the https
         XMLSchema-instance namespace x3d.py writes replaced by the correct one.
 
         Returns JSON {fixed, changes, unfixable, remaining}. `changes` lists each
-        edit with its kind (containerField, profile, version, component, xsi,
-        doctype), old and new value, and reason -- read it and revert any edit you
-        disagree with. `unfixable` names what needs a human decision (USE before
-        DEF, nodes in a parent that accepts no such type, unknown nodes).
+        edit with its kind (containerField, def-order, profile, version, component,
+        xsi, doctype), old and new value, and reason -- read it and revert any edit
+        you disagree with. `unfixable` names what needs a human decision (a USE
+        before its DEF that no sibling move fixes, nodes in a parent that accepts
+        no such type, unknown nodes).
         `remaining` is the re-validation of `fixed`: schema_valid, schema_errors,
         profile_ok. If remaining.schema_valid is false, the errors are structural;
         fix them by hand, then validate again.

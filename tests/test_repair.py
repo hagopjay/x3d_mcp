@@ -176,3 +176,35 @@ def test_geolod_with_geoorigin_not_reported():
                           head="<head><component name='Geospatial' level='1'/></head>"))
     assert not any(u["kind"] == "geolod-content-model" for u in res["unfixable"])
     assert res["remaining"]["schema_valid"] is True
+
+
+_JOINTED = (
+    "<RigidBodyCollection>"
+    "<BallJoint><RigidBody USE='B1' containerField='body1'/>"
+    "<RigidBody USE='B2' containerField='body2'/></BallJoint>"
+    "<CollisionCollection/>"
+    "<RigidBody DEF='B1'/><RigidBody DEF='B2'/>"
+    "</RigidBodyCollection>"
+)
+
+
+def test_use_before_def_across_fields_is_reordered():
+    """A joint ahead of its bodies is the x3d.py order (X-05); the DEFs move first."""
+    src = _doc(_JOINTED, profile="Immersive", version="4.1")
+    assert "use-before-def" in validate_semantic(src)
+    res = repair_x3d(src)
+    moves = [c for c in res["changes"] if c["kind"] == "def-order"]
+    assert {"B1", "B2"} <= {m["ref"] for m in moves}
+    assert res["unfixable"] == []
+    assert "use-before-def" not in validate_semantic(res["fixed"])
+    # sibling order inside one field is never touched
+    assert res["fixed"].index("DEF=\"B1\"") < res["fixed"].index("DEF=\"B2\"")
+
+
+def test_use_before_def_in_one_field_is_left_unfixable():
+    """Swapping nodes inside one MFNode field could change meaning; report instead."""
+    body = ("<Group><Shape USE='S'/></Group>"
+            "<Group><Shape DEF='S'><Box/></Shape></Group>")
+    res = repair_x3d(_doc(body))
+    assert not [c for c in res["changes"] if c["kind"] == "def-order"]
+    assert [u["ref"] for u in res["unfixable"] if u["kind"] == "use-before-def"] == ["S"]

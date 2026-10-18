@@ -226,3 +226,35 @@ def test_containerfield_override_rejects_bad_field():
         assert False, "expected SceneError"
     except SceneError:
         pass
+
+
+def _jointed_scene() -> SceneManager:
+    """Two bodies, a joint using both, and a collider: the shape x3d.py misorders."""
+    s = SceneManager()
+    rbc = s.create_node("RigidBodyCollection")
+    b1 = s.create_node("RigidBody")
+    b2 = s.create_node("RigidBody")
+    s.def_node(b1, "B1")
+    s.def_node(b2, "B2")
+    s.add_child(rbc, b1)
+    s.add_child(rbc, b2)
+    s.add_child(rbc, s.create_node("CollisionCollection"))
+    joint = s.create_node("BallJoint")
+    s.add_child(rbc, joint)
+    s.add_child(joint, s.use_node("B1"), "body1")
+    s.add_child(joint, s.use_node("B2"), "body2")
+    return s
+
+
+def test_to_xml_defs_bodies_before_joints():
+    """x3d.py writes joints before bodies; to_xml must put each DEF first (X-05)."""
+    from validation.semantic import semantic_diagnostics
+    xml = _jointed_scene().to_xml()
+    assert xml.index("DEF=\"B1\"") < xml.index("USE=\"B1\"")
+    assert xml.index("DEF=\"B2\"") < xml.index("USE=\"B2\"")
+    assert not [d for d in semantic_diagnostics(xml) if d.check == "use-before-def"]
+
+
+def test_to_xml_keeps_doctype_when_reordering():
+    xml = _jointed_scene().to_xml()
+    assert xml.startswith('<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE X3D')

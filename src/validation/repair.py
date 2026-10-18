@@ -13,18 +13,22 @@ order an author would, and re-validates so the caller sees what is left:
    to ``<head>`` (created when absent) or raised to the needed level.
 4. The ``https`` XMLSchema-instance namespace x3d.py writes, which the XSD
    rejects, is dropped; a correct ``noNamespaceSchemaLocation`` is written.
+5. USE before DEF, where moving sibling nodes across containerFields fixes it
+   (a RigidBodyCollection's joints ahead of its bodies, say); see ``defuse``.
 
 Each change is recorded so an agent can explain, or decline, what was done.
-Structural problems (USE before DEF, a node in a parent that accepts no such
-type, unknown nodes, a GeoLOD whose inline children need a GeoOrigin) are
-reported under ``unfixable`` with the options, and left alone.
+Structural problems (a USE before its DEF that no sibling move fixes, a node
+in a parent that accepts no such type, unknown nodes, a GeoLOD whose inline
+children need a GeoOrigin) are reported under ``unfixable`` with the options, and left alone.
 """
 
 import re
 from lxml import etree
 
 from validation.autofix import autofix_containerfields
+from validation.defuse import reorder_defs
 from validation.profile import check_profile, component_statements, _local_tag
+from validation.semantic import _check_use_before_def
 from validation.validate import (
     XSD_PATHS, XSI_NS, _nodes_by_version, resolve_xsd_version, validate_xml,
 )
@@ -157,6 +161,14 @@ def repair_x3d(xml_string: str) -> dict:
     if _local_tag(root) != "X3D":
         return {"error": "Root element is not X3D", "fixed": "", "changes": [],
                 "unfixable": [], "remaining": {}}
+
+    for move in reorder_defs(root):
+        changes.append(dict(move, kind="def-order",
+                            reason="a USE preceded its DEF; the DEF's node was moved "
+                                   "ahead of the node that uses it"))
+    for d in _check_use_before_def(root):
+        unfixable.append({"kind": "use-before-def", "node": d.node_tag,
+                          "ref": d.def_name, "reason": d.message})
 
     _fix_header(root, changes, unfixable)
     _fix_components(root, changes)
