@@ -225,3 +225,27 @@ def test_convert_xml_to_xml_orders_defs_before_uses():
                         "to_encoding": "xml"}))
     text = out[0][0].text if isinstance(out, tuple) else out[0].text
     assert not [d for d in semantic_diagnostics(text) if d.check == "use-before-def"]
+
+
+def test_set_field_tool_accepts_json_bool():
+    """A JSON false must arrive as a bool, not an int pydantic then rejects (X-08)."""
+    import asyncio
+    import re
+    from mcp.server.fastmcp import FastMCP
+    from tools.granular import register, _scene
+    mcp = FastMCP("t")
+    register(mcp)
+
+    def call(name, args):
+        out = asyncio.run(mcp.call_tool(name, args))
+        return (out[0][0] if isinstance(out, tuple) else out[0]).text
+
+    _scene.reset()
+    created = call("create_node", {"node_type": "RigidBody"})
+    node_id = re.search(r"ID: (\S+)", created).group(1)
+    call("set_field", {"node_id": node_id, "field_name": "enabled", "value": False})
+    call("set_field", {"node_id": node_id, "field_name": "useGlobalGravity",
+                       "value": "false"})
+    xml = _scene.to_xml()
+    _scene.reset()
+    assert "enabled='false'" in xml and "useGlobalGravity='false'" in xml

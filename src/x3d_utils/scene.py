@@ -56,7 +56,28 @@ class SceneManager:
         if field_name not in field_names:
             raise SceneError(f"{node_type} has no field '{field_name}'")
 
+        ftype = next(f["type"] for f in node_fields if f["name"] == field_name)
+        if ftype == "SFBool":
+            value = self._as_bool(node_type, field_name, value)
         setattr(node, field_name, value)
+
+    @staticmethod
+    def _as_bool(node_type: str, field_name: str, value) -> bool:
+        """An SFBool value as a real bool.
+
+        x3d.py only omits a bool equal to the default, and a string like 'false'
+        is neither equal to it nor a bool, so it was accepted and then dropped
+        from the XML. Accept bools, 0/1 and the strings 'true'/'false'.
+        """
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str) and value.strip().lower() in ("true", "false"):
+            return value.strip().lower() == "true"
+        if value in (0, 1) and not isinstance(value, str):
+            return bool(value)
+        raise SceneError(
+            f"{node_type}.{field_name} is an SFBool; got {value!r}, expected "
+            f"true or false")
 
     def add_child(self, parent_id: str, child_id: str,
                   container_field: str | None = None) -> None:

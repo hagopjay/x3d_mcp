@@ -258,3 +258,27 @@ def test_to_xml_defs_bodies_before_joints():
 def test_to_xml_keeps_doctype_when_reordering():
     xml = _jointed_scene().to_xml()
     assert xml.startswith('<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE X3D')
+
+
+@pytest.mark.parametrize("value", [False, "false", "False", 0])
+def test_set_field_sfbool_false_is_written(sm, value):
+    """A false SFBool must reach the XML: it used to be accepted then dropped (X-08)."""
+    node_id = sm.create_node("RigidBody")
+    sm.set_field(node_id, "enabled", value)
+    assert sm._nodes[node_id].enabled is False
+    assert "enabled='false'" in sm.to_xml()
+
+
+@pytest.mark.parametrize("value", [True, "true", 1])
+def test_set_field_sfbool_true(sm, value):
+    node_id = sm.create_node("RigidBody", enabled=False)
+    sm.set_field(node_id, "enabled", value)
+    assert sm._nodes[node_id].enabled is True
+
+
+def test_set_field_sfbool_rejects_garbage(sm):
+    node_id = sm.create_node("RigidBody")
+    with pytest.raises(SceneError, match="SFBool"):
+        sm.set_field(node_id, "enabled", "maybe")
+    with pytest.raises(SceneError, match="SFBool"):
+        sm.set_field(node_id, "enabled", 2)

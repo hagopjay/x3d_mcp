@@ -62,14 +62,15 @@ def register(mcp: FastMCP):
 
     @mcp.tool()
     def set_field(node_id: str, field_name: str,
-                  value: str | int | float | list,
+                  value: bool | str | int | float | list,
                   ctx: Context = None) -> str:
         """Set a field value on an existing node.
 
         Args:
             node_id: The node tracking ID returned by create_node.
             field_name: The field name (e.g. "diffuseColor", "size", "translation").
-            value: The value to set. Use lists for vector types.
+            value: The value to set. Use lists for vector types and true/false
+                (or the strings "true"/"false") for SFBool fields.
         """
         if isinstance(value, list):
             value = tuple(value)
