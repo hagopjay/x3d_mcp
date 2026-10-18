@@ -104,3 +104,13 @@ def reorder_defs(root: etree._Element) -> list[dict]:
             for pos, el in zip(positions, ordered):
                 parent.insert(pos, el)
     return changes
+
+
+def reorder_defs_xml(xml_string: str) -> str:
+    """reorder_defs on a document string; the string itself when nothing moves."""
+    tree = etree.ElementTree(etree.fromstring(
+        xml_string.encode("utf-8"), etree.XMLParser(remove_blank_text=True)))
+    if not reorder_defs(tree.getroot()):
+        return xml_string
+    return ('<?xml version="1.0" encoding="UTF-8"?>\n'
+            + etree.tostring(tree, pretty_print=True, encoding="unicode"))

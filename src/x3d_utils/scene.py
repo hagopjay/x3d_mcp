@@ -5,7 +5,6 @@ UUID-based node tracking, DEF/USE management, and ROUTE support.
 """
 
 import uuid
-from lxml import etree
 import x3d.x3d as x3d_mod
 from x3d.x3d import X3D, Scene, head, meta, ROUTE
 
@@ -245,16 +244,10 @@ class SceneManager:
         bodies, which leaves every USE ahead of its DEF; reorder_defs fixes that.
         """
         from validation.autofix import autofix_containerfields
-        from validation.defuse import reorder_defs
+        from validation.defuse import reorder_defs_xml
         raw = self.get_model().XML()
         res = autofix_containerfields(raw)
-        xml = res["fixed"] if res.get("changes") else raw    # only re-emit if fixed
-        tree = etree.ElementTree(etree.fromstring(
-            xml.encode("utf-8"), etree.XMLParser(remove_blank_text=True)))
-        if not reorder_defs(tree.getroot()):
-            return xml
-        return ('<?xml version="1.0" encoding="UTF-8"?>\n'
-                + etree.tostring(tree, pretty_print=True, encoding="unicode"))
+        return reorder_defs_xml(res["fixed"] if res.get("changes") else raw)
 
     def to_json(self) -> str:
         """Serialize scene to X3D JSON encoding."""

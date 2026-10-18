@@ -10,6 +10,7 @@ import x3d.x3d as x3d_mod
 from x3d.x3d import X3D, Scene, head, meta
 from mcp.server.fastmcp import FastMCP
 
+from validation.defuse import reorder_defs_xml
 from x3d_utils.x3duom import get_x3duom
 
 
@@ -43,6 +44,15 @@ def _parse_xml_to_model(xml_string: str) -> X3D:
 
 def _parse_children(parent_el: etree._Element) -> list:
     """Recursively parse XML elements into x3d.py node objects."""
+    return [node for node, _ in _parse_nodes(parent_el)]
+
+
+def _parse_nodes(parent_el: etree._Element) -> list[tuple[object, str | None]]:
+    """Parse child elements into (x3d.py node, containerField) pairs.
+
+    The containerField is the one written on the element, else the node's
+    default; it is None for statements (ROUTE) that no field holds.
+    """
     uom = get_x3duom()
     nodes = uom.get_concrete_nodes()
     children = []
@@ -51,12 +61,12 @@ def _parse_children(parent_el: etree._Element) -> list:
         tag = el.tag
         if tag == "ROUTE":
             from x3d.x3d import ROUTE
-            children.append(ROUTE(
+            children.append((ROUTE(
                 fromNode=el.get("fromNode", ""),
                 fromField=el.get("fromField", ""),
                 toNode=el.get("toNode", ""),
                 toField=el.get("toField", ""),
-            ))
+            ), None))
             continue
 
         cls = getattr(x3d_mod, tag, None)
@@ -79,19 +89,18 @@ def _parse_children(parent_el: etree._Element) -> list:
             if field_info:
                 kwargs[attr_name] = _coerce_value(attr_value, field_info["type"])
 
-        sub_children = _parse_children(el)
-        if sub_children and "children" in field_map:
-            kwargs["children"] = sub_children
-        else:
-            for sub in sub_children:
-                sub_type = type(sub).__name__
-                sub_info = nodes.get(sub_type, {})
-                cf = sub_info.get("containerField")
-                if cf and cf in field_map:
-                    kwargs[cf] = sub
+        for sub, cf in _parse_nodes(el):
+            if cf not in field_map and "children" in field_map:
+                cf = "children"
+            if cf not in field_map:
+                continue
+            if field_map[cf]["type"] == "MFNode":
+                kwargs.setdefault(cf, []).append(sub)
+            else:
+                kwargs[cf] = sub
 
-        node = cls(**kwargs)
-        children.append(node)
+        cf = el.get("containerField") or node_info.get("containerField")
+        children.append((cls(**kwargs), cf))
 
     return children
 
@@ -113,6 +122,10 @@ def _coerce_value(value_str: str, field_type: str):
     elif field_type in ("SFVec4f", "SFVec4d", "SFRotation", "SFQuaternion"):
         parts = value_str.split()
         return tuple(float(p) for p in parts[:4])
+    elif field_type in ("SFMatrix3f", "SFMatrix3d"):
+        return tuple(float(p) for p in value_str.replace(",", " ").split()[:9])
+    elif field_type in ("SFMatrix4f", "SFMatrix4d"):
+        return tuple(float(p) for p in value_str.replace(",", " ").split()[:16])
     elif field_type in ("SFColor",):
         parts = value_str.split()
         return tuple(float(p) for p in parts[:3])
@@ -165,7 +178,7 @@ def register(mcp: FastMCP):
             return f"Parsing from '{from_encoding}' is not yet supported. Use 'xml' as source."
 
         if to_encoding == "xml":
-            return model.XML()
+            return reorder_defs_xml(model.XML())      # x3d.py writes joints before bodies
         elif to_encoding == "json":
             return model.JSON()
         elif to_encoding == "vrml":
