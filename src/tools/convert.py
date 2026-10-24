@@ -4,6 +4,7 @@ Converts X3D content between XML, JSON, and ClassicVRML encodings
 using x3d.py's built-in serialization.
 """
 
+import collections
 import json as json_mod
 import keyword
 from lxml import etree
@@ -12,7 +13,12 @@ from x3d.x3d import X3D, Scene, component, head, meta, unit
 from mcp.server.fastmcp import FastMCP
 
 from validation.defuse import reorder_defs_xml
+from x3d_utils.gen_schema import DEFAULT_MAX_NODES, SchemaRequestError, build_generation_schema
+from x3d_utils.json2xml import JsonConversionError, json_to_xml
 from x3d_utils.x3duom import get_x3duom
+
+_XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n'
+_HUGE_PARSER = etree.XMLParser(huge_tree=True)    # counting elements must not hit lxml's per-attribute size limit
 
 
 def _parse_xml_to_model(xml_string: str) -> X3D:
@@ -193,6 +199,24 @@ def _coerce_value(value_str: str, field_type: str):
     return value_str
 
 
+def _json_scene_as_xml(xml: str) -> str:
+    """The XML json_to_xml wrote, with every DEF ahead of its USEs and an XML declaration."""
+    try:
+        xml = reorder_defs_xml(xml)
+    except etree.XMLSyntaxError:      # a parser size limit, not a fault of the document: keep the text as written
+        pass
+    return xml if xml.startswith("<?xml") else _XML_DECLARATION + xml
+
+
+def _dropped_elements(source_xml: str, written_xml: str) -> dict[str, int]:
+    """Elements of source_xml that written_xml (x3d.py's rendering of it) holds fewer of."""
+    def counts(xml: str) -> collections.Counter:
+        root = etree.fromstring(xml.encode("utf-8"), _HUGE_PARSER)
+        return collections.Counter(e.tag for e in root.iter() if isinstance(e.tag, str))
+    before, after = counts(source_xml), counts(written_xml)
+    return {tag: n - after.get(tag, 0) for tag, n in before.items() if n > after.get(tag, 0)}
+
+
 def register(mcp: FastMCP):
 
     @mcp.tool()
@@ -200,15 +224,42 @@ def register(mcp: FastMCP):
                     to_encoding: str) -> str:
         """Convert X3D content between encodings.
 
+        JSON is read as the X3D JSON encoding (ISO/IEC 19776-5, the layout of
+        x3d-4.0-JSONSchema.json): "@" members are attributes, "-" members hold
+        child nodes, "#sourceCode" is Script source. Member order does not matter;
+        "#comment" members are dropped. To "xml" the scene comes back as written (DEFs
+        moved ahead of their USEs); "json" returns it unchanged; "vrml" goes through x3d.py and is
+        refused, naming the elements, if x3d.py would drop any.
+
         Args:
             content: The X3D content string.
-            from_encoding: Source encoding - "xml".
+            from_encoding: Source encoding - "xml" or "json".
             to_encoding: Target encoding - "xml", "json", or "vrml".
         """
         if from_encoding == "xml":
             model = _parse_xml_to_model(content)
+        elif from_encoding == "json":
+            try:
+                xml = json_to_xml(content)
+            except JsonConversionError as exc:
+                return f"Cannot read X3D JSON: {exc}"
+            if to_encoding == "xml":
+                return _json_scene_as_xml(xml)
+            if to_encoding == "json":
+                return content          # already JSON; json_to_xml has checked that it reads
+            if to_encoding != "vrml":
+                return f"Unknown target encoding: {to_encoding}"
+            try:
+                model = _parse_xml_to_model(xml)
+                dropped = _dropped_elements(xml, model.XML())
+            except etree.XMLSyntaxError as exc:
+                return f"Cannot convert to {to_encoding}: {exc}. Use to_encoding='xml' for a scene this large."
+            if dropped:
+                names = ", ".join(f"{tag} x{n}" for tag, n in sorted(dropped.items()))
+                return (f"Cannot convert to {to_encoding}: x3d.py would drop {names}. "
+                        "Use to_encoding='xml', which keeps the scene as written.")
         else:
-            return f"Parsing from '{from_encoding}' is not yet supported. Use 'xml' as source."
+            return f"Parsing from '{from_encoding}' is not yet supported. Use 'xml' or 'json' as source."
 
         if to_encoding == "xml":
             return reorder_defs_xml(model.XML())      # x3d.py writes joints before bodies
@@ -218,3 +269,57 @@ def register(mcp: FastMCP):
             return model.VRML()
         else:
             return f"Unknown target encoding: {to_encoding}"
+
+    @mcp.tool()
+    def x3d_generation_schema(profile: str = "Interchange", nodes: list[str] | None = None,
+                              max_nodes: int = DEFAULT_MAX_NODES, version: str = "4.0",
+                              include_schema: bool = True) -> str:
+        """A strict JSON Schema for generating an X3D scene as JSON under schema-constrained decoding.
+
+        Give it to a provider's structured-output option (or a local grammar) so the
+        model can only write nodes of the profile, closed objects, real field names and
+        enumerated values. Turn the JSON it writes into XML with convert_x3d
+        (from_encoding="json"), then run validate_x3d and validate_semantic: the schema
+        is a first filter, the validators decide.
+
+        The schema is a subset of the official X3D 4.0 JSON Schema (with its
+        NavigationInfo.type fixed to an array of strings), so it is small: about 30 KB
+        for Interchange, 40 KB for Interactive. Providers cap schema size and some reject
+        large ones; lower max_nodes or name only the nodes you need if yours does.
+
+        Args:
+            profile: Profile whose nodes are offered - Core, Interchange, Interactive,
+                Immersive, Full, CADInterchange, MedicalInterchange or MPEG4Interactive.
+            nodes: Node names to offer in addition (each outside the profile needs a
+                component statement, listed in the report).
+            max_nodes: Most profile nodes offered, commonly used ones first; nodes
+                named in `nodes` are always offered.
+            version: "4.0" (what the official JSON Schema describes) or "4.1".
+            include_schema: false returns the report alone, to check the size first.
+        """
+        try:
+            built = build_generation_schema(profile, nodes, max_nodes, version)
+        except SchemaRequestError as exc:
+            return json_mod.dumps({"error": str(exc)})
+        report = built["report"]
+        notes = [
+            f"{report['size']['bytes']} bytes, {report['node_count']} nodes. Providers cap schema size and "
+            "complexity and some reject large schemas (a 76 KB, 119-node subset of this kind was rejected by "
+            "some); lower max_nodes or pass nodes=[...] if yours does.",
+            "First filter only: convert_x3d(from_encoding='json', to_encoding='xml'), then validate_x3d and "
+            "validate_semantic decide.",
+            "Objects are closed and optional members stay optional; a provider whose strict mode requires "
+            "every property to be listed as required needs the schema adapted.",
+        ]
+        if report["outside_profile"]:
+            declare = ", ".join(f"{c} level {lvl}" for c, lvl in sorted(report["components_to_declare"].items()))
+            notes.append(f"Nodes outside {profile} need head component statements: {declare}.")
+        if report["unknown_nodes"]:
+            notes.append("Not in the X3D 4.0 JSON Schema, so not offered: " + ", ".join(report["unknown_nodes"]))
+        if version == "4.1":
+            notes.append("No X3D 4.1 JSON Schema exists: the nodes are the 4.0 set, and validate_x3d(encoding="
+                         "'json') still rejects @version 4.1 because the 4.0 schema's enum stops there.")
+        result = {"report": report, "notes": notes}
+        if include_schema:
+            result["schema"] = built["schema"]
+        return json_mod.dumps(result, separators=(",", ":"))
