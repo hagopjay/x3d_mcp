@@ -5,6 +5,7 @@ using x3d.py's built-in serialization.
 """
 
 import json as json_mod
+import keyword
 from lxml import etree
 import x3d.x3d as x3d_mod
 from x3d.x3d import X3D, Scene, component, head, meta, unit
@@ -109,8 +110,9 @@ def _parse_nodes(parent_el: etree._Element) -> list[tuple[object, str | None]]:
                 continue
 
             field_info = field_map.get(attr_name)
-            if field_info:
-                kwargs[attr_name] = _coerce_value(attr_value, field_info["type"])
+            if field_info:        # x3d.py spells a field named like a Python keyword (DirectionalLight.global) global_
+                key = attr_name + "_" if keyword.iskeyword(attr_name) else attr_name
+                kwargs[key] = _coerce_value(attr_value, field_info["type"])
 
         if "sourceCode" in field_map and "sourceCode" not in kwargs:   # Script and shader source, in CDATA
             source = (el.text or "") + "".join(c.tail or "" for c in el)

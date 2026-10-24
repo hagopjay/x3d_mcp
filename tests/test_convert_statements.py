@@ -82,3 +82,10 @@ def test_mf_vec2_and_colorrgba_values_are_read():
 def test_scripted_scene_is_still_valid_after_conversion():
     out = _parse_xml_to_model(_SCRIPTED).XML()
     assert validate_xml(out)["valid"] is True
+
+
+def test_field_named_like_a_python_keyword_is_read():
+    xml = """<X3D profile="Immersive" version="4.1"><Scene>
+      <DirectionalLight global="true" intensity="0.5"/></Scene></X3D>"""
+    light = _roundtrip(xml).find("Scene/DirectionalLight")
+    assert light.get("global") == "true" and light.get("intensity") == "0.5"
