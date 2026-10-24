@@ -216,14 +216,42 @@ def validate_scene(scene_manager) -> dict:
     return validate_xml(xml_string)
 
 
+def _fix_navigationinfo_type(schema: dict) -> None:
+    """NavigationInfo.type is an MFString but the 4.0 schema types it as a plain string.
+
+    Of the 2,771 X3D type annotations in the schema ($comment "MFString inputOutput"
+    and the like) this is the only one that disagrees with its JSON type, so the
+    array form x3d-tidy writes (["EXAMINE", "ANY"]) is rejected and a bare string
+    accepted. No-op once upstream corrects it.
+    """
+    node = schema.get("$defs", {}).get("NavigationInfo", {})
+    for variant in node.get("oneOf", [node]):
+        prop = variant.get("properties", {}).get("@type")
+        if (prop is not None and prop.get("type") == "string"
+                and prop.get("$comment", "").startswith("MFString")):
+            prop["type"] = "array"
+            prop["items"] = {"type": "string"}
+
+
+# Corrections applied in memory to the bundled upstream schema, which stays byte-identical.
+JSON_SCHEMA_FIXES = (_fix_navigationinfo_type,)
+
+
+def load_json_schema() -> dict:
+    """The X3D 4.0 JSON Schema with JSON_SCHEMA_FIXES applied (a fresh copy per call)."""
+    with JSON_SCHEMA_PATH.open() as f:
+        schema = json.load(f)
+    for fix in JSON_SCHEMA_FIXES:
+        fix(schema)
+    return schema
+
+
 def _get_json_validator() -> Draft202012Validator:
     """Load and cache the X3D 4.0 JSON Schema validator."""
     global _json_validator
     if _json_validator is not None:
         return _json_validator
-    with JSON_SCHEMA_PATH.open() as f:
-        schema = json.load(f)
-    _json_validator = Draft202012Validator(schema)
+    _json_validator = Draft202012Validator(load_json_schema())
     return _json_validator
 
 
