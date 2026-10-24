@@ -7,7 +7,7 @@ using x3d.py's built-in serialization.
 import json as json_mod
 from lxml import etree
 import x3d.x3d as x3d_mod
-from x3d.x3d import X3D, Scene, head, meta
+from x3d.x3d import X3D, Scene, component, head, meta, unit
 from mcp.server.fastmcp import FastMCP
 
 from validation.defuse import reorder_defs_xml
@@ -23,11 +23,17 @@ def _parse_xml_to_model(xml_string: str) -> X3D:
     head_node = None
     head_el = root.find("head")
     if head_el is not None:
-        metas = []
-        for m in head_el.findall("meta"):
-            metas.append(meta(name=m.get("name", ""), content=m.get("content", "")))
-        if metas:
-            head_node = head(children=metas)
+        statements = []
+        for h in head_el:
+            if h.tag == "meta":
+                statements.append(meta(name=h.get("name", ""), content=h.get("content", "")))
+            elif h.tag == "component":
+                statements.append(component(name=h.get("name", ""), level=int(h.get("level", "1"))))
+            elif h.tag == "unit":
+                statements.append(unit(category=h.get("category", ""), name=h.get("name", ""),
+                                       conversionFactor=float(h.get("conversionFactor", "1"))))
+        if statements:
+            head_node = head(children=statements)
 
     scene_el = root.find("Scene")
     children = []
@@ -40,6 +46,15 @@ def _parse_xml_to_model(xml_string: str) -> X3D:
         head=head_node,
         Scene=Scene(children=children),
     )
+
+
+# Statement elements that are no nodes in the X3DUOM but that nodes hold: the
+# attributes x3d.py takes for each (Script and shader fields, IS connections).
+_STATEMENT_ATTRS = {
+    "field": ("name", "type", "accessType", "value", "appinfo", "documentation"),
+    "connect": ("nodeField", "protoField"),
+    "IS": (),
+}
 
 
 def _parse_children(parent_el: etree._Element) -> list:
@@ -59,6 +74,14 @@ def _parse_nodes(parent_el: etree._Element) -> list[tuple[object, str | None]]:
 
     for el in parent_el:
         tag = el.tag
+        if not isinstance(tag, str):      # comments and processing instructions
+            continue
+        if tag in _STATEMENT_ATTRS and tag not in nodes:
+            stmt = {k: el.get(k) for k in _STATEMENT_ATTRS[tag] if el.get(k) is not None}
+            if tag == "IS":
+                stmt["connect"] = _parse_children(el)
+            children.append((getattr(x3d_mod, tag)(**stmt), tag))   # held by the field of that name
+            continue
         if tag == "ROUTE":
             from x3d.x3d import ROUTE
             children.append((ROUTE(
@@ -88,6 +111,11 @@ def _parse_nodes(parent_el: etree._Element) -> list[tuple[object, str | None]]:
             field_info = field_map.get(attr_name)
             if field_info:
                 kwargs[attr_name] = _coerce_value(attr_value, field_info["type"])
+
+        if "sourceCode" in field_map and "sourceCode" not in kwargs:   # Script and shader source, in CDATA
+            source = (el.text or "") + "".join(c.tail or "" for c in el)
+            if source.strip():
+                kwargs["sourceCode"] = source.strip()
 
         for sub, cf in _parse_nodes(el):
             if cf not in field_map and "children" in field_map:
@@ -142,7 +170,10 @@ def _coerce_value(value_str: str, field_type: str):
         parts = value_str.replace(",", " ").split()
         floats = [float(p) for p in parts]
         return [tuple(floats[i:i+3]) for i in range(0, len(floats), 3)]
-    elif field_type in ("MFVec4f", "MFVec4d", "MFRotation", "MFQuaternion"):
+    elif field_type in ("MFVec2f", "MFVec2d"):
+        floats = [float(p) for p in value_str.replace(",", " ").split()]
+        return [tuple(floats[i:i+2]) for i in range(0, len(floats), 2)]
+    elif field_type in ("MFVec4f", "MFVec4d", "MFRotation", "MFQuaternion", "MFColorRGBA"):
         parts = value_str.replace(",", " ").split()
         floats = [float(p) for p in parts]
         return [tuple(floats[i:i+4]) for i in range(0, len(floats), 4)]
