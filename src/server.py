@@ -20,8 +20,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from mcp.server.fastmcp import FastMCP
 from starlette.responses import JSONResponse
 
+from transfer import blobs as _blobs
+from transfer.errors import ConfigError
+
 _TRANSPORT = os.environ.get("MCP_TRANSPORT", "stdio").lower()
 _IS_HTTP = _TRANSPORT in ("http", "streamable-http")
+
+# Blob store settings come from X3D_MCP_BLOB* variables; a bad value stops the server here.
+try:
+    _blob_cfg = _blobs.configure()
+except ConfigError as _exc:
+    raise SystemExit(f"x3d-mcp: {_exc}")
 
 _real_stdout = sys.stdout
 sys.stdout = sys.stderr
@@ -29,6 +38,7 @@ from tools import (
     workflow, granular, convert, query, validate_tool, render, scene_ops, animate,
     prompts, semantics,
 )
+from tools import transfer as blob_tools
 sys.stdout = _real_stdout
 
 # Surfaced to the client on connect -- the proactive "read me first" that keeps a
@@ -67,10 +77,34 @@ or defaulted containerField makes a conforming viewer silently drop or misfile t
 
 When unsure, the answer is describe_node + validate_semantic -- not recall."""
 
+# Only when the blob store is on: tells the model how to keep big documents out of its context.
+BLOB_INSTRUCTIONS = """
+
+LARGE SCENES, SPLATS AND DATA FILES: never paste a document over about 100 KB into a tool call, \
+and do not ask for one back. Store it once, then name it. Under stdio pass `path=`; over HTTP \
+the harness uploads with `PUT /blob` (bearer token) and small or compressed payloads go through \
+`blob_put`. Then pass `blob_id=<id>` to validate_x3d, validate_semantic, autofix_x3d, repair_x3d, \
+convert_x3d, modify_x3d_node, remove_x3d_node and move_x3d_node (leave `content` empty where it is \
+required). Add `return_mode="summary"` to get the digest, size, node counts and the list of \
+changes instead of the document, or `return_mode="blob"` to keep the result server-side and get \
+its new blob_id for the next call. `blob_info` and `blob_read` (paged) look inside a stored blob \
+when you must see part of it."""
+if _blob_cfg.enabled:
+    INSTRUCTIONS += BLOB_INSTRUCTIONS
+
 _fastmcp_kwargs = {}
 if _IS_HTTP:
     _fastmcp_kwargs["host"] = os.environ.get("HOST", "0.0.0.0")
     _fastmcp_kwargs["port"] = int(os.environ.get("PORT", "8000"))
+    if _blob_cfg.allowed_hosts or _blob_cfg.allowed_origins:
+        # X3D_MCP_ALLOWED_HOSTS / _ORIGINS turn on the SDK's DNS-rebinding checks for /mcp
+        # (and /blob); without them a hosted bind has none, as before.
+        from mcp.server.transport_security import TransportSecuritySettings
+        _fastmcp_kwargs["transport_security"] = TransportSecuritySettings(
+            enable_dns_rebinding_protection=True,
+            allowed_hosts=list(_blob_cfg.allowed_hosts),
+            allowed_origins=list(_blob_cfg.allowed_origins),
+        )
 
 mcp = FastMCP("x3d-mcp", instructions=INSTRUCTIONS, **_fastmcp_kwargs)
 
@@ -84,6 +118,13 @@ scene_ops.register(mcp)
 animate.register(mcp)
 prompts.register(mcp)
 semantics.register(mcp)
+
+if _blob_cfg.enabled:
+    blob_tools.register(mcp)
+    if _IS_HTTP:
+        # PUT/POST/GET/HEAD/DELETE /blob: exist only with X3D_MCP_BLOB_TOKEN set.
+        from transfer import routes as _blob_routes
+        _blob_routes.register(mcp, _blob_cfg)
 
 
 # Friendly responses on the root and /pulse paths under HTTP transport.
@@ -117,6 +158,11 @@ if __name__ == "__main__":
             f"{mcp.settings.streamable_http_path} (streamable-http)",
             file=sys.stderr,
         )
+        if _blob_cfg.enabled:
+            print("x3d-mcp: blob routes enabled at /blob (bearer token required)", file=sys.stderr)
+            if not (_blob_cfg.allowed_hosts or _blob_cfg.allowed_origins):
+                print("x3d-mcp: warning: X3D_MCP_ALLOWED_HOSTS/_ORIGINS are not set; the bearer "
+                      "token alone protects /blob", file=sys.stderr)
         mcp.run(transport="streamable-http")
     else:
         mcp.run()
