@@ -21,34 +21,29 @@ def _http_transport_active() -> bool:
     return transport in ("http", "streamable-http")
 
 
-def load_x3d_source(content: str | None = None, path: str | None = None) -> str:
-    """Return X3D text from exactly one of `content` (inline) or `path` (a file).
-
-    Raises ValueError if neither or both are given, or if the file is missing --
-    callers should surface the message to the user.
-    """
-    has_content = content is not None and content.strip() != ""
-    has_path = path is not None and path.strip() != ""
-
-    if has_path and has_content:
+def read_path_text(path: str) -> str:
+    """Read an X3D file as UTF-8 text. Raises ValueError for the HTTP transport, a missing file, or a read error."""
+    if _http_transport_active():
         raise ValueError(
-            "Provide either `content` (inline X3D) or `path` (a file), not both."
+            "Path input is disabled over the HTTP transport. "
+            "Provide inline X3D content instead."
         )
-    if not has_path and not has_content:
-        raise ValueError("Provide either `content` (inline X3D) or `path` (a file).")
+    p = Path(path).expanduser()
+    if not p.is_file():
+        raise ValueError(f"X3D file not found: {p}")
+    try:
+        return p.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise ValueError(f"Could not read X3D file {p}: {exc}") from exc
 
-    if has_path:
-        if _http_transport_active():
-            raise ValueError(
-                "Path input is disabled over the HTTP transport. "
-                "Provide inline X3D content instead."
-            )
-        p = Path(path).expanduser()
-        if not p.is_file():
-            raise ValueError(f"X3D file not found: {p}")
-        try:
-            return p.read_text(encoding="utf-8")
-        except OSError as exc:
-            raise ValueError(f"Could not read X3D file {p}: {exc}") from exc
 
-    return content
+def load_x3d_source(content: str | None = None, path: str | None = None,
+                    blob_id: str | None = None) -> str:
+    """Return X3D text from exactly one of `content` (inline), `path` (a file) or `blob_id` (a stored blob).
+
+    Raises ValueError if none or several are given, or if the file or blob is
+    missing -- callers should surface the message to the user. The choice of
+    input is made in transfer.blobs.resolve_text, the one place that owns it.
+    """
+    from transfer.blobs import resolve_text
+    return resolve_text(content or "", path or "", blob_id or "")[0]
