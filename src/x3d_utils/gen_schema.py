@@ -9,9 +9,11 @@ NavigationInfo.@type is the array the field really is.
 
 It is not a new language. An instance of the subset is valid against the official
 schema (with the NavigationInfo correction from validation.validate), which is why
-the root requires "encoding" and, for version 4.1, which the 4.0 enum lacks, the
-two differ on @version only. It is a first filter for generation, never the gate:
-the exact validators (XSD, semantic checks) still decide.
+the root requires "encoding". There are two exceptions. The official @version enum
+stops at 4.0, so a 4.1 instance fails there on @version alone. And the component name
+TextureProjection, which the XSD and X3DUOM use, is spelled TextureProjector in the
+official head.component enum. The subset is a first filter for generation, never the
+gate: the exact validators (XSD, semantic checks) still decide.
 
 Left out, to keep the size down: IS and PROTO statements, -metadata, @class/@id/@style,
 bounding-box fields, @geoSystem (its oneOf has nine alternatives) and the secondary
