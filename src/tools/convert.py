@@ -8,10 +8,14 @@ import json as json_mod
 from lxml import etree
 import x3d.x3d as x3d_mod
 from x3d.x3d import X3D, Scene, head, meta
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import Context, FastMCP
 
+from transfer.outputs import XML_TYPE, document_info, envelope, error_envelope, input_info, parse_mode
+from transfer.tooling import require_blob_access, resolve_input, run_heavy
 from validation.defuse import reorder_defs_xml
 from x3d_utils.x3duom import get_x3duom
+
+_MEDIA_TYPES = {"xml": XML_TYPE, "json": "model/x3d+json", "vrml": "model/x3d+vrml"}
 
 
 def _parse_xml_to_model(xml_string: str) -> X3D:
@@ -160,28 +164,61 @@ def _coerce_value(value_str: str, field_type: str):
     return value_str
 
 
+def _convert(content: str, from_encoding: str, to_encoding: str) -> tuple[str, bool]:
+    """(output, True) for a conversion; (message, False) for an unsupported encoding."""
+    if from_encoding == "xml":
+        model = _parse_xml_to_model(content)
+    else:
+        return f"Parsing from '{from_encoding}' is not yet supported. Use 'xml' as source.", False
+
+    if to_encoding == "xml":
+        return reorder_defs_xml(model.XML()), True      # x3d.py writes joints before bodies
+    elif to_encoding == "json":
+        return model.JSON(), True
+    elif to_encoding == "vrml":
+        return model.VRML(), True
+    else:
+        return f"Unknown target encoding: {to_encoding}", False
+
+
 def register(mcp: FastMCP):
 
     @mcp.tool()
-    def convert_x3d(content: str, from_encoding: str,
-                    to_encoding: str) -> str:
+    async def convert_x3d(content: str, from_encoding: str, to_encoding: str,
+                          blob_id: str = "", return_mode: str = "full",
+                          ctx: Context = None) -> str:
         """Convert X3D content between encodings.
 
         Args:
-            content: The X3D content string.
+            content: The X3D content string. Pass an empty string when blob_id is given.
             from_encoding: Source encoding - "xml".
             to_encoding: Target encoding - "xml", "json", or "vrml".
+            blob_id: Id of a stored blob holding the document (instead of content).
+            return_mode: "full" (default) returns the converted document. "summary" returns
+                JSON: the result's sha256, size and (for xml) node counts, not the document.
+                "blob" also stores the result and returns its blob_id.
         """
-        if from_encoding == "xml":
-            model = _parse_xml_to_model(content)
-        else:
-            return f"Parsing from '{from_encoding}' is not yet supported. Use 'xml' as source."
-
-        if to_encoding == "xml":
-            return reorder_defs_xml(model.XML())      # x3d.py writes joints before bodies
-        elif to_encoding == "json":
-            return model.JSON()
-        elif to_encoding == "vrml":
-            return model.VRML()
-        else:
-            return f"Unknown target encoding: {to_encoding}"
+        try:
+            mode = parse_mode(return_mode)
+        except ValueError as e:
+            return str(e)
+        label = "inline content"
+        try:
+            if blob_id.strip():
+                content, label = await resolve_input(content, "", blob_id, ctx)
+            if mode == "blob":
+                require_blob_access(ctx)
+        except ValueError as e:
+            return str(e) if mode == "full" else error_envelope(mode, str(e))
+        out, ok = await run_heavy(_convert, content, from_encoding, to_encoding, size=len(content))
+        if mode == "full":
+            return out
+        if not ok:
+            return error_envelope(mode, out, label)
+        media = _MEDIA_TYPES[to_encoding]
+        try:
+            doc = await run_heavy(document_info, out, media, mode == "blob", size=len(out))
+            inp = await run_heavy(input_info, content, blob_id, size=len(content))
+        except ValueError as e:
+            return error_envelope(mode, str(e), label)
+        return envelope(mode, label, ok=True, input=inp, document=doc)
