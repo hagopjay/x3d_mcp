@@ -15,6 +15,7 @@ and nothing is generated from it.
 | [x3d-examples.md](x3d-examples.md) | Worked example scenes |
 | [x3d-tools-and-references.md](x3d-tools-and-references.md) | Browsers, converters, specifications |
 | [ecosystem-research.md](ecosystem-research.md) | The wider ecosystem the server sits in |
+| [transfer-layer.md](transfer-layer.md) | Moving large scenes in and out without the model: the blob store, `/blob` routes, `blob_id` and `return_mode`, settings, security |
 
 ## The Accountability Playground
 
