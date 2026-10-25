@@ -185,7 +185,7 @@ def _chunk_job(data: bytes, limits: SplatLimits, opts: dict) -> dict:
 
 def register(mcp: FastMCP):
 
-    @mcp.tool()
+    @mcp.tool(structured_output=False)
     async def splat_inspect(path: str = "", blob_id: str = "", ctx: Context = None) -> str:
         """Report on a Gaussian splat file: count, SH degree, bounding box, statistics, memory estimates and a verdict.
 
@@ -212,7 +212,7 @@ def register(mcp: FastMCP):
             return _err(exc)
         return json.dumps(_finite({"source": label, **report}), indent=2)
 
-    @mcp.tool()
+    @mcp.tool(structured_output=False)
     async def splat_chunk(path: str = "", blob_id: str = "", target: int = 50000, method: str = "kd",
                           precision: str = "auto", coordinate_system: str = "as-is", bbox_mode: str = "cull_safe",
                           name: str = "scene", out_dir: str = "", url_prefix: str = "", drop_invalid: bool = False,

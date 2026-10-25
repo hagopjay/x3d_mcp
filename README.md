@@ -322,7 +322,7 @@ For documents too large to pass through the model (a 10 MB scene, a splat file).
 
 ### Splat Tools
 
-Gaussian splat files are 5 to 65 MB and one `GaussianSplats` node cannot be validated past about 80,000 splats (libxml2's 10 MB start-tag limit), so they are read on the server and never pass through the model. Both tools take `path` (stdio only) or `blob_id`; they need numpy (`pip install 'x3d-mcp[splat]'`) and are not registered without it. See [docs/splats.md](docs/splats.md).
+Gaussian splat files are 5 to 65 MB and one `GaussianSplats` node cannot be validated past roughly 75,000 to 100,000 splats, fewer with spherical harmonics (libxml2's 10 MB start-tag limit), so they are read on the server and never pass through the model. Both tools take `path` (stdio only) or `blob_id`; they need numpy (`pip install 'x3d-mcp[splat]'`) and are not registered without it. See [docs/splats.md](docs/splats.md).
 
 | Tool | Description |
 |------|-------------|

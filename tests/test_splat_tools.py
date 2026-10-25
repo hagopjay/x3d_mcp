@@ -97,6 +97,7 @@ def test_both_tools_are_registered_with_optional_path_and_blob_id(mcp):
         props = tools[name].inputSchema["properties"]
         assert props["path"]["default"] == "" and props["blob_id"]["default"] == ""
         assert "ctx" not in props and not tools[name].inputSchema.get("required")
+        assert tools[name].outputSchema is None            # structured_output=False: the report is not sent twice
 
 
 def test_inspect_by_blob_id_equals_the_function_and_by_path_agrees(mcp, spz_file):

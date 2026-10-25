@@ -101,7 +101,7 @@ _SPLATS = splat_tools.numpy_available() and (_blob_cfg.enabled or not _IS_HTTP)
 SPLAT_INSTRUCTIONS = """
 
 GAUSSIAN SPLATS: a splat scene is 5 to 65 MB and one GaussianSplats node cannot be validated past roughly \
-60,000 to 100,000 splats (libxml2's 10 MB start-tag limit). Do not paste splat data. Name the file (`blob_id=`, or \
+75,000 to 100,000 splats (libxml2's 10 MB start-tag limit). Do not paste splat data. Name the file (`blob_id=`, or \
 `path=` under stdio) and call `splat_inspect` for its facts and a verdict, then `splat_chunk` to cut it \
 into small valid X3D files plus a master scene of Inline nodes and a manifest; the answer lists blob ids, \
 never contents. validate_x3d on an oversize scene answers "not-checkable-at-this-size" (not a parse error)."""

@@ -22,7 +22,7 @@ unless it says otherwise.
 | Observation | Grade |
 |---|---|
 | A 500,000-splat scene is 49 to 65 MB as X3D text and 5 to 8 MB as `.spz`. X3D 4.1 `GaussianSplats` has only inline array fields (positions, scales, orientations, opacities, sphericalHarmonics\*), no `url`. | Confirmed |
-| libxml2 refuses a start tag over 10,000,000 bytes (all attributes together). With this server's digits that is about 60,000 to 100,000 splats per node (80,601 for lattice digits, fewer with spherical harmonics). Before this change `validate_x3d` answered `XML parse error: Resource limit exceeded`, which reads like a malformed file. | Confirmed |
+| libxml2 refuses a start tag over 10,000,000 bytes (all attributes together). At 99 bytes per splat (lattice digits) that is 100,000 splats per node, at 129 (six decimals) 77,000, and at SH degree 3 about 18,000; the tools plan for an 8,000,000-byte budget (80,601 at lattice digits). Before this change `validate_x3d` answered `XML parse error: Resource limit exceeded`, which reads like a malformed file. | Confirmed |
 | One attribute of about 1.3 million six-decimal numbers (13 MB) makes the XSD engine itself fail with "Internal error", even after the parser limit is lifted. The point where it fails depends on the shape of the numbers; three shapes were measured. | Confirmed |
 | `.spz` is gzip around a fixed-point stream. Decoding 500,000 splats takes 0.08 to 0.17 s with numpy. | Confirmed |
 
