@@ -37,6 +37,8 @@ MAGIC = 0x5053474E                # "NGSP" read as a little-endian u32
 COLOR_SCALE = np.float32(0.15)
 SQRT1_2 = np.float32(0.707106781186547524401)
 DEFAULT_MAX_POINTS = 10_000_000   # 200 MB of streams and about 560 MB of float32 arrays at SH degree 0
+DEFAULT_MAX_RATIO = 250.0         # streams : file; real files measure 1.2 to 3, the blob store refuses uploads above this ratio too
+DEFAULT_MAX_PAYLOAD = 512 << 20   # decoded stream bytes (10M splats: 200 MB at SH degree 0, 650 MB at degree 3)
 DEFLATE_MAX_RATIO = 1032             # the most one deflate byte can stand for; a header claiming more than this is lying
 FLAG_ANTIALIASED = 0x1
 FLAG_EXTENSIONS = 0x2
@@ -130,6 +132,8 @@ def read_header(data: bytes) -> SpzHeader:
             buf = zlib.decompressobj(31).decompress(bytes(data), 32)
         except zlib.error as exc:
             raise SpzError(f"corrupt gzip stream: {exc}") from exc
+        if len(buf) < 16:
+            raise SpzError(f"truncated gzip stream: {len(data):,} bytes hold {len(buf)} of the 16 header bytes")
         return _parse_header(buf, "gzip")
     return _parse_header(bytes(data[:32]), "none")
 
@@ -154,17 +158,21 @@ def _check_count(hdr: SpzHeader, max_points: int, size: int | None = None) -> No
         raise SpzError(f"{hdr.count:,} splats cannot fit in {size:,} bytes")
 
 
-def unpack(data: bytes, *, max_points: int = DEFAULT_MAX_POINTS, max_ratio: float | None = None) -> Packed:
+def unpack(data: bytes, *, max_points: int = DEFAULT_MAX_POINTS, max_ratio: float | None = DEFAULT_MAX_RATIO,
+           max_payload_bytes: int | None = DEFAULT_MAX_PAYLOAD) -> Packed:
     """Split an SPZ file into its byte streams, without interpreting them.
 
     Raises SpzError for a bad header, a count over `max_points`, a stream that is truncated or longer than the
-    header allows, and a v4 table of contents that does not match the header. `max_ratio` (a server policy, off by
-    default) also refuses a file whose streams would expand to more than that many times its size; real files
-    measure 1.2 to 3.
+    header allows, and a v4 table of contents that does not match the header. `max_ratio` (default 250; None
+    switches it off) refuses a file whose streams would expand to more than that many times its size, whatever the
+    header says it holds; real files measure 1.2 to 3. `max_payload_bytes` (None: no limit) caps the decoded streams.
     """
     data = bytes(data) if not isinstance(data, (bytes, bytearray, memoryview)) else data
     hdr = read_header(data)
     _check_count(hdr, max_points, len(data) if hdr.wrapped != "gzip" else None)
+    if max_payload_bytes is not None and hdr.payload_size > max_payload_bytes:
+        raise SpzError(f"{hdr.count:,} splats at SH degree {hdr.sh_degree} hold {hdr.payload_size:,} bytes of streams, above the "
+                       f"limit of {max_payload_bytes:,} (X3D_MCP_SPLAT_MAX_PAYLOAD_BYTES)")
     if hdr.wrapped == "gzip" and hdr.payload_size + 16 > len(data) * DEFLATE_MAX_RATIO:
         raise SpzError(f"{hdr.count:,} splats cannot fit in {len(data):,} bytes (deflate never exceeds {DEFLATE_MAX_RATIO}:1)")
     if max_ratio is not None and hdr.payload_size + 16 > len(data) * max_ratio:
@@ -204,7 +212,8 @@ def _unpack_v4(data, hdr: SpzHeader) -> Packed:
         raise SpzError("v4 table of contents lies outside the file")
     pos = hdr.toc_offset + 16 * hdr.num_streams
     dctx = zstandard.ZstdDecompressor()
-    out = bytearray()
+    out = bytearray(sum(sizes))                   # one buffer, filled in place: no growth copies, no final bytes() copy
+    at = 0
     for i, want in enumerate(sizes):
         csize, usize = struct.unpack_from("<QQ", data, hdr.toc_offset + 16 * i)
         if usize != want:
@@ -224,11 +233,13 @@ def _unpack_v4(data, hdr: SpzHeader) -> Packed:
             raise SpzError(f"v4 stream {i}: {exc}") from exc
         if len(piece) != want:
             raise SpzError(f"v4 stream {i} decoded to {len(piece):,} bytes, expected {want:,}")
-        out += piece
+        out[at:at + want] = piece
+        del piece
+        at += want
         pos += csize
     if pos != size:
         raise SpzError(f"{size - pos:,} unexplained bytes after the last v4 stream")
-    return _slice_streams(hdr, bytes(out))
+    return _slice_streams(hdr, out)
 
 
 def _lut(fn) -> np.ndarray:
@@ -291,13 +302,14 @@ def decode(packed: Packed, *, sh: bool = True) -> SplatCloud:
               "sh_degree_file": hdr.sh_degree, "has_extensions": hdr.has_extensions, "wrapped": hdr.wrapped},
     )
     if sh and hdr.sh_dim:
-        coefs = _SH_LUT[packed.sh]
-        cloud.sh = coefs[:, :SH_DIMS[3], :] if hdr.sh_degree == 4 else coefs
+        raw = packed.sh[:, :SH_DIMS[3], :] if hdr.sh_degree == 4 else packed.sh     # slice first: no float for degree 4
+        cloud.sh = _SH_LUT[raw]
         if hdr.sh_degree == 4:
             cloud.info["sh_degree_dropped"] = "degree 4 has no X3D field; degrees 0 to 3 kept"
     return cloud
 
 
-def read_spz(data: bytes, *, max_points: int = DEFAULT_MAX_POINTS, max_ratio: float | None = None, sh: bool = True) -> SplatCloud:
+def read_spz(data: bytes, *, max_points: int = DEFAULT_MAX_POINTS, max_ratio: float | None = DEFAULT_MAX_RATIO,
+             max_payload_bytes: int | None = DEFAULT_MAX_PAYLOAD, sh: bool = True) -> SplatCloud:
     """Decode an SPZ file (bytes) into a SplatCloud."""
-    return decode(unpack(data, max_points=max_points, max_ratio=max_ratio), sh=sh)
+    return decode(unpack(data, max_points=max_points, max_ratio=max_ratio, max_payload_bytes=max_payload_bytes), sh=sh)

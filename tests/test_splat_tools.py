@@ -347,7 +347,8 @@ def test_server_limits_apply_to_both_tools(mcp, monkeypatch):
 def test_limits_come_from_the_environment_and_bad_values_are_named():
     from transfer.errors import ConfigError
     d = SplatLimits.from_env({})
-    assert (d.max_points, d.max_ratio, d.max_text_bytes, d.max_output_bytes) == (10_000_000, None, 256 << 20, 512 << 20)
+    assert (d.max_points, d.max_ratio, d.max_text_bytes, d.max_output_bytes) == (10_000_000, 250.0, 256 << 20, 512 << 20)
+    assert d.max_payload_bytes == 512 << 20 and SplatLimits.from_env({"X3D_MCP_SPLAT_MAX_RATIO": "0"}).max_ratio is None
     got = SplatLimits.from_env({"X3D_MCP_SPLAT_MAX_POINTS": "5000", "X3D_MCP_SPLAT_MAX_RATIO": "100",
                                 "X3D_MCP_SPLAT_MAX_TEXT_BYTES": "1M", "X3D_MCP_SPLAT_MAX_OUTPUT_BYTES": "2G"})
     assert (got.max_points, got.max_ratio, got.max_text_bytes, got.max_output_bytes) == (5000, 100.0, 1 << 20, 2 << 30)

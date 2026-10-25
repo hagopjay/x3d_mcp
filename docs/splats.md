@@ -121,7 +121,7 @@ says when stored files lapse; fetch them (`GET /blob/<id>`) before then.
 | `precision` | `auto`: for SPZ, digits derived from the quantisation steps ("lattice": positions 4 decimals at 10 fractional bits, 99 bytes per splat); otherwise six decimals ("bridge"). `exact`: nine significant digits |
 | `coordinate_system` | `as-is` or `rub` (the same), or `rdf`: wraps the chunks in a Transform that turns the scene half a turn about X, for y-down files. A training PLY is right-down-forward; an SPZ file records no axes |
 | `bbox_mode` | `cull_safe` (default): each node's centre is its own splats' centre and its size covers the whole scene, so a viewer never culls a node. `tight`: the chunk's real box (the tight box is always in the manifest) |
-| `url_prefix` | prepended to the `Inline` urls, for files hosted at an absolute address. Spaces, quotes, backslashes and angle brackets are refused |
+| `url_prefix` | prepended to the `Inline` urls, for files hosted at an absolute address. At most 1,024 characters (it is repeated in every `Inline`); spaces, quotes, backslashes and angle brackets are refused |
 | `drop_invalid` | leave out splats with NaN or infinity (default: fail and say how many) |
 | `validate` | also run the XSD and semantic checks on every file and report the verdicts in `validation` (about 8 s for 500,000 splats) |
 | `bundle` | also store the tar |
@@ -202,8 +202,9 @@ variable.
 | Variable | Default | Meaning |
 |---|---|---|
 | `X3D_MCP_SPLAT_MAX_POINTS` | 10,000,000 | most splats a file may declare. The header is checked before anything is allocated |
-| `X3D_MCP_SPLAT_MAX_RATIO` | unset | refuse an SPZ whose streams expand to more than this many times its size. Real files measure 1.2; 100 leaves wide headroom |
-| `X3D_MCP_SPLAT_MAX_TEXT_BYTES` | 256M | largest X3D text scene or ASCII PLY body the tools will read (text parses to float64, 1.5 to 4 times its size) |
+| `X3D_MCP_SPLAT_MAX_RATIO` | 250 | refuse an SPZ whose streams expand to more than this many times its size (any version). Real files measure 1.2 to 3; `0` switches the limit off |
+| `X3D_MCP_SPLAT_MAX_PAYLOAD_BYTES` | 512M | most decoded SPZ stream bytes a file may declare (10,000,000 splats are 200 MB at SH degree 0 and 650 MB at degree 3). Checked from the header, before anything is allocated |
+| `X3D_MCP_SPLAT_MAX_TEXT_BYTES` | 256M | largest X3D text scene or ASCII PLY body the tools will read (text parses to arrays larger than itself: measured peaks above the input are 4 times for X3D text with many small nodes and 5.6 times for ASCII PLY of one-digit numbers; plan for that at the cap) |
 | `X3D_MCP_SPLAT_MAX_OUTPUT_BYTES` | 512M | most X3D text one `splat_chunk` call may produce, estimated from a sample before cutting; the files are held in memory until stored |
 | `X3D_MCP_XML_HUGE`, `X3D_MCP_XML_HUGE_MAX_BYTES` | off, 128M | see above |
 

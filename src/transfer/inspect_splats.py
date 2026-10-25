@@ -330,14 +330,14 @@ def _ply_refusal(hdr, max_points: int) -> str:
     return ""
 
 
-def load_cloud(data: bytes, *, max_points: int = 10_000_000, max_ratio: float | None = None,
-               max_text_bytes: int = MAX_TEXT_BYTES) -> tuple[SplatCloud, str, dict]:
+def load_cloud(data: bytes, *, max_points: int = 10_000_000, max_ratio: float | None = spzmod.DEFAULT_MAX_RATIO,
+               max_text_bytes: int = MAX_TEXT_BYTES, max_payload_bytes: int | None = spzmod.DEFAULT_MAX_PAYLOAD) -> tuple[SplatCloud, str, dict]:
     """Decode the bytes of an SPZ, PLY or X3D text file into (cloud, format, facts). Raises SplatError for unreadable
     input, a count above `max_points`, or X3D text above `max_text_bytes`. X3D text is read from its GaussianSplats
     nodes only: any other node of the scene is not carried over."""
     fmt = detect_format(data)
     if fmt == "spz":
-        return spzmod.read_spz(data, max_points=max_points, max_ratio=max_ratio), fmt, {}
+        return spzmod.read_spz(data, max_points=max_points, max_ratio=max_ratio, max_payload_bytes=max_payload_bytes), fmt, {}
     if fmt == "ply":
         return plymod.read_ply(data, max_points=max_points, max_ascii_bytes=max_text_bytes), fmt, {}
     if len(data) > max_text_bytes:
@@ -347,7 +347,7 @@ def load_cloud(data: bytes, *, max_points: int = 10_000_000, max_ratio: float | 
 
 
 def inspect_bytes(data: bytes, *, max_points: int = 10_000_000, max_text_bytes: int = MAX_TEXT_BYTES,
-                  max_ratio: float | None = None) -> dict:
+                  max_ratio: float | None = spzmod.DEFAULT_MAX_RATIO, max_payload_bytes: int | None = spzmod.DEFAULT_MAX_PAYLOAD) -> dict:
     """Entry point: bytes of an SPZ, PLY or X3D text -> report dict. Raises SplatError for unreadable input."""
     fmt = detect_format(data)
     size = len(data)
@@ -355,11 +355,14 @@ def inspect_bytes(data: bytes, *, max_points: int = 10_000_000, max_text_bytes: 
         hdr = spzmod.read_header(data)
         facts = {"spz": {"version": hdr.version, "antialiased": hdr.antialiased, "fractional_bits": hdr.fractional_bits,
                          "wrapped": hdr.wrapped, "decoded_payload_bytes": hdr.payload_size}}
-        if hdr.count > max_points:
+        over = (f"{hdr.count:,} splats is above the inspect limit of {max_points:,}" if hdr.count > max_points else
+                f"{hdr.payload_size:,} bytes of streams is above the inspect limit of {max_payload_bytes:,}"
+                if max_payload_bytes is not None and hdr.payload_size > max_payload_bytes else "")
+        if over:
             return {"format": "spz", "bytes": size, "count": hdr.count, "sh_degree": hdr.sh_degree, **facts,
                     "verdict": {"level": "unusable", "reasons": [{"level": "error", "code": "too-large",
-                                "message": f"{hdr.count:,} splats is above the inspect limit of {max_points:,}; header facts only"}]}}
-        return inspect_cloud(spzmod.read_spz(data, max_points=max_points, max_ratio=max_ratio), file_bytes=size, fmt="spz", extra=facts, max_points=max_points)
+                                "message": f"{over}; header facts only"}]}}
+        return inspect_cloud(spzmod.read_spz(data, max_points=max_points, max_ratio=max_ratio, max_payload_bytes=max_payload_bytes), file_bytes=size, fmt="spz", extra=facts, max_points=max_points)
     if fmt == "ply":
         hdr = plymod.read_header(data)
         facts = {"ply": {"format": hdr.format, "properties": len(hdr.vertex.properties) if hdr.vertex else 0,

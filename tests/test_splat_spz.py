@@ -171,6 +171,8 @@ def test_count_that_fits_the_ratio_but_not_the_stream_is_truncated():
     # 1000 splats claim 20 KB; a gzip of that header and 40 zero bytes is small, but 20 KB is within 1032 times its size
     blob = gzip.compress(header(1000) + bytes(40))
     with pytest.raises(spz.SpzError, match="truncated"):
+        spz.read_spz(blob, max_ratio=None)                      # the default ratio limit (250) refuses it earlier
+    with pytest.raises(spz.SpzError, match="ratio limit of 250"):
         spz.read_spz(blob)
 
 
@@ -181,7 +183,7 @@ def test_gzip_bomb_stops_at_the_size_the_header_allows():
     assert len(blob) < 1_000_000
     tracemalloc.start()
     with pytest.raises(spz.SpzError, match="more than"):
-        spz.read_spz(blob)
+        spz.read_spz(blob, max_ratio=None)
     peak = tracemalloc.get_traced_memory()[1]
     tracemalloc.stop()
     assert peak < 10_000_000
@@ -304,3 +306,46 @@ def test_mutation_fuzz_only_ever_raises_spz_errors():
             except spz.SpzError:
                 rejected += 1
     assert decoded + rejected == 1000 and rejected > 300          # many mutations are caught; the rest decode to some splats
+
+
+# ---- expansion bombs and short files
+
+def test_a_header_claiming_a_huge_cloud_is_refused_before_anything_is_allocated():
+    # 10M splats at SH degree 4 claim 920 MB of streams; a gzip of zeros reaches that in under 1 MB
+    blob = gzip.compress(header(10_000_000, sh=4) + bytes(1_000_000), 9)
+    tracemalloc.start()
+    with pytest.raises(spz.SpzError, match="cannot fit"):
+        spz.read_spz(blob, max_payload_bytes=None)
+    with pytest.raises(spz.SpzError, match="limit of 536,870,912"):
+        spz.read_spz(blob)
+    peak = tracemalloc.get_traced_memory()[1]
+    tracemalloc.stop()
+    assert peak < 20_000_000
+    assert spz.unpack(spzfix.write_spz(make_cloud(100)), max_payload_bytes=2_000).header.count == 100
+    # a header that deflate could carry (about 1000:1) but real files never reach: the ratio limit refuses it
+    mid = gzip.compress(header(100_000, sh=4) + bytes(100_000 * 92), 9)
+    assert 250 < (100_000 * 92 + 16) / len(mid) < 1032
+    with pytest.raises(spz.SpzError, match="ratio limit of 250"):
+        spz.read_spz(mid)
+
+
+def test_the_ratio_limit_covers_v4_too():
+    data = spzfix.write_spz(make_cloud(2000), version=4, wrap="zstd")
+    spz.read_spz(data)
+    with pytest.raises(spz.SpzError, match="ratio limit"):
+        spz.read_spz(data, max_ratio=0.5)
+
+
+def test_degree_4_sh_keeps_the_first_15_coefficients():
+    n = 300
+    raw = header(n, sh=4) + bytes(n * (9 + 1 + 3 + 3 + 4 + 72))
+    cloud = spz.read_spz(raw)
+    assert cloud.sh.shape == (n, 15, 3) and cloud.info["sh_degree_dropped"]
+
+
+def test_a_cut_off_gzip_stream_says_so_not_that_the_header_is_missing():
+    data = spzfix.write_spz(make_cloud(2000))
+    with pytest.raises(spz.SpzError, match="truncated gzip stream"):
+        spz.read_header(data[:50])
+    with pytest.raises(spz.SpzError, match="truncated gzip stream"):
+        spz.read_spz(data[:50])

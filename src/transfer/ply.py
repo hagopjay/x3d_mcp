@@ -20,7 +20,7 @@ from .cloud import SH_DIMS, SplatCloud, SplatError, sh_degree_for_dim
 
 HEADER_LIMIT = 65536
 DEFAULT_MAX_POINTS = 10_000_000
-DEFAULT_MAX_ASCII_BYTES = 256 * 1024 * 1024    # an ASCII body parses to float64, 1.5 to 4 times its size
+DEFAULT_MAX_ASCII_BYTES = 256 * 1024 * 1024    # an ASCII body of one-digit numbers parses to float32 at 2 times its size, and the cloud adds about as much again
 _ASCII_BLOCK = 8 * 1024 * 1024
 _WHITESPACE = re.compile(rb"\s")
 _END_HEADER = re.compile(rb"^end_header[ \t]*\r?$", re.MULTILINE)     # a whole line; a comment may mention the word
@@ -138,7 +138,7 @@ def read_header(data: bytes) -> PlyHeader:
 
 
 def _ascii_rows(data: bytes, hdr: PlyHeader, max_ascii_bytes: int) -> dict[str, np.ndarray]:
-    """Columns of an ASCII vertex element, by property name (float64).
+    """Columns of an ASCII vertex element, by property name (float32, the precision of the cloud and of a binary PLY).
 
     The body is read in blocks cut at whitespace into an array sized by the header, so a body with more numbers than the
     header promises is refused after one block instead of being parsed whole. (numpy's `count` argument is not used: it
@@ -151,12 +151,12 @@ def _ascii_rows(data: bytes, hdr: PlyHeader, max_ascii_bytes: int) -> dict[str, 
     size = len(data) - hdr.header_size
     need = v.count * len(names)
     if need == 0:
-        return {n: np.empty(0) for n in names}
+        return {n: np.empty(0, np.float32) for n in names}
     if size > max_ascii_bytes:
         raise PlyError(f"ASCII body of {size:,} bytes is above the limit of {max_ascii_bytes:,}")
     if size < 2 * need - 1:
         raise PlyError(f"truncated: {size:,} bytes of text cannot hold the {need:,} values the header promises")
-    flat = np.empty(need, dtype=np.float64)
+    flat = np.empty(need, dtype=np.float32)
     got, pos, end = 0, hdr.header_size, len(data)
     while pos < end:
         stop = end
@@ -170,7 +170,7 @@ def _ascii_rows(data: bytes, hdr: PlyHeader, max_ascii_bytes: int) -> dict[str, 
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("error")            # numpy before 2 only warns about unreadable text
-                values = np.fromstring(piece, dtype=np.float64, sep=" ")
+                values = np.fromstring(piece, dtype=np.float32, sep=" ")
         except (ValueError, DeprecationWarning) as exc:
             raise PlyError(f"ASCII body is not numbers: {str(exc)[:80]}") from exc
         if got + len(values) > need:

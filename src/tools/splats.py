@@ -71,7 +71,7 @@ def _always() -> int:
 def _inspect_job(data: bytes, limits: SplatLimits) -> dict:
     from transfer.inspect_splats import inspect_bytes
     return inspect_bytes(data, max_points=limits.max_points, max_text_bytes=limits.max_text_bytes,
-                         max_ratio=limits.max_ratio)
+                         max_ratio=limits.max_ratio, max_payload_bytes=limits.max_payload_bytes)
 
 
 def _validate_files(files: dict[str, bytes]) -> dict:
@@ -154,7 +154,7 @@ def _chunk_job(data: bytes, limits: SplatLimits, opts: dict) -> dict:
     from transfer.chunk import build_envelope, to_tar
     from transfer.inspect_splats import load_cloud
     cloud, fmt, facts = load_cloud(data, max_points=limits.max_points, max_ratio=limits.max_ratio,
-                                   max_text_bytes=limits.max_text_bytes)
+                                   max_text_bytes=limits.max_text_bytes, max_payload_bytes=limits.max_payload_bytes)
     source = {"format": cloud.source_format, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
     files, manifest = build_envelope(
         cloud, name=opts["name"], target=opts["target"], method=opts["method"], precision=opts["precision"],
