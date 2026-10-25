@@ -12,7 +12,7 @@ from mcp.server.fastmcp import Context, FastMCP
 
 from transfer.errors import BlobError
 from transfer.outputs import XML_TYPE, document_info, envelope, error_envelope, input_info, parse_mode
-from transfer.tooling import require_blob_access, resolve_input, run_heavy
+from transfer.tooling import holds_input, require_blob_access, resolve_input, run_heavy
 from validation.defuse import reorder_defs_xml
 from x3d_utils.x3duom import get_x3duom
 
@@ -185,6 +185,7 @@ def _convert(content: str, from_encoding: str, to_encoding: str) -> tuple[str, b
 def register(mcp: FastMCP):
 
     @mcp.tool()
+    @holds_input
     async def convert_x3d(content: str, from_encoding: str, to_encoding: str,
                           blob_id: str = "", return_mode: str = "full",
                           ctx: Context = None) -> str:

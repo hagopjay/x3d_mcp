@@ -19,7 +19,7 @@ from transfer.outputs import (
     XML_TYPE, cap_items, clip, clip_deep, document_info, envelope, error_envelope, input_info,
     parse_mode, report_info,
 )
-from transfer.tooling import require_blob_access, resolve_input, run_heavy
+from transfer.tooling import holds_input, require_blob_access, resolve_input, run_heavy
 
 
 _SEM_ITEM = re.compile(r"- \*\*\[([^\]]+)\]\*\* (.*)")
@@ -51,6 +51,7 @@ def _semantic_summary(report: str) -> dict:
 def register(mcp: FastMCP):
 
     @mcp.tool()
+    @holds_input
     async def validate_x3d(content: str = "", encoding: str = "xml", path: str = "",
                            blob_id: str = "", return_mode: str = "full",
                            ctx: Context = None) -> str:
@@ -116,6 +117,7 @@ def register(mcp: FastMCP):
         )
 
     @mcp.tool()
+    @holds_input
     async def validate_semantic(content: str = "", path: str = "", blob_id: str = "",
                                 return_mode: str = "full", ctx: Context = None) -> str:
         """Run semantic checks on X3D beyond XSD schema validation (content, path OR a stored blob).
@@ -154,6 +156,7 @@ def register(mcp: FastMCP):
         return envelope(mode, label, input=inp, **body)
 
     @mcp.tool()
+    @holds_input
     async def autofix_x3d(content: str = "", path: str = "", blob_id: str = "",
                           return_mode: str = "full", ctx: Context = None) -> str:
         """Auto-correct containerField mistakes and return the FIXED X3D document.
@@ -203,6 +206,7 @@ def register(mcp: FastMCP):
                         **cap_items(clip_deep(result["unfixable"]), "unfixable"))
 
     @mcp.tool()
+    @holds_input
     async def repair_x3d(content: str = "", path: str = "", blob_id: str = "",
                          return_mode: str = "full", ctx: Context = None) -> str:
         """Apply the fixes validate_x3d and validate_semantic name, and return the FIXED document.

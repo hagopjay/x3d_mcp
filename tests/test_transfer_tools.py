@@ -986,3 +986,59 @@ def test_a_cancelled_heavy_job_releases_the_lock():
     assert asyncio.run(go()) == "next"
     assert tooling._HEAVY.acquire(blocking=False)
     tooling._HEAVY.release()
+
+
+def test_concurrent_calls_on_big_blobs_are_admitted_within_the_decoded_byte_budget(mcp, monkeypatch):
+    """Every call decodes its document before it queues for the heavy lock, so queued calls
+    used to pile up their texts. Now at most twice the per-document limit is held at once."""
+    import time
+    doc_size = len(big_scene(2000))
+    blobs.configure(BlobConfig(tool_max_bytes=doc_size + 10_000, offload_min=1000))
+    ids = [store_doc(big_scene(2000).replace("diffuseColor", "diffuseColor", 1) + f"<!-- {i} -->") for i in range(6)]
+    peak = [0]
+    real = validate_tool._validate_semantic
+
+    def slow(text):
+        peak[0] = max(peak[0], tooling._DOC_BYTES)
+        time.sleep(0.15)
+        return real(text)
+
+    monkeypatch.setattr(validate_tool, "_validate_semantic", slow)
+
+    async def go():
+        outs = await asyncio.gather(*[mcp.call_tool("validate_semantic", {"blob_id": i, "return_mode": "summary"})
+                                      for i in ids])
+        return [json.loads(o[0][0].text if isinstance(o, tuple) else o[0].text) for o in outs]
+
+    outs = asyncio.run(go())
+    assert all(o["ok"] is True for o in outs) and len({o["input"]["sha256"] for o in outs}) == 6
+    assert 0 < peak[0] <= 2 * (doc_size + 10_000) and tooling._DOC_BYTES == 0       # the budget, and it drains
+
+
+def test_a_cancelled_call_gives_its_admission_back(mcp, monkeypatch):
+    import time
+    doc = big_scene(1000)
+    blobs.configure(BlobConfig(tool_max_bytes=len(doc) + 10_000, offload_min=1000))
+    bid = store_doc(doc)
+    monkeypatch.setattr(validate_tool, "_validate_semantic", lambda text: time.sleep(0.4) or "# Semantic Check\n")
+
+    async def go():
+        calls = [asyncio.create_task(mcp.call_tool("validate_semantic", {"blob_id": bid, "return_mode": "summary"}))
+                 for _ in range(4)]
+        await asyncio.sleep(0.2)
+        for c in calls[1:]:
+            c.cancel()
+        await asyncio.gather(*calls, return_exceptions=True)
+        return await mcp.call_tool("validate_semantic", {"blob_id": bid, "return_mode": "summary"})
+
+    asyncio.run(go())
+    assert tooling._DOC_BYTES == 0
+
+
+def test_tools_without_a_blob_id_are_not_counted_and_their_schemas_are_untouched(mcp):
+    run(mcp, "validate_semantic", content=SAMPLE)
+    assert tooling._DOC_BYTES == 0
+    schemas = {t.name: list(t.inputSchema["properties"]) for t in asyncio.run(mcp.list_tools())}
+    assert schemas["validate_x3d"] == ["content", "encoding", "path", "blob_id", "return_mode"]
+    assert schemas["modify_x3d_node"] == ["content", "def_name", "field_changes", "blob_id", "return_mode"]
+    assert schemas["convert_x3d"] == ["content", "from_encoding", "to_encoding", "blob_id", "return_mode"]

@@ -1,14 +1,60 @@
 """Helpers the tools share: resolving an input (inline, path or blob) and running heavy work off the event loop."""
 
+import functools
 import threading
+from contextvars import ContextVar
 
 import anyio
 
 from .auth import tool_gate
-from .blobs import get_config, resolve_text
+from .blobs import get_config, get_store, resolve_text
 
 _HEAVY = threading.Lock()
 HEAVY_POLL = 0.02         # seconds between looks at the heavy-job lock while it is taken
+
+# Decoded blob text held by tool calls in flight. A call that names a blob decodes the whole
+# document before it queues for the heavy-job lock, so without a bound every queued call would
+# hold its text. The bound is twice the per-document limit; a lone document is always admitted.
+_DOC_LOCK = threading.Lock()
+_DOC_BYTES = 0
+_held: ContextVar["_Held | None"] = ContextVar("x3d_blob_held", default=None)
+
+
+class _Held:
+    """The decoded bytes one tool call has been admitted for."""
+
+    def __init__(self):
+        self.bytes = 0
+
+
+def _admit(n: int, budget: int) -> bool:
+    global _DOC_BYTES
+    with _DOC_LOCK:
+        if _DOC_BYTES and _DOC_BYTES + n > budget:
+            return False
+        _DOC_BYTES += n
+        return True
+
+
+def _give_back(n: int) -> None:
+    global _DOC_BYTES
+    with _DOC_LOCK:
+        _DOC_BYTES -= n
+
+
+def holds_input(fn):
+    """Decorator for a tool that takes `blob_id`: the decoded document it asks for is counted
+    against the in-flight budget from the moment it is admitted until the call ends."""
+    @functools.wraps(fn)
+    async def wrapper(*args, **kwargs):
+        held = _Held()
+        token = _held.set(held)
+        try:
+            return await fn(*args, **kwargs)
+        finally:
+            _held.reset(token)
+            _give_back(held.bytes)
+    return wrapper
 
 
 async def resolve_input(content: str = "", path: str = "", blob_id: str = "", ctx=None) -> tuple[str, str]:
@@ -22,6 +68,13 @@ async def resolve_input(content: str = "", path: str = "", blob_id: str = "", ct
             raise ValueError(denied)
         # a stored document may be far larger than an inline one could be (X3D_MCP_TOOL_MAX_BYTES):
         # a 34 KB blob can be 250 MiB of text, and a parse costs about 15 times that in memory
+        held = _held.get()
+        if held is not None and not (content or "").strip() and not (path or "").strip():
+            size = get_store().stat(blob_id)["size"]
+            if size <= cfg.tool_max_bytes:              # a larger one is refused when it is read
+                while not _admit(size, 2 * cfg.tool_max_bytes):
+                    await anyio.sleep(HEAVY_POLL)       # wait on the loop, holding neither text nor thread
+                held.bytes += size
         return await anyio.to_thread.run_sync(resolve_text, content or "", path or "", blob_id,
                                               cfg.tool_max_bytes)
     return resolve_text(content or "", path or "", blob_id or "")

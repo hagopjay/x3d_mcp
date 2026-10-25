@@ -19,7 +19,7 @@ from transfer.outputs import (
     SOURCE_CLIP, XML_TYPE, cap_items, clip, clip_deep, document_info, envelope, error_envelope,
     input_info, parse_mode,
 )
-from transfer.tooling import require_blob_access, resolve_input, run_heavy
+from transfer.tooling import holds_input, require_blob_access, resolve_input, run_heavy
 
 
 def _http_transport_active() -> bool:
@@ -343,6 +343,7 @@ async def _scene_op(ctx, content: str, blob_id: str, return_mode: str, run) -> s
 def register(mcp: FastMCP):
 
     @mcp.tool()
+    @holds_input
     async def modify_x3d_node(
         content: str, def_name: str, field_changes: str,
         blob_id: str = "", return_mode: str = "full", ctx: Context = None,
@@ -374,6 +375,7 @@ def register(mcp: FastMCP):
             lambda src, inline, log: _modify_node(src, def_name, changes, inline, log))
 
     @mcp.tool()
+    @holds_input
     async def remove_x3d_node(
         content: str,
         def_name: str = "",
@@ -404,6 +406,7 @@ def register(mcp: FastMCP):
             lambda src, inline, log: _remove_node(src, def_name, node_type, index, inline, log))
 
     @mcp.tool()
+    @holds_input
     async def move_x3d_node(
         content: str, def_name: str, new_parent_def: str = "",
         blob_id: str = "", return_mode: str = "full", ctx: Context = None,
