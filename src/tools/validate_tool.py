@@ -14,9 +14,10 @@ from mcp.server.fastmcp import Context
 from validation.autofix import autofix_containerfields
 from validation.repair import repair_x3d as _repair_x3d
 from tools.granular import _scene_for
+from transfer.errors import BlobError
 from transfer.outputs import (
     XML_TYPE, cap_items, clip, clip_deep, document_info, envelope, error_envelope, input_info,
-    parse_mode,
+    parse_mode, report_info,
 )
 from transfer.tooling import require_blob_access, resolve_input, run_heavy
 
@@ -91,12 +92,9 @@ def register(mcp: FastMCP):
                 "error_count": len(result.get("errors", [])),
                 **cap_items([clip(e) for e in result.get("errors", [])], "errors"),
                 **cap_items([clip(n) for n in result.get("notes", [])], "notes")}
-        try:
-            if mode == "blob":
-                body["report"] = document_info(json.dumps(result, indent=2), "application/json", True)
-            inp = await run_heavy(input_info, text, blob_id, size=len(text))
-        except ValueError as exc:
-            return json.dumps({"valid": False, "errors": [str(exc)]}, indent=2)
+        if mode == "blob":
+            body["report"] = report_info(json.dumps(result, indent=2), "application/json")
+        inp = await run_heavy(input_info, text, blob_id, size=len(text))
         return envelope(mode, label, input=inp, **body)
 
     @mcp.tool()
@@ -149,13 +147,10 @@ def register(mcp: FastMCP):
         report = await run_heavy(_validate_semantic, text, size=len(text))
         if mode == "full":
             return report
-        try:
-            body = _semantic_summary(report)
-            if mode == "blob":
-                body["report"] = document_info(report, "text/markdown", True)
-            inp = await run_heavy(input_info, text, blob_id, size=len(text))
-        except ValueError as exc:
-            return f"# Semantic Check: Input Error\n\n{exc}"
+        body = _semantic_summary(report)
+        if mode == "blob":
+            body["report"] = report_info(report, "text/markdown")
+        inp = await run_heavy(input_info, text, blob_id, size=len(text))
         return envelope(mode, label, input=inp, **body)
 
     @mcp.tool()
@@ -200,9 +195,9 @@ def register(mcp: FastMCP):
         try:
             doc = await run_heavy(document_info, result["fixed"], XML_TYPE, mode == "blob",
                                   size=len(result["fixed"]))
-            inp = await run_heavy(input_info, text, blob_id, size=len(text))
-        except ValueError as exc:
-            return error_envelope(mode, str(exc), label)
+        except BlobError as exc:
+            return error_envelope(mode, f"the result could not be stored: {exc}", label)
+        inp = await run_heavy(input_info, text, blob_id, size=len(text))
         return envelope(mode, label, ok=True, input=inp, document=doc,
                         **cap_items(clip_deep(result["changes"]), "changes"),
                         **cap_items(clip_deep(result["unfixable"]), "unfixable"))
@@ -258,9 +253,9 @@ def register(mcp: FastMCP):
         try:
             doc = await run_heavy(document_info, result["fixed"], XML_TYPE, mode == "blob",
                                   size=len(result["fixed"]))
-            inp = await run_heavy(input_info, text, blob_id, size=len(text))
-        except ValueError as exc:
-            return error_envelope(mode, str(exc), label)
+        except BlobError as exc:
+            return error_envelope(mode, f"the result could not be stored: {exc}", label)
+        inp = await run_heavy(input_info, text, blob_id, size=len(text))
         return envelope(
             mode, label, ok=True, input=inp, document=doc,
             **cap_items(clip_deep(result["changes"]), "changes"),

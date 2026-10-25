@@ -14,9 +14,10 @@ from lxml import etree
 
 from mcp.server.fastmcp import Context, FastMCP
 
+from transfer.errors import BlobError
 from transfer.outputs import (
-    XML_TYPE, cap_items, clip_deep, document_info, envelope, error_envelope, input_info,
-    parse_mode,
+    SOURCE_CLIP, XML_TYPE, cap_items, clip, clip_deep, document_info, envelope, error_envelope,
+    input_info, parse_mode,
 )
 from transfer.tooling import require_blob_access, resolve_input, run_heavy
 
@@ -322,7 +323,7 @@ async def _scene_op(ctx, content: str, blob_id: str, return_mode: str, run) -> s
 
     is_path = not inline and not _looks_like_xml(text)  # content that names a file, as before
     if is_path:
-        label = f"file {text.strip()}"
+        label = f"file {clip(text.strip(), SOURCE_CLIP)}"
     log: list = []
     result = await run_heavy(run, text, inline, log, size=len(text))
     if mode == "full":
@@ -331,10 +332,10 @@ async def _scene_op(ctx, content: str, blob_id: str, return_mode: str, run) -> s
         return error_envelope(mode, result, label)
     try:
         doc = await run_heavy(document_info, result, XML_TYPE, mode == "blob", size=len(result))
-        inp = {"path": text.strip()} if is_path else await run_heavy(
-            input_info, text, blob_id, size=len(text))
-    except ValueError as e:                            # store unavailable, full or over quota
-        return error_envelope(mode, str(e), label)
+    except BlobError as e:                             # store unavailable, full or over quota
+        return error_envelope(mode, f"the result could not be stored: {e}", label)
+    inp = {"path": clip(text.strip(), SOURCE_CLIP)} if is_path else await run_heavy(
+        input_info, text, blob_id, size=len(text))
     return envelope(mode, label, ok=True, input=inp, document=doc,
                     **cap_items(clip_deep(log), "changes"))
 

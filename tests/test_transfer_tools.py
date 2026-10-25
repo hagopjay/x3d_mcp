@@ -24,6 +24,7 @@ from tools import transfer as blob_tools
 from transfer import blobs, outputs, tooling
 from transfer.auth import bearer_ok, request_of, tool_gate
 from transfer.blobs import BlobConfig
+from transfer.errors import StoreFull
 from validation.autofix import autofix_containerfields
 from validation.repair import repair_x3d
 from validation.semantic import validate_semantic as semantic_report
@@ -702,3 +703,149 @@ def test_stdio_default_is_unchanged_for_callers_that_never_heard_of_blobs(mcp):
     assert out == validate_xml(SAMPLE)
     assert run(mcp, "remove_x3d_node", content=SAMPLE, def_name="Sun").startswith("<?xml")
     assert blobs.get_store().stats()["blobs"] == before == 0
+
+
+# ---------------------------------------------------------------- review fixes: store failures are not verdicts
+
+class Clock:
+    def __init__(self):
+        self.t = 5_000_000.0
+
+    def __call__(self):
+        return self.t
+
+
+def install_store(**cfg_kw):
+    """A process-wide store with a fake clock."""
+    clock = Clock()
+    cfg = BlobConfig(**cfg_kw)
+    blobs.configure(cfg)
+    store = blobs.BlobStore(cfg, clock=clock)
+    blobs._store = store
+    return store, clock
+
+
+def slow_down(monkeypatch, module, name, clock, advance=1000.0):
+    """Make module.name take `advance` seconds of the store's clock, as a long or queued job does."""
+    real = getattr(module, name)
+
+    def slow(*a, **kw):
+        clock.t += advance
+        return real(*a, **kw)
+
+    monkeypatch.setattr(module, name, slow)
+
+
+@pytest.mark.parametrize("tool,fn", [("validate_x3d", "validate_xml"), ("validate_semantic", "_validate_semantic"),
+                                     ("autofix_x3d", "autofix_containerfields"), ("repair_x3d", "_repair_x3d")])
+def test_summary_keeps_the_result_when_the_input_blob_expires_during_the_job(mcp, monkeypatch, tool, fn):
+    store, clock = install_store(ttl=100.0)
+    bid = store.put(SAMPLE.encode(), media_type="model/x3d+xml")["blob_id"]
+    slow_down(monkeypatch, validate_tool, fn, clock)
+    out = json.loads(run(mcp, tool, blob_id=bid, return_mode="summary"))
+    assert store.peek(bid) is None                              # the blob did expire while the job ran
+    assert out["input"] == {"sha256": bid, "bytes": len(SAMPLE.encode())}
+    assert out.get("ok", True) is True and out.get("valid", True) is True and "error" not in out
+    if tool in ("autofix_x3d", "repair_x3d"):
+        assert out["document"]["bytes"] > 0
+
+
+def test_edit_and_convert_summaries_survive_an_input_that_expires_during_the_job(mcp, monkeypatch):
+    store, clock = install_store(ttl=100.0)
+    bid = store.put(SAMPLE.encode(), media_type="model/x3d+xml")["blob_id"]
+    real = scene_ops._modify_node
+
+    def slow(*a, **kw):
+        clock.t += 1000.0
+        return real(*a, **kw)
+
+    monkeypatch.setattr(scene_ops, "_modify_node", slow)
+    out = json.loads(run(mcp, "modify_x3d_node", content="", blob_id=bid, def_name="Sun",
+                         field_changes='{"intensity": "0.1"}', return_mode="summary"))
+    assert out["ok"] is True and out["input"]["sha256"] == bid and out["changes"][0]["after"] == "0.1"
+
+
+def refuse_puts(monkeypatch):
+    def full(self, *a, **kw):
+        raise StoreFull("store quota exhausted and every remaining blob is in use (X3D_MCP_BLOB_QUOTA_BYTES)")
+
+    monkeypatch.setattr(blobs.BlobStore, "put", full)
+
+
+def test_result_storage_failures_in_validate_keep_the_verdict(mcp, monkeypatch):
+    bid = store_doc(SAMPLE)
+    refuse_puts(monkeypatch)
+    out = json.loads(run(mcp, "validate_x3d", blob_id=bid, return_mode="blob"))
+    assert out["valid"] is True and out["error_count"] == 0 and out["input"]["sha256"] == bid
+    assert out["report"]["stored"] is False and "quota" in out["report"]["error"]
+    assert "blob_id" not in out["report"] and out["report"]["media_type"] == "application/json"
+    sem = run(mcp, "validate_semantic", blob_id=bid, return_mode="blob")
+    sem = json.loads(sem)
+    assert sem["ok"] is True and sem["report"]["stored"] is False and "quota" in sem["report"]["error"]
+    bad = json.loads(run(mcp, "validate_x3d", content=BROKEN_SCHEMA, return_mode="blob"))
+    assert bad["valid"] is False and bad["error_count"] >= 2 and bad["report"]["stored"] is False
+
+
+def test_result_storage_failures_in_document_tools_are_ok_false_not_valid_false(mcp, monkeypatch):
+    bid = store_doc(SAMPLE)
+    refuse_puts(monkeypatch)
+    for tool, args in (("repair_x3d", {}), ("autofix_x3d", {}),
+                       ("modify_x3d_node", {"content": "", "def_name": "Sun", "field_changes": '{"intensity": "0.2"}'}),
+                       ("remove_x3d_node", {"content": "", "def_name": "Sun"}),
+                       ("move_x3d_node", {"content": "", "def_name": "RedShape", "new_parent_def": "BlueGroup"}),
+                       ("convert_x3d", {"content": "", "from_encoding": "xml", "to_encoding": "xml"})):
+        out = json.loads(run(mcp, tool, blob_id=bid, return_mode="blob", **args))
+        assert out["ok"] is False and "could not be stored" in out["error"] and "quota" in out["error"], tool
+        assert "valid" not in out and out["return_mode"] == "blob", tool
+
+
+def test_blob_mode_works_while_every_streaming_upload_slot_is_busy(mcp):
+    blobs.configure(BlobConfig(max_uploads=2))
+    store = blobs.get_store()
+    bid = store.put(SAMPLE.encode())["blob_id"]
+    held = [store.upload(), store.upload()]
+    try:
+        out = json.loads(run(mcp, "validate_x3d", blob_id=bid, return_mode="blob"))
+        assert out["valid"] is True and out["report"]["blob_id"]
+        mod = json.loads(run(mcp, "modify_x3d_node", content="", blob_id=bid, def_name="Sun",
+                             field_changes='{"intensity": "0.3"}', return_mode="blob"))
+        assert mod["ok"] is True and mod["document"]["blob_id"]
+        assert json.loads(run(mcp, "blob_put", content="small"))["created"] is True
+    finally:
+        for u in held:
+            u.abort()
+
+
+def test_input_info_uses_the_id_and_does_not_touch_the_store():
+    store, clock = install_store(ttl=100.0)
+    bid = store.put("héllo <X3D/>".encode())["blob_id"]
+    clock.t += 1000
+    assert store.peek(bid) is None
+    assert outputs.input_info("héllo <X3D/>", bid) == {"sha256": bid, "bytes": len("héllo <X3D/>".encode())}
+    assert outputs.input_info("plain", "") == {"sha256": hashlib.sha256(b"plain").hexdigest(), "bytes": 5}
+    assert outputs.input_info("\ud800 lone", "")["bytes"] == 3 + 5                # never raises
+
+
+# ---------------------------------------------------------------- review fixes: small answers
+
+def test_a_comment_first_inline_document_does_not_double_the_response(mcp):
+    doc = "<!-- exported -->\n" + big_scene(3000).split("?>\n", 1)[1]
+    assert len(doc) > 300_000
+    for mode in ("summary", "blob"):
+        text = run(mcp, "modify_x3d_node", content=doc, def_name="T1", field_changes='{"translation": "1 1 1"}',
+                   return_mode=mode)
+        out = json.loads(text)
+        assert out["ok"] is False and len(text) < 3000, (mode, len(text))
+        assert "File not found" in out["error"] and len(out["source"]) < 400
+    assert len(run(mcp, "modify_x3d_node", content=doc, def_name="T1", field_changes='{"a": "b"}')) < len(doc) * 1.1
+    text = run(mcp, "remove_x3d_node", content=doc, def_name="T1", return_mode="summary")
+    assert len(text) < 3000
+    text = run(mcp, "move_x3d_node", content=doc, def_name="T1", return_mode="summary")
+    assert len(text) < 3000
+
+
+def test_error_envelopes_clip_long_messages_and_sources():
+    out = json.loads(outputs.error_envelope("summary", "e" * 50_000, "s" * 50_000))
+    assert len(out["error"]) < 1200 and len(out["source"]) < 300 and "more characters" in out["error"]
+    out = json.loads(outputs.envelope("summary", "s" * 50_000, ok=True))
+    assert len(out["source"]) < 300

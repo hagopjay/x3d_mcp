@@ -10,6 +10,7 @@ import x3d.x3d as x3d_mod
 from x3d.x3d import X3D, Scene, head, meta
 from mcp.server.fastmcp import Context, FastMCP
 
+from transfer.errors import BlobError
 from transfer.outputs import XML_TYPE, document_info, envelope, error_envelope, input_info, parse_mode
 from transfer.tooling import require_blob_access, resolve_input, run_heavy
 from validation.defuse import reorder_defs_xml
@@ -218,7 +219,7 @@ def register(mcp: FastMCP):
         media = _MEDIA_TYPES[to_encoding]
         try:
             doc = await run_heavy(document_info, out, media, mode == "blob", size=len(out))
-            inp = await run_heavy(input_info, content, blob_id, size=len(content))
-        except ValueError as e:
-            return error_envelope(mode, str(e), label)
+        except BlobError as e:
+            return error_envelope(mode, f"the result could not be stored: {e}", label)
+        inp = await run_heavy(input_info, content, blob_id, size=len(content))
         return envelope(mode, label, ok=True, input=inp, document=doc)

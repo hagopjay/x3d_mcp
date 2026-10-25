@@ -17,11 +17,14 @@ from collections import Counter
 
 from lxml import etree
 
-from .blobs import get_config, get_store
+from .blobs import get_config, get_store, normalize_blob_id
+from .errors import BlobError
 
 MODES = ("full", "summary", "blob")
 XML_TYPE = "model/x3d+xml"
 CLIP = 300
+ERROR_CLIP = 1000        # an error message in a summary or blob answer
+SOURCE_CLIP = 200        # the "source" label: a path or other text the caller supplied
 
 
 def parse_mode(value: str | None) -> str:
@@ -79,11 +82,13 @@ def count_nodes(data: bytes, top: int = 12) -> dict | None:
 
 
 def input_info(text: str, blob_id: str = "") -> dict:
-    """Digest and size of the input: the blob id (no rehash) when it came from the store."""
+    """Digest and size of the input. For a blob the id is the digest (the text was decoded
+    from the bytes it names), so there is no rehash and no store lookup: a blob that expired
+    or was deleted while the job ran cannot turn a finished result into an error."""
     if blob_id and blob_id.strip():
-        meta = get_store().stat(blob_id)
-        return {"sha256": meta["sha256"], "bytes": meta["size"]}
-    data = text.encode("utf-8")
+        return {"sha256": normalize_blob_id(blob_id),
+                "bytes": len(text) if text.isascii() else len(text.encode("utf-8", "surrogatepass"))}
+    data = text.encode("utf-8", "surrogatepass")
     return {"sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data)}
 
 
@@ -103,13 +108,25 @@ def document_info(text: str, media_type: str, store_blob: bool = False, name: st
     return part
 
 
+def report_info(text: str, media_type: str) -> dict:
+    """Describe a produced report and store it. When the store refuses (full, too many blobs,
+    switched off) the description still comes back, with stored false and the reason, so the
+    verdict that went with the report is not lost."""
+    try:
+        return document_info(text, media_type, True)
+    except BlobError as e:
+        return {**document_info(text, media_type), "stored": False, "error": clip(str(e), ERROR_CLIP)}
+
+
 def envelope(mode: str, source: str, **fields) -> str:
     """The JSON a summary or blob return carries."""
-    return json.dumps({"return_mode": mode, "source": source, **fields}, indent=2)
+    return json.dumps({"return_mode": mode, "source": clip(source, SOURCE_CLIP), **fields}, indent=2)
 
 
 def error_envelope(mode: str, message: str, source: str = "") -> str:
-    body = {"return_mode": mode, "ok": False, "error": message}
+    """A failure as JSON. Message and source are clipped: both can carry text the caller
+    supplied (a document mistaken for a path), and these modes exist to keep answers small."""
+    body = {"return_mode": mode, "ok": False, "error": clip(message, ERROR_CLIP)}
     if source:
-        body["source"] = source
+        body["source"] = clip(source, SOURCE_CLIP)
     return json.dumps(body, indent=2)
