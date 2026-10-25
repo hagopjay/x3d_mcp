@@ -321,6 +321,7 @@ def test_reentry_flag_is_cleared_after_every_call(big, monkeypatch):
 
 
 def test_array_value_check_is_skipped_above_the_byte_cap(big, monkeypatch):
+    pytest.importorskip("numpy")           # without numpy the values are never parsed, whatever the cap (tested above)
     monkeypatch.delenv("X3D_MCP_XML_HUGE", raising=False)
     monkeypatch.setattr(oversize, "MAX_VALUE_BYTES", 1_000_000)
     check = validate_xml(big)["oversize"]["tags"][0]["array_check"]
