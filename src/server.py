@@ -21,14 +21,18 @@ from mcp.server.fastmcp import FastMCP
 from starlette.responses import JSONResponse
 
 from transfer import blobs as _blobs
+from transfer.auth import explicit_security
 from transfer.errors import ConfigError
 
 _TRANSPORT = os.environ.get("MCP_TRANSPORT", "stdio").lower()
 _IS_HTTP = _TRANSPORT in ("http", "streamable-http")
 
-# Blob store settings come from X3D_MCP_BLOB* variables; a bad value stops the server here.
+# Blob store settings come from X3D_MCP_BLOB* variables; a bad value, or a spill directory
+# that is not private, not ours or in use by another process, stops the server here.
 try:
     _blob_cfg = _blobs.configure()
+    _blobs.start()
+    _host_security = explicit_security(_blob_cfg) if _IS_HTTP else None
 except ConfigError as _exc:
     raise SystemExit(f"x3d-mcp: {_exc}")
 
@@ -96,15 +100,10 @@ _fastmcp_kwargs = {}
 if _IS_HTTP:
     _fastmcp_kwargs["host"] = os.environ.get("HOST", "0.0.0.0")
     _fastmcp_kwargs["port"] = int(os.environ.get("PORT", "8000"))
-    if _blob_cfg.allowed_hosts or _blob_cfg.allowed_origins:
+    if _host_security is not None:
         # X3D_MCP_ALLOWED_HOSTS / _ORIGINS turn on the SDK's DNS-rebinding checks for /mcp
         # (and /blob); without them a hosted bind has none, as before.
-        from mcp.server.transport_security import TransportSecuritySettings
-        _fastmcp_kwargs["transport_security"] = TransportSecuritySettings(
-            enable_dns_rebinding_protection=True,
-            allowed_hosts=list(_blob_cfg.allowed_hosts),
-            allowed_origins=list(_blob_cfg.allowed_origins),
-        )
+        _fastmcp_kwargs["transport_security"] = _host_security
 
 mcp = FastMCP("x3d-mcp", instructions=INSTRUCTIONS, **_fastmcp_kwargs)
 
@@ -165,4 +164,6 @@ if __name__ == "__main__":
                       "token alone protects /blob", file=sys.stderr)
         mcp.run(transport="streamable-http")
     else:
+        if _blob_cfg.enabled and _blob_cfg.auto_spill:
+            _blobs.exit_on_sigterm()          # hosts stop stdio servers with SIGTERM
         mcp.run()

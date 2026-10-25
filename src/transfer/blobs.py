@@ -92,6 +92,7 @@ PIECE = 1 << 20
 SWEEP_EVERY = 1.0                # seconds between full scans for expired blobs
 
 log = logging.getLogger("x3d_mcp.blob")
+_AUTO_DIRS: list[str] = []       # temporary spill directories this process made
 
 
 def _oserr(ex: OSError) -> str:
@@ -652,6 +653,7 @@ class BlobStore:
                 d = tempfile.mkdtemp(prefix="x3d-blobs-")        # 0700
                 self._spill = d
                 self._spill_auto = True
+                _AUTO_DIRS.append(d)
                 atexit.register(shutil.rmtree, d, True)
                 return True
             return False
@@ -1150,14 +1152,27 @@ def start() -> None:
 
 
 def exit_on_sigterm() -> None:
-    """Turn SIGTERM into a normal exit, so that atexit removes the temporary spill directory
-    (stdio hosts stop a server with SIGTERM, which otherwise skips atexit). Does nothing off
-    the main thread or when something else already handles SIGTERM."""
+    """Remove the temporary spill directories when SIGTERM arrives. Stdio hosts stop a server
+    with SIGTERM, which skips atexit; and a normal exit would wait for the thread that is
+    blocked reading stdin. So the handler removes the directories itself and exits at once
+    (status 128 + signal). Does nothing off the main thread or when something else already
+    handles SIGTERM."""
     import signal
     import sys
+
+    def handler(signum, frame):
+        for d in _AUTO_DIRS:
+            shutil.rmtree(d, ignore_errors=True)
+        for stream in (sys.stdout, sys.stderr):
+            try:
+                stream.flush()
+            except Exception:
+                pass
+        os._exit(128 + signum)
+
     try:
         if signal.getsignal(signal.SIGTERM) is signal.SIG_DFL:
-            signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(128 + signum))
+            signal.signal(signal.SIGTERM, handler)
     except (ValueError, OSError):
         pass
 

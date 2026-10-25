@@ -11,6 +11,7 @@ import gzip
 import hashlib
 import json
 import os
+import signal
 import socket
 import subprocess
 import sys
@@ -658,3 +659,140 @@ def test_real_server_process_serves_blob_routes_and_tools():
         except subprocess.TimeoutExpired:
             p.kill()
         assert TOKEN not in (p.stderr.read().decode() if p.stderr else "")           # never logged
+
+
+# ---------------------------------------------------------------- start-up checks (subprocess)
+
+def _clean_env(**extra) -> dict:
+    env = {k: v for k, v in os.environ.items() if not k.startswith(("X3D_MCP", "MCP_TRANSPORT"))}
+    env.update(PYTHONUNBUFFERED="1", **extra)
+    return env
+
+
+def _free_port() -> int:
+    s = socket.socket()
+    s.bind(("127.0.0.1", 0))
+    port = s.getsockname()[1]
+    s.close()
+    return port
+
+
+def _start_http_server(**env):
+    port = _free_port()
+    p = subprocess.Popen(
+        [sys.executable, str(SRC / "server.py")],
+        env=_clean_env(MCP_TRANSPORT="streamable-http", HOST="127.0.0.1", PORT=str(port),
+                       X3D_MCP_BLOB_TOKEN=TOKEN, **env),
+        stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+    base = f"http://127.0.0.1:{port}"
+    for _ in range(240):
+        try:
+            if httpx.get(base + "/pulse", timeout=1).status_code == 200:
+                return p, base
+        except httpx.HTTPError:
+            time.sleep(0.25)
+    p.kill()
+    pytest.fail("server did not start")
+
+
+def _stop(p):
+    p.terminate()
+    try:
+        p.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        p.kill()
+
+
+HTTP_ENV = {"MCP_TRANSPORT": "streamable-http", "X3D_MCP_BLOB_TOKEN": TOKEN}
+
+
+def test_unusable_spill_directory_stops_the_server_at_startup(tmp_path):
+    loose = tmp_path / "loose"
+    loose.mkdir()
+    os.chmod(loose, 0o755)
+    got = probe({**HTTP_ENV, "X3D_MCP_BLOB_DIR": str(loose)})
+    assert got["exit"] != 0 and "must be private" in got["stderr"]
+    target = tmp_path / "real"
+    target.mkdir(mode=0o700)
+    link = tmp_path / "link"
+    link.symlink_to(target)
+    got = probe({**HTTP_ENV, "X3D_MCP_BLOB_DIR": str(link)})
+    assert got["exit"] != 0 and "not a directory" in got["stderr"]
+    ok = probe({**HTTP_ENV, "X3D_MCP_BLOB_DIR": str(tmp_path / "fresh")})
+    assert "tools" in ok                                      # a usable directory starts fine
+
+
+def test_server_on_a_spill_directory_another_process_holds_stops_at_startup(tmp_path):
+    from transfer.blobs import BlobStore
+    d = tmp_path / "spill"
+    owner = BlobStore(BlobConfig(spill_dir=str(d)))
+    try:
+        got = probe({**HTTP_ENV, "X3D_MCP_BLOB_DIR": str(d)})
+        assert got["exit"] != 0 and "in use by another server process" in got["stderr"]
+    finally:
+        owner.close()
+    assert "tools" in probe({**HTTP_ENV, "X3D_MCP_BLOB_DIR": str(d)})
+
+
+def test_origins_without_hosts_stop_the_server_at_startup():
+    got = probe({**HTTP_ENV, "X3D_MCP_ALLOWED_ORIGINS": "https://app.example.com"})
+    assert got["exit"] != 0 and "X3D_MCP_ALLOWED_HOSTS" in got["stderr"]
+    ok = probe({"X3D_MCP_ALLOWED_ORIGINS": "https://app.example.com"})        # stdio does not use them
+    assert "tools" in ok
+
+
+def test_hosts_with_origins_serve_blob_and_mcp_and_refuse_others():
+    p, base = _start_http_server(X3D_MCP_ALLOWED_HOSTS="127.0.0.1:*",
+                                 X3D_MCP_ALLOWED_ORIGINS="https://app.example.com")
+    try:
+        assert httpx.post(base + "/blob", content=b"hello", headers=AUTH).status_code == 201
+        init = {"jsonrpc": "2.0", "id": 1, "method": "initialize",
+                "params": {"protocolVersion": "2025-03-26", "capabilities": {},
+                           "clientInfo": {"name": "t", "version": "1"}}}
+        mcp_h = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream"}
+        assert httpx.post(base + "/mcp", json=init, headers=mcp_h).status_code == 200
+        ok_origin = httpx.post(base + "/blob", content=b"hello2", headers={**AUTH, "Origin": "https://app.example.com"})
+        assert ok_origin.status_code == 201
+        bad_origin = httpx.post(base + "/blob", content=b"x", headers={**AUTH, "Origin": "https://evil.example"})
+        assert bad_origin.status_code == 403
+        bad_host = httpx.post(base + "/blob", content=b"x", headers={**AUTH, "Host": "evil.example"})
+        assert bad_host.status_code == 421
+    finally:
+        _stop(p)
+
+
+def test_stdio_sigterm_removes_the_temporary_spill_directory(tmp_path):
+    f = tmp_path / "scene.x3d"
+    f.write_bytes(os.urandom(5000))
+    tmpbase = tmp_path / "tmp"
+    tmpbase.mkdir()
+    p = subprocess.Popen([sys.executable, str(SRC / "server.py")],
+                         env=_clean_env(X3D_MCP_BLOB_MEM_BYTES="1", TMPDIR=str(tmpbase)),
+                         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+
+    def rpc(msg):
+        p.stdin.write(json.dumps(msg) + "\n")
+        p.stdin.flush()
+
+    def reply():
+        return json.loads(p.stdout.readline())
+
+    try:
+        rpc({"jsonrpc": "2.0", "id": 1, "method": "initialize",
+             "params": {"protocolVersion": "2025-03-26", "capabilities": {},
+                        "clientInfo": {"name": "t", "version": "1"}}})
+        reply()
+        rpc({"jsonrpc": "2.0", "method": "notifications/initialized"})
+        rpc({"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+             "params": {"name": "blob_put", "arguments": {"path": str(f)}}})
+        out = json.loads(reply()["result"]["content"][0]["text"])
+        assert out["size"] == 5000
+        (spill,) = list(tmpbase.glob("x3d-blobs-*"))
+        assert len(os.listdir(spill)) == 1
+        p.send_signal(signal.SIGTERM)
+        p.wait(timeout=20)
+        assert not spill.exists()
+        assert p.returncode == 128 + signal.SIGTERM
+    finally:
+        if p.poll() is None:
+            p.kill()

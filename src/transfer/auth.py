@@ -3,6 +3,8 @@
 import hashlib
 import hmac
 
+from .errors import ConfigError
+
 
 def _digest(value: str) -> bytes:
     return hashlib.sha256((value or "").encode("utf-8", "surrogatepass")).digest()
@@ -50,14 +52,25 @@ def tool_gate(ctx, cfg) -> str | None:
             "connection (the value of X3D_MCP_BLOB_TOKEN)")
 
 
+def explicit_security(cfg):
+    """Host/Origin settings built from X3D_MCP_ALLOWED_HOSTS/_ORIGINS, or None when neither is set.
+
+    Origins alone are refused (ConfigError): the SDK's check rejects every request whose Host
+    is not listed, so an empty host list would answer 421 to every client."""
+    from mcp.server.transport_security import TransportSecuritySettings
+    if not (cfg.allowed_hosts or cfg.allowed_origins):
+        return None
+    if not cfg.allowed_hosts:
+        raise ConfigError("X3D_MCP_ALLOWED_ORIGINS needs X3D_MCP_ALLOWED_HOSTS as well: the "
+                          "SDK's check refuses every request whose Host is not listed")
+    return TransportSecuritySettings(
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=list(cfg.allowed_hosts),
+        allowed_origins=list(cfg.allowed_origins),
+    )
+
+
 def transport_security(mcp, cfg):
     """The settings for Host/Origin checks: the server's own when it has them (a loopback
     bind enables them automatically), else built from X3D_MCP_ALLOWED_HOSTS/_ORIGINS, else None."""
-    from mcp.server.transport_security import TransportSecuritySettings
-    if cfg.allowed_hosts or cfg.allowed_origins:
-        return TransportSecuritySettings(
-            enable_dns_rebinding_protection=True,
-            allowed_hosts=list(cfg.allowed_hosts),
-            allowed_origins=list(cfg.allowed_origins),
-        )
-    return getattr(mcp.settings, "transport_security", None)
+    return explicit_security(cfg) or getattr(mcp.settings, "transport_security", None)
