@@ -156,6 +156,8 @@ class BlobConfig:
     allowed_origins: tuple[str, ...] = ()
     summary_items: int = 200
     offload_min: int = 1 << 20
+    tool_max_bytes: int = 96 << 20        # largest decoded blob a tool will read (the store itself takes max_bytes)
+    tool_concurrency: int = 2             # tool calls on blob inputs running at once; each holds several copies
 
     @property
     def quota(self) -> int:
@@ -214,6 +216,8 @@ class BlobConfig:
             allowed_origins=_env_list(env, "X3D_MCP_ALLOWED_ORIGINS"),
             summary_items=int(_env_size(env, "X3D_MCP_SUMMARY_ITEMS", 200, 1)),
             offload_min=_env_size(env, "X3D_MCP_OFFLOAD_MIN", 1 << 20),
+            tool_max_bytes=_env_size(env, "X3D_MCP_TOOL_MAX_BYTES", 96 << 20, 1),
+            tool_concurrency=int(_env_size(env, "X3D_MCP_TOOL_CONCURRENCY", 2, 1)),
         )
         if cfg.page_default > cfg.page_max:
             cfg = replace(cfg, page_default=cfg.page_max)
@@ -1034,7 +1038,14 @@ def resolve_text(content: str = "", path: str = "", blob_id: str = "") -> tuple[
                          f"(got: {', '.join(given)}). With blob_id, pass content as an empty string.")
     if given == ["blob_id"]:
         bid = normalize_blob_id(blob_id)
-        return get_store().get_text(bid), f"blob {bid[:12]}"
+        store = get_store()
+        size = store.stat(bid)["size"]            # the decoded size: a few hundred KB stored can decode to 250 MB
+        limit = store.cfg.tool_max_bytes
+        if size > limit:
+            raise ValueError(
+                f"blob {bid[:12]} is {size:,} bytes decoded; a tool reads at most {limit:,} "
+                "(X3D_MCP_TOOL_MAX_BYTES). Page it with blob_read, or ask the operator to raise the limit.")
+        return store.get_text(bid), f"blob {bid[:12]}"
     if given == ["path"]:
         from x3d_utils.source import read_path_text
         return read_path_text(path), f"file {path.strip()}"

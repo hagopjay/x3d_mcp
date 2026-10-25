@@ -12,8 +12,9 @@ import x3d.x3d as x3d_mod
 from x3d.x3d import X3D, Scene, component, head, meta, unit
 from mcp.server.fastmcp import Context, FastMCP
 
+from transfer.blobs import get_config
 from transfer.outputs import XML_TYPE, document_info, envelope, error_envelope, input_info, parse_mode
-from transfer.tooling import require_blob_access, resolve_input, run_heavy
+from transfer.tooling import with_blob_slot, require_blob_access, resolve_input, run_heavy
 from validation.defuse import reorder_defs_xml
 from x3d_utils.gen_schema import DEFAULT_MAX_NODES, SchemaRequestError, build_generation_schema
 from x3d_utils.json2xml import JsonConversionError, json_to_xml
@@ -23,6 +24,12 @@ _XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n'
 _HUGE_PARSER = etree.XMLParser(huge_tree=True)    # counting elements must not hit lxml's per-attribute size limit
 _MEDIA_TYPES = {"xml": XML_TYPE, "json": "model/x3d+json", "vrml": "model/x3d+vrml"}
 SCHEMA_TYPE = "application/schema+json"
+
+# x3d.py indents VRML by depth without a cap: a document 200 levels deep with 80,000
+# leaves grows 145-fold (0.9 MB to 129 MB, 19 s). Measured, a level of an element costs
+# about 8 bytes of output; a conversion expected to write more than this is refused.
+_VRML_BYTES_PER_DEPTH = 8
+MAX_VRML_BYTES = 64 << 20
 
 
 def _parse_xml_to_model(xml_string: str) -> X3D:
@@ -89,9 +96,16 @@ def _parse_nodes(parent_el: etree._Element) -> list[tuple[object, str | None]]:
             continue
         if tag in _STATEMENT_ATTRS and tag not in nodes:
             stmt = {k: el.get(k) for k in _STATEMENT_ATTRS[tag] if el.get(k) is not None}
+            raw_value = stmt.pop("value", None) if tag == "field" else None
             if tag == "IS":
                 stmt["connect"] = _parse_children(el)
-            children.append((getattr(x3d_mod, tag)(**stmt), tag))   # held by the field of that name
+            obj = getattr(x3d_mod, tag)(**stmt)
+            if raw_value is not None:
+                # x3d.py type-checks a field's value, then writes any type but SFBool as the Python
+                # repr of the tuple or list ("(1.0, 2.0, 3.0)"). The XML text goes in as written,
+                # which its XML() writes back unchanged.
+                obj._value = raw_value
+            children.append((obj, tag))   # held by the field of that name
             continue
         if tag == "ROUTE":
             from x3d.x3d import ROUTE
@@ -231,8 +245,9 @@ def _dropped_elements(source_xml: str, written_xml: str) -> dict[str, int]:
 
 def _convert_json(content: str, to_encoding: str) -> tuple[str, bool]:
     """(output, True) for a conversion of X3D JSON; (message, False) for a refusal."""
+    stats: dict = {}
     try:
-        xml = json_to_xml(content)
+        xml = json_to_xml(content, stats=stats)
     except JsonConversionError as exc:
         return f"Cannot read X3D JSON: {exc}", False
     except RecursionError:
@@ -246,12 +261,17 @@ def _convert_json(content: str, to_encoding: str) -> tuple[str, bool]:
         return content, True          # already JSON; json_to_xml has checked that it reads
     if to_encoding != "vrml":
         return f"Unknown target encoding: {to_encoding}", False
+    expected = len(xml) + stats["indent_units"] * _VRML_BYTES_PER_DEPTH
+    if expected > MAX_VRML_BYTES:
+        return (f"Cannot convert to {to_encoding}: the {to_encoding} text would be about {expected >> 20} MB "
+                f"(x3d.py indents by depth; the limit is {MAX_VRML_BYTES >> 20} MB). "
+                "Use to_encoding='xml' for a scene this large or this deep."), False
     try:
         model = _parse_xml_to_model(xml)
         dropped = _dropped_elements(xml, model.XML())
     except etree.XMLSyntaxError as exc:
         return f"Cannot convert to {to_encoding}: {exc}. Use to_encoding='xml' for a scene this large.", False
-    except (ValueError, TypeError, AttributeError, RecursionError) as exc:      # x3d.py refusing a value: "oops" for a SFVec3f
+    except (x3d_mod.X3DError, ValueError, TypeError, AttributeError, RecursionError) as exc:      # x3d.py refusing a value: "oops" for a SFVec3f
         return (f"Cannot convert to {to_encoding}: x3d.py cannot hold this scene ({type(exc).__name__}: "
                 f"{str(exc)[:160]}). Use to_encoding='xml', which keeps the scene as written."), False
     if dropped:
@@ -266,23 +286,24 @@ def _convert(content: str, from_encoding: str, to_encoding: str) -> tuple[str, b
     if from_encoding == "json":
         return _convert_json(content, to_encoding)
     if from_encoding == "xml":
-        model = _parse_xml_to_model(content)
-    else:
-        return f"Parsing from '{from_encoding}' is not yet supported. Use 'xml' or 'json' as source.", False
-
-    if to_encoding == "xml":
-        return reorder_defs_xml(model.XML()), True      # x3d.py writes joints before bodies
-    elif to_encoding == "json":
-        return model.JSON(), True
-    elif to_encoding == "vrml":
-        return model.VRML(), True
-    else:
+        try:
+            model = _parse_xml_to_model(content)
+            if to_encoding == "xml":
+                return reorder_defs_xml(model.XML()), True      # x3d.py writes joints before bodies
+            elif to_encoding == "json":
+                return model.JSON(), True
+            elif to_encoding == "vrml":
+                return model.VRML(), True
+        except x3d_mod.X3DError as exc:                         # x3d.py refusing a value it cannot hold
+            return f"Cannot convert to {to_encoding}: x3d.py cannot hold this scene ({type(exc).__name__}: {str(exc)[:160]}).", False
         return f"Unknown target encoding: {to_encoding}", False
+    return f"Parsing from '{from_encoding}' is not yet supported. Use 'xml' or 'json' as source.", False
 
 
 def register(mcp: FastMCP):
 
     @mcp.tool()
+    @with_blob_slot
     async def convert_x3d(content: str, from_encoding: str, to_encoding: str,
                           blob_id: str = "", return_mode: str = "full",
                           ctx: Context = None) -> str:
@@ -293,7 +314,9 @@ def register(mcp: FastMCP):
         child nodes, "#sourceCode" is Script source. Member order does not matter;
         "#comment" members are dropped. To "xml" the scene comes back as written (DEFs
         moved ahead of their USEs); "json" returns it unchanged; "vrml" goes through x3d.py and is
-        refused, naming the elements, if x3d.py would drop any.
+        refused, naming the elements, if x3d.py would drop any. That check covers a JSON
+        source only: XML read by x3d.py still loses what it has no class for (the field
+        of an ExternProtoDeclare, MetadataString inside WorldInfo, unknown elements).
 
         Args:
             content: The X3D content string. Pass an empty string when blob_id is given.
@@ -316,7 +339,9 @@ def register(mcp: FastMCP):
                 require_blob_access(ctx)
         except ValueError as e:
             return str(e) if mode == "full" else error_envelope(mode, str(e))
-        out, ok = await run_heavy(_convert, content, from_encoding, to_encoding, size=len(content))
+        # JSON input is amplified on the way (5x to XML, much more to VRML), so its job always goes to the worker thread
+        size = max(len(content), get_config().offload_min) if from_encoding == "json" else len(content)
+        out, ok = await run_heavy(_convert, content, from_encoding, to_encoding, size=size)
         if mode == "full":
             return out
         if not ok:

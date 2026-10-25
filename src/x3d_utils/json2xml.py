@@ -48,8 +48,9 @@ MAX_ELEMENTS = 1_000_000
 MAX_INDENT = 24
 
 # Namespace prefixes the writer can use without declaring them: xml is built in,
-# xsd is declared on the root, xmlns is the declaration syntax itself.
-_PREFIXES = frozenset({"xml", "xsd", "xmlns"})
+# xsd is declared on the root. An attribute may also carry xmlns (a declaration);
+# an element may not.
+_PREFIXES = frozenset({"xml", "xsd"})
 
 # Longest JSON path quoted in an error message.
 _PATH_CLIP = 240
@@ -71,7 +72,7 @@ _RANK = {
 
 _CHUNK = 1 << 16
 _NUMBER_TYPES = {int, float}      # bool is a separate type here, so True and False take the general path
-_NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_.-]*(:[A-Za-z_][A-Za-z0-9_.-]*)?$")
+_NAME_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_.-]*(:[A-Za-z_][A-Za-z0-9_.-]*)?")      # used with fullmatch: $ would pass a trailing newline
 _XML_BAD_CHARS = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\ud800-\udfff￾￿]")
 
 
@@ -87,10 +88,10 @@ def _fail(path: list[str], message: str):
 
 
 def _check_name(name: str, path: list[str], what: str) -> str:
-    if not _NAME_RE.match(name):
+    if not _NAME_RE.fullmatch(name):
         _fail(path, f"{what} name {name[:60]!r} is not a valid XML name")
     prefix = name.partition(":")[0] if ":" in name else None
-    if prefix is not None and prefix not in _PREFIXES:
+    if prefix is not None and prefix not in _PREFIXES and not (prefix == "xmlns" and what == "attribute"):
         _fail(path, f"{what} name {name[:60]!r} uses the namespace prefix {prefix!r}, which the document does not declare")
     return name
 
@@ -148,6 +149,7 @@ class _Writer:
         self.canonical = canonical
         self.out: list[str] = []
         self.elements = 0
+        self.indent_units = 0          # sum over elements of their (uncapped) depth: what a reader that indents without a cap would write
 
     def _rank(self, parent: str, name: str, field: str | None) -> int:
         table = _RANK.get(parent)
@@ -161,8 +163,8 @@ class _Writer:
         if depth > MAX_DEPTH:
             _fail(path, f"nodes nested deeper than {MAX_DEPTH}")
         self.elements += 1
-        if self.elements > MAX_ELEMENTS:
-            _fail(path, f"more than {MAX_ELEMENTS:,} elements; send a scene this large as XML")
+        self.indent_units += depth
+        self._over_budget(0, path)
         if not isinstance(body, dict):
             _fail(path, f"{name} is a {type(body).__name__}, not an object")
         attrs: list[tuple[str, str]] = []
@@ -190,14 +192,15 @@ class _Writer:
                 continue
             else:                                # statements: head.meta, IS.connect, Script.field, ...
                 items = value if isinstance(value, list) else [value]
+                self._over_budget(len(kids) + len(items), kpath)
                 for i, item in enumerate(items):
                     kids.append((_check_name(key, kpath, "node"), None, item,
                                  path + [f"{key}[{i}]" if isinstance(value, list) else key]))
-        default = _default_container_field(name) if field else None
-        if field and default not in (None, field):
+        if field:
             if any(a == "containerField" for a, _ in attrs):
                 _fail(path, f"@containerField is given and the member -{field} sets it too")
-            attrs.append(("containerField", field))
+            if _default_container_field(name) not in (None, field):
+                attrs.append(("containerField", field))
         if self.canonical:
             kids.sort(key=lambda k: self._rank(name, k[0], k[1]))     # stable
         pad = "  " * min(depth, MAX_INDENT)
@@ -212,9 +215,14 @@ class _Writer:
             self.out.append(f"{pad}  <![CDATA[{text.replace(']]>', ']]]]><![CDATA[>')}]]>")
         self.out.append(f"{pad}</{name}>")
 
-    @staticmethod
-    def _nodes(kids, field, items, path, key):
+    def _over_budget(self, pending: int, path: list[str]) -> None:
+        """Refuse once the elements written plus `pending` more would pass MAX_ELEMENTS."""
+        if self.elements + pending > MAX_ELEMENTS:
+            _fail(path, f"more than {MAX_ELEMENTS:,} elements; send a scene this large as XML")
+
+    def _nodes(self, kids, field, items, path, key):
         """Collect the {NodeName: body} items of a '-children' or '-field' member."""
+        self._over_budget(len(kids) + len(items), path)       # before the items are visited: a wide array must not be collected first
         for i, item in enumerate(items):
             ipath = path + [f"{key}[{i}]"]
             if not isinstance(item, dict):
@@ -241,16 +249,18 @@ def _no_duplicate_members(pairs: list[tuple[str, object]]) -> dict:
     return obj
 
 
-def json_to_xml(text: str | dict, canonical: bool = True) -> str:
+def json_to_xml(text: str | dict, canonical: bool = True, stats: dict | None = None) -> str:
     """Convert X3D JSON (text or an already parsed object) to X3D XML text.
 
     Raises JsonConversionError when the document is not JSON, has no top-level
     "X3D" object, writes a member twice, nests too deeply, or holds a value XML
     cannot carry (NaN, infinity, control characters, undeclared namespace prefixes).
     canonical=False keeps the member order as written (the A/B "v1" mode, for
-    sensitivity checks).
+    sensitivity checks). A leading byte-order mark is ignored. When stats is a
+    dict it receives "elements" and "indent_units" (the sum of the elements' depths).
     """
     if isinstance(text, str):
+        text = text.removeprefix("\ufeff")
         try:
             doc = json.loads(text, object_pairs_hook=_no_duplicate_members)
         except RecursionError:
@@ -271,6 +281,8 @@ def json_to_xml(text: str | dict, canonical: bool = True) -> str:
     location = SCHEMA_LOCATION.format(version if version in KNOWN_VERSIONS else KNOWN_VERSIONS[0])
     writer = _Writer(canonical)
     writer.node("X3D", root, None, 0, ["X3D"])
+    if stats is not None:
+        stats.update(elements=writer.elements, indent_units=writer.indent_units)
     first = writer.out[0]
     boiler = f" xmlns:xsd='{XSI_NS}' xsd:noNamespaceSchemaLocation='{location}'"
     cut = first.index("<X3D") + 4

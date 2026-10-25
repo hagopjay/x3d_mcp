@@ -234,7 +234,7 @@ def test_hostile_json_comes_back_as_text(monkeypatch):
 
 
 def test_xml_that_is_not_well_formed_is_never_returned_as_a_result(monkeypatch):
-    monkeypatch.setattr(convert_mod, "json_to_xml", lambda text: "<X3D><Scene><Group></Scene></X3D>")
+    monkeypatch.setattr(convert_mod, "json_to_xml", lambda text, **kw: "<X3D><Scene><Group></Scene></X3D>")
     out = _convert(_doc({"Group": {}}), "xml")
     assert out.startswith("Cannot read X3D JSON: the XML written for it is not well-formed")
 

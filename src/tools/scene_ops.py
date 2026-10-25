@@ -18,7 +18,7 @@ from transfer.outputs import (
     XML_TYPE, cap_items, clip_deep, document_info, envelope, error_envelope, input_info,
     parse_mode,
 )
-from transfer.tooling import require_blob_access, resolve_input, run_heavy
+from transfer.tooling import with_blob_slot, require_blob_access, resolve_input, run_heavy
 
 
 def _http_transport_active() -> bool:
@@ -297,6 +297,7 @@ def _looks_like_xml(source: str) -> bool:
     return source.strip().startswith(("<?xml", "<X3D", "<!DOCTYPE"))
 
 
+@with_blob_slot
 async def _scene_op(ctx, content: str, blob_id: str, return_mode: str, run) -> str:
     """Run one scene operation with optional blob input and return mode.
 

@@ -95,6 +95,8 @@ Everything is an environment variable with a default. Sizes accept `K`, `M`, `G`
 | `X3D_MCP_ALLOWED_HOSTS` / `X3D_MCP_ALLOWED_ORIGINS` | unset | Comma lists (SDK grammar, `host:*` allowed). When set, the SDK's Host/Origin checks apply to `/blob` **and** `/mcp` |
 | `X3D_MCP_SUMMARY_ITEMS` | `200` | Most list entries a `return_mode="summary"` answer carries |
 | `X3D_MCP_OFFLOAD_MIN` | `1M` | Documents at least this large are processed in a worker thread, one job at a time |
+| `X3D_MCP_TOOL_MAX_BYTES` | `96M` | Largest decoded blob a tool will read (the store itself takes `X3D_MCP_BLOB_MAX_BYTES`); a blob of a few hundred KB can decode to 250 MB, and a tool holds about 12 times the decoded size while it works. `blob_read` is not limited by it |
+| `X3D_MCP_TOOL_CONCURRENCY` | `2` | Tool calls on a `blob_id` that run at once; further calls wait. `convert_x3d` on JSON input always runs in the worker thread, and a vrml result expected above 64 MB is refused |
 
 A bad value (not a size, below the minimum, unknown mode) stops the server at startup with a
 message naming the variable.
