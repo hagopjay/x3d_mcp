@@ -28,24 +28,31 @@ Environment variables (all optional; sizes accept K/M/G suffixes, binary units):
   X3D_MCP_BLOB_QUOTA_BYTES     total stored bytes. Default 1G with a spill directory,
                                otherwise the RAM budget.
   X3D_MCP_BLOB_DIR             spill directory (private, mode 0700, owned by the server user;
-                               created if missing). Unset: RAM only over HTTP; under stdio a
-                               temporary directory is created on first spill and removed at exit.
+                               created if missing; locked, one process only). Unset: RAM only
+                               over HTTP; under stdio a temporary directory is created on first
+                               spill and removed at exit and on SIGTERM.
   X3D_MCP_BLOB_HOT_BYTES       decoded-blob cache for paged reads. Default 64M, 0 disables.
   X3D_MCP_BLOB_TTL             idle seconds before a blob expires (refreshed on use). 3600.
-  X3D_MCP_BLOB_MAX_AGE         hard lifetime in seconds. 86400.
+  X3D_MCP_BLOB_MAX_AGE         hard lifetime in seconds, from the first store. 86400.
+  X3D_MCP_BLOB_MAX_COUNT       most blobs in the table. 10000.
   X3D_MCP_BLOB_MAX_RATIO       largest decoded:wire ratio once 1 MiB was decoded; 0 disables. 250.
   X3D_MCP_BLOB_MAX_UPLOADS     concurrent streaming uploads before 429. 4.
-  X3D_MCP_BLOB_IDLE_TIMEOUT    seconds without upload data before 408. 30.
+  X3D_MCP_BLOB_IDLE_TIMEOUT    seconds without upload data before 408; also the write timeout of
+                               a download. 30.
   X3D_MCP_BLOB_TOTAL_TIMEOUT   seconds for one whole upload. 600.
+  X3D_MCP_BLOB_MIN_RATE        bytes per second an upload must average after 10 s; 0 disables. 4096.
   X3D_MCP_BLOB_INLINE_MAX      largest decoded blob_put payload. 3000000 (its base64 form and
                                the JSON-RPC envelope must stay under the SDK's 4 MiB body cap).
   X3D_MCP_BLOB_PAGE_DEFAULT    blob_read page size. 16384.
   X3D_MCP_BLOB_PAGE_MAX        largest blob_read page. 262144.
   X3D_MCP_ALLOWED_HOSTS        comma list of Host values (SDK grammar, host:*) for /mcp and /blob.
-  X3D_MCP_ALLOWED_ORIGINS      comma list of Origin values, same grammar.
+  X3D_MCP_ALLOWED_ORIGINS      comma list of Origin values, same grammar; needs ALLOWED_HOSTS too.
   X3D_MCP_SUMMARY_ITEMS        most list items a summary return carries. 200.
   X3D_MCP_OFFLOAD_MIN          documents of at least this many bytes are processed in a worker
                                thread so the event loop keeps serving. Default 1M.
+  X3D_MCP_TOOL_MAX_BYTES       largest decoded blob a tool will take as blob_id. Default 64M.
+  X3D_MCP_BLOB_PATH_ROOTS      directories blob_put(path=) may read under (os.pathsep-separated);
+                               unset: scene, data and splat extensions only.
 """
 
 import atexit
