@@ -497,7 +497,7 @@ def test_blob_put_path_under_stdio(mcp, tmp_path):
     out = json.loads(run(mcp, "blob_put", path=str(f), media_type="model/x3d+xml"))
     assert out["blob_id"] == hashlib.sha256(SAMPLE.encode()).hexdigest()
     assert "not both" in json.loads(run(mcp, "blob_put", path=str(f), content="x"))["error"]
-    assert "not found" in json.loads(run(mcp, "blob_put", path=str(tmp_path / "nope")))["error"]
+    assert "not found" in json.loads(run(mcp, "blob_put", path=str(tmp_path / "nope.x3d")))["error"]
 
 
 def test_blob_put_path_is_refused_when_http_transport_is_configured(mcp, tmp_path, monkeypatch):
@@ -546,7 +546,8 @@ def test_utf8_cut_helper():
     for k in range(1, 4):
         assert _utf8_cut(b"x" + four[:k], False) == 1
     assert _utf8_cut(four, False) == 4
-    assert _utf8_cut(four[:1], False) == 1              # never an empty page
+    assert _utf8_cut(four[:1], False) == 0              # only the start of one character: the caller extends
+    assert _utf8_cut(four[:1], True) == 1
     assert _utf8_cut(b"", False) == 0
 
 
@@ -849,3 +850,72 @@ def test_error_envelopes_clip_long_messages_and_sources():
     assert len(out["error"]) < 1200 and len(out["source"]) < 300 and "more characters" in out["error"]
     out = json.loads(outputs.envelope("summary", "s" * 50_000, ok=True))
     assert len(out["source"]) < 300
+
+
+# ---------------------------------------------------------------- review fixes: blob_read pages
+
+def test_blob_read_pages_of_one_to_three_bytes_still_never_split_a_character(mcp):
+    text = "a😀é中" * 50
+    bid = json.loads(run(mcp, "blob_put", content=text))["blob_id"]
+    for length in (1, 2, 3, 4, 5):
+        off, parts = 0, []
+        while True:
+            page = json.loads(run(mcp, "blob_read", blob_id=bid, offset=off, length=length))
+            assert "�" not in page["data"] and page["length"] >= 1, (length, off)
+            assert page["length"] <= length + 3
+            parts.append(page["data"])
+            off = page["next_offset"]
+            if page["eof"]:
+                break
+        assert "".join(parts) == text, length
+    assert text.encode()[:1] == b"a"
+
+
+# ---------------------------------------------------------------- review fixes: blob_put(path=)
+
+def test_blob_put_path_reads_only_scene_and_data_files(mcp, tmp_path):
+    secret = tmp_path / "id_rsa"
+    secret.write_text("-----BEGIN OPENSSH PRIVATE KEY-----\nabc\n")
+    for name in ("id_rsa", "notes", "key.pem", ".env", "config.ini", "scene"):
+        f = tmp_path / name
+        f.write_text("secret")
+        out = json.loads(run(mcp, "blob_put", path=str(f)))
+        assert "error" in out and "X3D_MCP_BLOB_PATH_ROOTS" in out["error"], name
+        assert str(tmp_path) not in out["error"]
+    link = tmp_path / "innocent.x3d"
+    link.symlink_to(secret)                                       # the target decides, not the link name
+    out = json.loads(run(mcp, "blob_put", path=str(link)))
+    assert "error" in out and "BEGIN" not in json.dumps(out)
+    assert "error" in json.loads(run(mcp, "blob_put", path="/proc/self/environ"))
+    assert "error" in json.loads(run(mcp, "blob_put", path="/proc/self/../self/environ"))
+    assert "error" in json.loads(run(mcp, "blob_put", path="/sys/kernel/notes"))
+    for name in ("a.x3d", "b.JSON", "c.ttl", "d.spz", "e.mtlx", "f.x3dv", "g.ply"):
+        f = tmp_path / name
+        f.write_bytes(b"data " + name.encode())
+        out = json.loads(run(mcp, "blob_put", path=str(f)))
+        assert "blob_id" in out, (name, out)
+
+
+def test_blob_put_path_roots_replace_the_extension_rule(mcp, tmp_path):
+    root = tmp_path / "scenes"
+    root.mkdir()
+    (root / "anything").write_text("data in the root")
+    outside = tmp_path / "outside.x3d"
+    outside.write_text("<X3D/>")
+    (root / "link.x3d").symlink_to(outside)
+    blobs.configure(BlobConfig(path_roots=(str(root),)))
+    assert "blob_id" in json.loads(run(mcp, "blob_put", path=str(root / "anything")))
+    assert "error" in json.loads(run(mcp, "blob_put", path=str(outside)))             # right extension, wrong place
+    assert "error" in json.loads(run(mcp, "blob_put", path=str(root / "link.x3d")))   # a link out of the root
+    assert "error" in json.loads(run(mcp, "blob_put", path=str(root / ".." / "outside.x3d")))
+    assert "error" in json.loads(run(mcp, "blob_put", path="/proc/self/environ"))
+
+
+def test_blob_put_path_refuses_directories_and_oversized_files(mcp, tmp_path):
+    d = tmp_path / "dir.x3d"
+    d.mkdir()
+    assert "not found" in json.loads(run(mcp, "blob_put", path=str(d)))["error"]
+    blobs.configure(BlobConfig(max_bytes=1000))
+    big = tmp_path / "big.x3d"
+    big.write_bytes(b"x" * 5000)
+    assert "X3D_MCP_BLOB_MAX_BYTES" in json.loads(run(mcp, "blob_put", path=str(big)))["error"]

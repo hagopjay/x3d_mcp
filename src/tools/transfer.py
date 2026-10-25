@@ -11,6 +11,7 @@ import base64
 import binascii
 import json
 import os
+import stat as _stat
 
 import anyio
 from mcp.server.fastmcp import Context, FastMCP
@@ -32,7 +33,10 @@ def _err(message) -> str:
 
 
 def _utf8_cut(win: bytes, at_eof: bool) -> int:
-    """Length of the longest prefix of `win` that does not end inside a multibyte character."""
+    """Length of the longest prefix of `win` that does not end inside a multibyte character.
+
+    0 means `win` is only the start of one character (a page of 1 to 3 bytes): the caller
+    reads on to the end of it."""
     n = len(win)
     if at_eof or n == 0:
         return n
@@ -41,8 +45,7 @@ def _utf8_cut(win: bytes, at_eof: bool) -> int:
         if b & 0xC0 == 0x80:                    # continuation byte: look further back
             continue
         need = 1 if b < 0xC0 else 2 if b < 0xE0 else 3 if b < 0xF0 else 4
-        cut = n if back >= need else n - back
-        return cut or n                         # never return an empty page for a non-empty window
+        return n if back >= need else n - back
     return n
 
 
@@ -86,7 +89,7 @@ def register(mcp: FastMCP):
                 if cfg.http or transport_is_http():
                     return _err("Path input is disabled over the HTTP transport. "
                                 "Upload the file to POST /blob instead.")
-                raw = await anyio.to_thread.run_sync(_read_file, path.strip())
+                raw = await anyio.to_thread.run_sync(_read_file, path.strip(), cfg)
                 limit, cenc = cfg.max_bytes, ""
                 media = clean_media_type(media_type)
             else:
@@ -103,8 +106,10 @@ def register(mcp: FastMCP):
             meta = await anyio.to_thread.run_sync(
                 lambda: store.put(raw, cenc or None, media, ttl or None,
                                   name=name, max_bytes=limit))
-        except (BlobError, OSError) as e:
+        except BlobError as e:
             return _err(e)
+        except OSError as e:                      # no file name: it is the server's path
+            return _err(e.strerror or "could not read the file")
         return json.dumps(meta)
 
     @mcp.tool(structured_output=False)
@@ -133,8 +138,9 @@ def register(mcp: FastMCP):
         """Read a window of a stored blob: `length` bytes from `offset` (default 16 KiB, at most 256 KiB).
 
         Page through with next_offset until eof is true. Text pages never split a multibyte
-        character, so next_offset is what to pass next. Reading whole documents this way
-        costs context; prefer passing the blob_id to a tool.
+        character (a page may run up to 3 bytes past `length` to finish one), so next_offset
+        is what to pass next. Reading whole documents this way costs context; prefer passing
+        the blob_id to a tool.
 
         Args:
             blob_id: The id (64 hex characters, or sha256:<hex>).
@@ -157,7 +163,14 @@ def register(mcp: FastMCP):
         except BlobError as e:
             return _err(e)
         if encoding == "utf-8":
-            win = win[:_utf8_cut(win, offset + len(win) >= total)]
+            cut = _utf8_cut(win, offset + len(win) >= total)
+            if cut == 0 and win:                  # the window is the start of one character: finish it
+                try:
+                    win = await anyio.to_thread.run_sync(store.read, blob_id, offset, len(win) + 3)
+                except BlobError as e:
+                    return _err(e)
+                cut = _utf8_cut(win, offset + len(win) >= total) or len(win)
+            win = win[:cut]
             data = win.decode("utf-8", "replace")
         else:
             data = base64.b64encode(win).decode("ascii")
@@ -182,13 +195,54 @@ def register(mcp: FastMCP):
             return _err(e)
 
 
-def _read_file(path: str) -> bytes:
+# blob_put(path=) is a file-read primitive for the model (blob_read returns what it stored), so it
+# takes scene, data and splat files by extension, or whatever lies under X3D_MCP_BLOB_PATH_ROOTS.
+_PATH_SUFFIXES = frozenset((
+    ".x3d", ".x3dv", ".x3dj", ".wrl", ".json", ".jsonld", ".xml", ".gltf", ".glb", ".obj", ".mtl", ".mtlx",
+    ".stl", ".ply", ".splat", ".ksplat", ".spz", ".ttl", ".nt", ".nq", ".trig", ".rdf", ".owl",
+    ".txt", ".md", ".csv", ".tsv",
+))
+_PATH_DENIED_DIRS = ("/proc", "/sys", "/dev")
+
+
+def _under(path: str, root: str) -> bool:
+    root = root.rstrip(os.sep)
+    return path == root or path.startswith(root + os.sep)
+
+
+def _check_path(real: str, cfg) -> None:
+    """Raise BlobError unless blob_put may read this resolved path. The reason does not name
+    the path, so a refusal tells nothing about the file system."""
+    if any(_under(real, d) for d in _PATH_DENIED_DIRS):
+        raise BlobError("that path is not readable by blob_put")
+    if cfg.path_roots:
+        roots = [os.path.realpath(os.path.expanduser(r)) for r in cfg.path_roots]
+        if not any(_under(real, r) for r in roots):
+            raise BlobError("blob_put(path=) reads only under the directories in X3D_MCP_BLOB_PATH_ROOTS")
+    elif os.path.splitext(real)[1].lower() not in _PATH_SUFFIXES:
+        raise BlobError("blob_put(path=) reads scene, data and splat files by extension "
+                        f"({', '.join(sorted(_PATH_SUFFIXES))}); set X3D_MCP_BLOB_PATH_ROOTS to a "
+                        "directory to read other names from it")
+
+
+def _read_file(path: str, cfg=None) -> bytes:
     """Read a local file for blob_put(path=...); the store enforces the size limit."""
-    p = os.path.expanduser(path)
-    if not os.path.isfile(p):
-        raise BlobError(f"file not found: {p}")
-    limit = get_config().max_bytes
-    if os.path.getsize(p) > limit:
-        raise BlobError(f"file is larger than X3D_MCP_BLOB_MAX_BYTES ({limit})")
-    with open(p, "rb") as f:
-        return f.read()
+    cfg = cfg or get_config()
+    real = os.path.realpath(os.path.expanduser(path))      # symlinks resolved: the target decides
+    _check_path(real, cfg)
+    try:
+        fd = os.open(real, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+    except OSError:
+        raise BlobError("file not found or not readable") from None
+    try:
+        st = os.fstat(fd)
+        if not _stat.S_ISREG(st.st_mode):
+            raise BlobError("file not found: not a regular file")
+        if st.st_size > cfg.max_bytes:
+            raise BlobError(f"file is larger than X3D_MCP_BLOB_MAX_BYTES ({cfg.max_bytes})")
+        with os.fdopen(fd, "rb") as f:
+            fd = None
+            return f.read(cfg.max_bytes + 1)
+    finally:
+        if fd is not None:
+            os.close(fd)
