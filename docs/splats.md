@@ -139,8 +139,8 @@ of space with its own centre as `bboxCenter`; `cull_safe` keeps the node in view
 metric (the share of screen-overlapping splat pairs from different chunks that this node order draws
 backwards, 28 cameras, no opacity) cutting in file order scored 20.1% on the 500,000-splat Pantheon
 and a kd cut 1.1%; octree and grid scored 0.5 to 0.8%, and kd was chosen anyway for balanced chunk
-sizes and the fewest files. **That metric is not a renderer. The browser behaviour was not
-measured here** (see "Not verified").
+sizes and the fewest files. **That metric is not a renderer; see "Rendered in a browser" below for what a
+renderer showed.**
 
 ### Using the envelope in a browser
 
@@ -273,15 +273,42 @@ three trained PLY files (60,163 to 457,385 splats) get `needle-splats`, with 11.
 splats over 1000:1 (the Pantheon PLY has 0.0%, the 408,711-splat Sphinx PLY 3.6%). Whether those
 render badly is not known, so read that warning as "look", not "bad".
 
+## Rendered in a browser
+
+Chunked envelopes were loaded from a static folder in X_ITE 16.5.0 (headless Chromium, software
+WebGL2) and compared with one `GaussianSplats` node holding the same splats, from fixed viewpoints
+inside the scene (PSNR, 8 bit RGB, higher is closer). The sources were the real Pantheon files
+(50,058-splat PLY cut at 10,000 per chunk, six views; 500,000-splat SPZ cut at 10,000 per chunk, two
+views). Each run is one render per view, so differences of a dB or so are not established.
+
+| Cut | 50k, mean of 6 | 500k, mean of 2 |
+|---|---|---|
+| kd, `cull_safe` (default) | 42.4 | 36.4 |
+| octree, `cull_safe` | 42.6 | 37.2 |
+| grid, `cull_safe` | 41.9 | 33.4 |
+| file order, `cull_safe` | 38.1 (25.9 to 62.6 by view) | 21.4 |
+| kd, `tight` | 42.4 (identical images) | did not load (below) |
+
+- **Spatial cuts beat file order**, which is the design's claim, and by a wide margin at 500k. kd,
+  octree and grid are close at 50k; at 500k grid trailed by about 3 dB on two views. The kd default
+  stands, but this does not separate it from octree.
+- **`tight` at 500,000 splats did not finish loading** within 90 s and 300 s in two runs, where
+  `cull_safe` loaded in about 6.6 s. At 50,000 splats and in one view from outside the scene the two modes
+  were identical. This fits the earlier claim that a culled node can hold `loadURL`, but the cause
+  was not isolated (Likely, not Confirmed). It supports keeping `cull_safe` as the default. A
+  hand-edited variant with no `bboxCenter` at all (not a tool option) also loaded fine at 50k.
+- **Orientation:** the real SPZ rendered with `coordinate_system="rdf"` is upright (coffered ceiling
+  at the top); written `as-is` it renders upside down (13.5 dB against the rdf render). SPZ and PLY
+  record no axes, so pass `rdf` for files from the usual capture tools and check one render.
+- Whether the original claim that file-order chunks are drawn out of depth order is the reason for
+  the file-order loss was not isolated.
+
 ## Not verified
 
-- **A browser.** Nothing here was rendered. The claims about X_ITE (nodes ordered by `bboxCenter`, a
-  culled node holding `loadURL`, a y-down SPZ needing `rdf`) come from earlier work and are Likely at
-  best. Before relying on the defaults, open `scene.x3d` from a static host in X_ITE 16.5 or the pinned
-  version with `cull_safe`; regenerate with `bbox_mode="tight"` and fly the camera until chunks leave
-  the frustum (does `loadURL` hang?); render six fixed viewpoints for file-order chunks, kd, grid and
-  octree against one single-node reference and compare PSNR; load an SPZ and a PLY with `rdf` and
-  check that up is up. The result decides the default `method` and `bbox_mode`.
+- **Other browsers and renderers.** The render check below used one headless Chromium (software
+  WebGL2) and X_ITE 16.5.0 (16.4.3 agreed on the smaller checks), two to six fixed viewpoints, and
+  PSNR against a single-node reference. It says nothing about GPUs, other X_ITE versions, X3DOM or
+  other viewers, and PSNR is a crude measure of splat sorting.
 - **SPZ versions 2 and 4 and SH degrees 1 to 3 in SPZ.** All nine real SPZ files found are version 3
   with SH degree 0. The other paths follow the reference source and are tested against files this
   repository's test writer builds, which follows the same source. The SH layout (`[coefficient][R G B]`
