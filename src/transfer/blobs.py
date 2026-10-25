@@ -49,7 +49,9 @@ Environment variables (all optional; sizes accept K/M/G suffixes, binary units):
 """
 
 import atexit
+import errno
 import hashlib
+import logging
 import os
 import re
 import secrets
@@ -58,21 +60,27 @@ import stat as _stat
 import tempfile
 import threading
 import time
+import weakref
 import zlib
 from collections import OrderedDict
 from contextlib import contextmanager
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from typing import Iterator
+
+try:
+    import fcntl
+except ImportError:                       # Windows: no directory lock
+    fcntl = None
 
 from .capped import Capped, available_codecs, normalize_encoding, zstd_module
 from .errors import (
     BlobCorrupt, BlobError, BlobIdError, BlobMismatch, BlobNotFound, BlobTooLarge,
-    BlobUnavailable, ConfigError, StoreFull, TooManyUploads,
+    BlobUnavailable, ConfigError, StoreFull, StoreUnavailable, TooManyUploads,
 )
 
 _ID_RE = re.compile(r"[0-9a-f]{64}")
 _MEDIA_RE = re.compile(r"[a-z0-9][a-z0-9!#$&^_.+-]{0,63}/[a-z0-9][a-z0-9!#$&^_.+-]{0,95}")
-_SPILL_FINAL = re.compile(r"[0-9a-f]{64}")
+_SPILL_FINAL = re.compile(r"[0-9a-f]{64}\.[0-9a-f]{16}")     # <id>.<random>: one file per entry
 _SPILL_TEMP = re.compile(r"\.up_[0-9a-f]{32}")
 
 DEFAULT_MEDIA_TYPE = "application/octet-stream"
@@ -81,6 +89,15 @@ PROBE_MIN_GAIN = 0.05            # a probe that shrinks by less than this is sto
 RESERVE_FIRST = 1 << 20          # unknown-length uploads reserve this much, then grow by GROW
 GROW = 4 << 20
 PIECE = 1 << 20
+SWEEP_EVERY = 1.0                # seconds between full scans for expired blobs
+
+log = logging.getLogger("x3d_mcp.blob")
+
+
+def _oserr(ex: OSError) -> str:
+    """An OSError's reason without the file name: server paths do not go to clients (the
+    detail is logged)."""
+    return ex.strerror or type(ex).__name__
 
 
 # --------------------------------------------------------------------- configuration
@@ -135,7 +152,7 @@ def transport_is_http(environ=None) -> bool:
 class BlobConfig:
     enabled: bool = True
     http: bool = False
-    token: str = ""
+    token: str = field(default="", repr=False, compare=False)     # a secret: never in a repr
     tools_open: bool = False
     max_bytes: int = 256 << 20
     mem_bytes: int = 128 << 20
@@ -156,6 +173,10 @@ class BlobConfig:
     allowed_origins: tuple[str, ...] = ()
     summary_items: int = 200
     offload_min: int = 1 << 20
+    max_blobs: int = 10000
+    tool_max_bytes: int = 64 << 20
+    min_rate: int = 4096
+    path_roots: tuple[str, ...] = ()
 
     @property
     def quota(self) -> int:
@@ -189,6 +210,10 @@ class BlobConfig:
             enabled = False
         if http and token and len(token) < 32 and mode != "off":
             raise ConfigError("X3D_MCP_BLOB_TOKEN must be at least 32 characters")
+        origins = _env_list(env, "X3D_MCP_ALLOWED_ORIGINS")
+        if http and origins and not _env_list(env, "X3D_MCP_ALLOWED_HOSTS"):
+            raise ConfigError("X3D_MCP_ALLOWED_ORIGINS needs X3D_MCP_ALLOWED_HOSTS as well: the "
+                              "SDK's check refuses every request whose Host is not listed")
         spill = (env.get("X3D_MCP_BLOB_DIR") or "").strip()
         cfg = cls(
             enabled=enabled,
@@ -211,9 +236,14 @@ class BlobConfig:
             page_default=_env_size(env, "X3D_MCP_BLOB_PAGE_DEFAULT", 16384, 1),
             page_max=_env_size(env, "X3D_MCP_BLOB_PAGE_MAX", 262144, 1),
             allowed_hosts=_env_list(env, "X3D_MCP_ALLOWED_HOSTS"),
-            allowed_origins=_env_list(env, "X3D_MCP_ALLOWED_ORIGINS"),
+            allowed_origins=origins,
             summary_items=int(_env_size(env, "X3D_MCP_SUMMARY_ITEMS", 200, 1)),
             offload_min=_env_size(env, "X3D_MCP_OFFLOAD_MIN", 1 << 20),
+            max_blobs=int(_env_size(env, "X3D_MCP_BLOB_MAX_COUNT", 10000, 1)),
+            tool_max_bytes=_env_size(env, "X3D_MCP_TOOL_MAX_BYTES", 64 << 20, 1),
+            min_rate=_env_size(env, "X3D_MCP_BLOB_MIN_RATE", 4096),
+            path_roots=tuple(r for r in (env.get("X3D_MCP_BLOB_PATH_ROOTS") or "").split(os.pathsep)
+                             if r.strip()),
         )
         if cfg.page_default > cfg.page_max:
             cfg = replace(cfg, page_default=cfg.page_max)
@@ -299,7 +329,7 @@ class Upload:
 
     def __init__(self, store: "BlobStore", encoding: str, media_type: str, name: str,
                  expect_id: str | None, declared: int | None, ttl: float | None,
-                 limit: int | None = None):
+                 limit: int | None = None, slot: bool = True):
         cfg = store.cfg
         self.limit = min(limit, cfg.max_bytes) if limit else cfg.max_bytes
         self.store = store
@@ -328,9 +358,11 @@ class Upload:
         if declared is not None and declared > self.limit:
             raise BlobTooLarge(f"body of {declared} bytes exceeds the limit of {self.limit} "
                                "(X3D_MCP_BLOB_MAX_BYTES, or X3D_MCP_BLOB_INLINE_MAX for blob_put)")
-        store._begin_upload()
-        self._active = True
+        if slot:                              # in-process puts hold no streaming slot
+            store._begin_upload()
+            self._active = True
         try:
+            store._room_for_entry()
             # br/zstd bodies are stored as sent, so their size is known; identity and gzip
             # bodies shrink when stored, so reserve a first slice and grow as bytes land
             if declared is None:
@@ -396,7 +428,8 @@ class Upload:
         try:
             self._file.write(b)
         except OSError as e:
-            raise StoreFull(f"could not write the spill file: {e}") from e
+            log.warning("spill write failed: %s", e)
+            raise StoreFull(f"could not write the spill file: {_oserr(e)}") from e
 
     def _spill(self) -> None:
         store = self.store
@@ -408,7 +441,8 @@ class Upload:
             if self._buf:
                 self._file.write(self._buf)
         except OSError as e:
-            raise StoreFull(f"could not create a spill file: {e}") from e
+            log.warning("spill file could not be created: %s", e)
+            raise StoreFull(f"could not create a spill file: {_oserr(e)}") from e
         store._mem_release(self._mem_held)
         self._mem_held = 0
         self._buf = bytearray()
@@ -552,8 +586,11 @@ class BlobStore:
         self._hot: tuple[str, bytes] | None = None
         self._spill: str | None = None
         self._spill_auto = False
+        self._swept = float("-inf")
+        self._unlock = None
         if cfg.spill_dir:
             self._spill = self._prepare_spill_dir(cfg.spill_dir)
+            self._lock_spill()
             self._clean_spill()
 
     # -- spill directory
@@ -573,6 +610,25 @@ class BlobStore:
             os.makedirs(p, mode=0o700, exist_ok=True)
             os.chmod(p, 0o700)
         return p
+
+    def _lock_spill(self) -> None:
+        """Take an exclusive lock on the spill directory for the life of this store (released
+        by close(), or when the process ends). A second process on the same directory would
+        delete the first one's files at start-up, so it is refused instead."""
+        if fcntl is None:
+            return
+        fd = os.open(self._spill, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as e:
+            os.close(fd)
+            if e.errno in (errno.EWOULDBLOCK, errno.EAGAIN, errno.EACCES):
+                raise ConfigError(
+                    f"X3D_MCP_BLOB_DIR {self._spill} is in use by another server process; "
+                    "give each process its own directory") from None
+            log.warning("X3D_MCP_BLOB_DIR cannot be locked (%s); make sure only one process uses it", e)
+            return
+        self._unlock = weakref.finalize(self, os.close, fd)
 
     def _clean_spill(self) -> None:
         """Empty our own files from the spill directory; anything else in it is left alone."""
@@ -608,8 +664,11 @@ class BlobStore:
         return os.fdopen(fd, "wb"), path
 
     def _final_path(self, blob_id: str) -> str:
+        """A fresh file name for one entry: the id plus a random suffix, hex only. Two entries
+        with the same content (one deleted while a reader still holds it, one uploaded
+        again) never share a file."""
         assert _ID_RE.fullmatch(blob_id), "spill names are hex ids only"
-        return os.path.join(self._spill, blob_id)
+        return os.path.join(self._spill, f"{blob_id}.{secrets.token_hex(8)}")
 
     def close(self) -> None:
         """Drop everything and remove the spill files this store owns."""
@@ -620,6 +679,9 @@ class BlobStore:
             if self._spill_auto and self._spill:
                 shutil.rmtree(self._spill, ignore_errors=True)
                 self._spill = None
+            if self._unlock is not None:
+                self._unlock()
+                self._unlock = None
 
     # -- accounting
     def _begin_upload(self) -> None:
@@ -647,13 +709,33 @@ class BlobStore:
         with self._lock:
             self.inflight -= n
 
+    def _lru_victim(self, only_mem: bool = False) -> Entry | None:
+        """The least recently used entry nobody is reading (the table is in LRU order)."""
+        return next((e for e in self._d.values()
+                     if e.refs == 0 and (e.mem is not None or not only_mem)), None)
+
     def _evict_for(self, need: int) -> None:
         self._sweep()
-        for e in list(self._d.values()):
-            if self.total + self.inflight + need <= self.cfg.quota:
-                break
-            if e.refs == 0:
-                self._drop(e)
+        if self.total + self.inflight + need <= self.cfg.quota:
+            return
+        self._sweep(force=True)                   # expired blobs go before live ones
+        while self.total + self.inflight + need > self.cfg.quota:
+            victim = self._lru_victim()
+            if victim is None:
+                return
+            self._drop(victim)
+
+    def _room_for_entry(self) -> None:
+        """Make room for one more table entry (X3D_MCP_BLOB_MAX_COUNT) or raise StoreFull.
+        The quota counts payload bytes, so without this cap a stream of tiny blobs costs
+        memory and scan time that the quota never sees."""
+        with self._lock:
+            while len(self._d) >= self.cfg.max_blobs:
+                victim = self._lru_victim()
+                if victim is None:
+                    raise StoreFull(f"{len(self._d)} blobs are stored and all are in use "
+                                    "(X3D_MCP_BLOB_MAX_COUNT)")
+                self._drop(victim)
 
     def _mem_acquire(self, n: int) -> bool:
         """Room in the RAM budget for n more buffered bytes? Evicts unused in-memory blobs
@@ -661,11 +743,11 @@ class BlobStore:
         with self._lock:
             if self.mem_used + self.inflight_mem + n > self.cfg.mem_bytes and not self._spill \
                     and not self.cfg.auto_spill:
-                for e in list(self._d.values()):
-                    if self.mem_used + self.inflight_mem + n <= self.cfg.mem_bytes:
+                while self.mem_used + self.inflight_mem + n > self.cfg.mem_bytes:
+                    victim = self._lru_victim(only_mem=True)
+                    if victim is None:
                         break
-                    if e.mem is not None and e.refs == 0:
-                        self._drop(e)
+                    self._drop(victim)
             if self.mem_used + self.inflight_mem + n > self.cfg.mem_bytes:
                 return False
             self.inflight_mem += n
@@ -676,27 +758,40 @@ class BlobStore:
             self.inflight_mem -= n
 
     # -- table
-    def _sweep(self) -> None:
+    def _sweep(self, force: bool = False) -> None:
+        """Drop expired, unused entries. The scan is O(table), so it runs at most once a
+        second unless forced; _lookup checks the one entry it is asked for on its own."""
         now = self._now()
+        if not force and self._swept <= now < self._swept + SWEEP_EVERY:
+            return
+        self._swept = now
         for e in list(self._d.values()):
             if e.expires <= now and e.refs == 0:
                 self._drop(e)
 
     def _drop(self, e: Entry) -> None:
+        """Take an entry out of the table. Its bytes and its share of the quota and the RAM
+        budget are released now when nobody is reading it, else when the last reader lets go
+        (a blob that is deleted but still downloading is still on disk or in memory)."""
         with self._lock:
             if self._d.get(e.id) is not e:
                 return
             del self._d[e.id]
-            self.total -= e.stored
-            if e.mem is not None:
-                self.mem_used -= e.stored
-            if e.path:
-                if e.refs == 0:
-                    self._unlink(e.path)
-                else:
-                    e.dropped = True              # last reader unlinks it
             if self._hot and self._hot[0] == e.id:
                 self._hot = None
+            if e.refs == 0:
+                self._free(e)
+            else:
+                e.dropped = True
+
+    def _free(self, e: Entry) -> None:
+        self.total -= e.stored
+        if e.mem is not None:
+            self.mem_used -= e.stored
+            e.mem = None
+        if e.path:
+            self._unlink(e.path)
+            e.path = None
 
     @staticmethod
     def _unlink(path: str) -> None:
@@ -717,6 +812,13 @@ class BlobStore:
         with self._lock:
             self._sweep()
             e = self._d.get(bid)
+            if e is not None and e.refs == 0 and e.expires <= self._now():
+                self._drop(e)
+                e = None
+            if e is not None and e.path and not os.path.exists(e.path):
+                log.warning("blob %s: its spill file is gone", bid[:12])
+                self._drop(e)                     # the file was removed behind our back
+                e = None
             if e is None:
                 raise BlobNotFound(f"no blob {bid[:12]} (never stored, expired, evicted or deleted); "
                                    "upload it again")
@@ -736,31 +838,40 @@ class BlobStore:
     def _release(self, e: Entry) -> None:
         with self._lock:
             e.refs -= 1
-            if e.refs == 0 and e.dropped and e.path:
-                self._unlink(e.path)
-                e.path = None
+            if e.refs == 0 and e.dropped:
+                self._free(e)
 
     def _commit(self, e: Entry, data: bytes | None, tmp: str | None, mem_held: int) -> tuple[dict, bool]:
         with self._lock:
-            self.inflight_mem -= mem_held             # the buffer is now the entry (or is discarded)
             self._sweep()
             old = self._d.get(e.id)
-            if old is not None:                       # same content already stored: refresh it
-                old.created = e.created
-                old.ttl = e.ttl
+            if old is not None and old.path and not os.path.exists(old.path):
+                self._drop(old)                       # a ghost whose file is gone: store the new copy
+                old = None
+            if old is not None:                       # same content already stored
+                # renew the idle TTL, but not the hard lifetime, and never shorten what
+                # another holder of the same bytes asked for
+                old.ttl = max(old.ttl, e.ttl)
                 if old.media_type == DEFAULT_MEDIA_TYPE and e.media_type != DEFAULT_MEDIA_TYPE:
                     old.media_type = e.media_type
                 self._touch(old)
+                self.inflight_mem -= mem_held         # the buffer is discarded
                 if tmp:
                     self._unlink(tmp)
                 return _meta(old), False
-            if data is not None:
+            self._room_for_entry()                    # may raise; nothing has changed yet
+            if data is None:
+                final = self._final_path(e.id)
+                try:
+                    os.replace(tmp, final)
+                except OSError as ex:
+                    log.warning("could not move the spill file into place: %s", ex)
+                    raise StoreFull(f"could not store the spill file: {_oserr(ex)}") from ex
+                e.path = final
+            else:
                 self.mem_used += e.stored
                 e.mem = data
-            else:
-                final = self._final_path(e.id)
-                os.replace(tmp, final)
-                e.path = final
+            self.inflight_mem -= mem_held             # the buffer is now the entry
             self._d[e.id] = e
             self.total += e.stored
             return _meta(e), True
@@ -780,9 +891,10 @@ class BlobStore:
                         return
                     yield b
         except OSError as ex:
+            log.warning("blob %s: spill file unreadable: %s", e.id[:12], ex)
             with self._lock:
                 self._drop(e)
-            raise BlobNotFound(f"blob {e.id[:12]} data is no longer available: {ex}") from ex
+            raise BlobNotFound(f"blob {e.id[:12]} data is no longer available: {_oserr(ex)}") from ex
 
     def _iter_decoded(self, e: Entry) -> Iterator[bytes]:
         if e.encoding == "identity":
@@ -818,9 +930,11 @@ class BlobStore:
     # -- public API
     def upload(self, content_encoding: str | None = None, media_type: str | None = None, *,
                name: str = "", expect_id: str | None = None, declared: int | None = None,
-               ttl: float | None = None, max_bytes: int | None = None) -> Upload:
+               ttl: float | None = None, max_bytes: int | None = None, slot: bool = True) -> Upload:
         """Start a streaming ingest (see Upload). Raises UnsupportedEncoding (415),
-        BlobTooLarge (413), TooManyUploads (429) or StoreFull (507) before any byte is read."""
+        BlobTooLarge (413), TooManyUploads (429) or StoreFull (507) before any byte is read.
+        slot=False skips the X3D_MCP_BLOB_MAX_UPLOADS count (put() uses it: the bytes are
+        already in memory, so the limit on streaming uploads has nothing to protect)."""
         enc = normalize_encoding(content_encoding)
         if ttl is not None and ttl <= 0:
             ttl = None
@@ -828,7 +942,7 @@ class BlobStore:
             ttl = min(float(ttl), self.cfg.max_age)
         return Upload(self, enc, clean_media_type(media_type) if media_type else DEFAULT_MEDIA_TYPE,
                       clean_name(name), normalize_blob_id(expect_id) if expect_id else None, declared, ttl,
-                      max_bytes)
+                      max_bytes, slot)
 
     def put(self, data: bytes, content_encoding: str | None = None, media_type: str | None = None,
             ttl: float | None = None, *, name: str = "", expect_id: str | None = None,
@@ -837,7 +951,7 @@ class BlobStore:
         or zstd) and return its metadata: blob_id (= sha256 of the decoded bytes), size,
         stored_size, encoding (how it is kept), media_type, sha256, expires, created."""
         up = self.upload(content_encoding, media_type, name=name, expect_id=expect_id,
-                         declared=len(data), ttl=ttl, max_bytes=max_bytes)
+                         declared=len(data), ttl=ttl, max_bytes=max_bytes, slot=False)
         try:
             for i in range(0, max(len(data), 1), PIECE):
                 up.feed(data[i:i + PIECE])
@@ -864,9 +978,13 @@ class BlobStore:
             e.refs += 1
             return Lease(self, e)
 
-    def get_bytes(self, blob_id: str) -> bytes:
-        """The decoded bytes. Raises BlobNotFound for an unknown, expired or evicted id."""
+    def get_bytes(self, blob_id: str, max_bytes: int | None = None) -> bytes:
+        """The decoded bytes. Raises BlobNotFound for an unknown, expired or evicted id, and
+        BlobTooLarge (before decoding anything) when max_bytes is given and the blob is bigger."""
         with self._use(blob_id) as e:
+            if max_bytes is not None and e.size > max_bytes:
+                raise BlobTooLarge(f"blob {e.id[:12]} is {e.size} bytes decoded; the limit here is "
+                                   f"{max_bytes} (X3D_MCP_TOOL_MAX_BYTES)")
             hot = self._hot_get(e.id)
             if hot is not None:
                 return hot
@@ -877,9 +995,9 @@ class BlobStore:
             self._hot_set(e.id, data)
             return data
 
-    def get_text(self, blob_id: str) -> str:
-        """The decoded bytes as strict UTF-8 text."""
-        data = self.get_bytes(blob_id)
+    def get_text(self, blob_id: str, max_bytes: int | None = None) -> str:
+        """The decoded bytes as strict UTF-8 text (see get_bytes for max_bytes)."""
+        data = self.get_bytes(blob_id, max_bytes)
         try:
             return data.decode("utf-8")
         except UnicodeDecodeError as ex:
@@ -910,8 +1028,9 @@ class BlobStore:
                         f.seek(offset)
                         return f.read(end - offset)
                 except OSError as ex:
+                    log.warning("blob %s: spill file unreadable: %s", e.id[:12], ex)
                     self._drop(e)
-                    raise BlobNotFound(f"blob {e.id[:12]} data is no longer available: {ex}") from ex
+                    raise BlobNotFound(f"blob {e.id[:12]} data is no longer available: {_oserr(ex)}") from ex
             n = end - offset
             cacheable = 0 < e.size <= self.cfg.hot_bytes
             if cacheable and not (offset == 0 and n <= 65536):
@@ -940,11 +1059,12 @@ class BlobStore:
 
     def stats(self) -> dict:
         with self._lock:
-            self._sweep()
+            self._sweep(force=True)
             files = 0
             if self._spill:
                 try:
-                    files = sum(1 for _ in os.scandir(self._spill))
+                    files = sum(1 for de in os.scandir(self._spill)
+                                if _SPILL_FINAL.fullmatch(de.name) or _SPILL_TEMP.fullmatch(de.name))
                 except OSError:
                     pass
             return {
@@ -998,7 +1118,8 @@ def blob_enabled() -> bool:
 
 def get_store() -> BlobStore:
     """The process-wide store. Raises BlobUnavailable when the feature is switched off
-    (X3D_MCP_BLOB=off, or HTTP transport without X3D_MCP_BLOB_TOKEN)."""
+    (X3D_MCP_BLOB=off, or HTTP transport without X3D_MCP_BLOB_TOKEN), and StoreUnavailable
+    when it cannot start (the reason is logged; it names server paths, so clients do not get it)."""
     global _store
     cfg = get_config()
     if not cfg.enabled:
@@ -1007,13 +1128,44 @@ def get_store() -> BlobStore:
             "X3D_MCP_BLOB=off switches it off)")
     with _state_lock:
         if _store is None:
-            _store = BlobStore(cfg)
+            try:
+                _store = BlobStore(cfg)
+            except ConfigError as e:
+                log.error("blob store cannot start: %s", e)
+                raise StoreUnavailable("the blob store cannot start on this server; "
+                                       "see the server log") from e
         return _store
+
+
+def start() -> None:
+    """Build the store now. The server calls this at start-up so that an unusable
+    X3D_MCP_BLOB_DIR stops it there (ConfigError) instead of failing every later request."""
+    cfg = get_config()
+    if not cfg.enabled:
+        return
+    global _store
+    with _state_lock:
+        if _store is None:
+            _store = BlobStore(cfg)
+
+
+def exit_on_sigterm() -> None:
+    """Turn SIGTERM into a normal exit, so that atexit removes the temporary spill directory
+    (stdio hosts stop a server with SIGTERM, which otherwise skips atexit). Does nothing off
+    the main thread or when something else already handles SIGTERM."""
+    import signal
+    import sys
+    try:
+        if signal.getsignal(signal.SIGTERM) is signal.SIG_DFL:
+            signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(128 + signum))
+    except (ValueError, OSError):
+        pass
 
 
 # --------------------------------------------------------------------- the input resolver
 
-def resolve_text(content: str = "", path: str = "", blob_id: str = "") -> tuple[str, str]:
+def resolve_text(content: str = "", path: str = "", blob_id: str = "",
+                 max_bytes: int | None = None) -> tuple[str, str]:
     """Return (text, label) for exactly one of inline `content`, a file `path`, or a stored `blob_id`.
 
     The one place that decides which input is used: giving none, or more than one, is an
@@ -1034,7 +1186,7 @@ def resolve_text(content: str = "", path: str = "", blob_id: str = "") -> tuple[
                          f"(got: {', '.join(given)}). With blob_id, pass content as an empty string.")
     if given == ["blob_id"]:
         bid = normalize_blob_id(blob_id)
-        return get_store().get_text(bid), f"blob {bid[:12]}"
+        return get_store().get_text(bid, max_bytes), f"blob {bid[:12]}"
     if given == ["path"]:
         from x3d_utils.source import read_path_text
         return read_path_text(path), f"file {path.strip()}"

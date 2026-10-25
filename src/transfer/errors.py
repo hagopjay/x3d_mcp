@@ -67,5 +67,10 @@ class BlobTimeout(BlobError):
     status = 408
 
 
+class StoreUnavailable(BlobError):
+    """The store cannot start (for example its spill directory is unusable); the detail is in the log."""
+    status = 503
+
+
 class ConfigError(ValueError):
     """An environment variable of the transfer layer is invalid (a startup error)."""
