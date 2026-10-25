@@ -28,6 +28,7 @@ from .capped import available_codecs, normalize_encoding
 from .errors import BlobError, BlobIdError, BlobTimeout, UnsupportedEncoding
 
 _SECURITY = {"X-Content-Type-Options": "nosniff"}
+RATE_GRACE = 10.0        # seconds an upload may take before X3D_MCP_BLOB_MIN_RATE is enforced
 
 
 def _json(status: int, obj: dict, headers: dict | None = None) -> JSONResponse:
@@ -79,15 +80,27 @@ def _accepted(request: Request) -> set[str]:
 
 
 class _Leased(StreamingResponse):
-    """A streaming response that releases its lease whether it completes or is cancelled."""
+    """A streaming response that releases its lease whether it completes or is cancelled.
 
-    def __init__(self, lease, body, **kw):
+    Each write must be accepted by the client within `write_timeout` seconds: a client that
+    stops reading would otherwise pin the blob (it cannot be evicted while leased) and its
+    memory or file descriptor for as long as it keeps the socket open."""
+
+    def __init__(self, lease, body, write_timeout: float = 0.0, **kw):
         super().__init__(body, **kw)
         self._lease = lease
+        self._write_timeout = write_timeout
 
     async def __call__(self, scope, receive, send):
+        async def guarded(message):
+            if self._write_timeout:
+                with anyio.fail_after(self._write_timeout):
+                    await send(message)
+            else:
+                await send(message)
+
         try:
-            await super().__call__(scope, receive, send)
+            await super().__call__(scope, receive, guarded)
         finally:
             self._lease.close()
 
@@ -111,8 +124,8 @@ def register(mcp, cfg=None) -> None:
         bad = await check(request)
         if bad is not None:
             return bad
-        store = get_store()
         try:
+            store = get_store()
             expect = None
             if request.path_params.get("blob_id") is not None:
                 expect = normalize_blob_id(request.path_params["blob_id"])
@@ -149,10 +162,16 @@ def register(mcp, cfg=None) -> None:
                     break
                 except TimeoutError:
                     raise BlobTimeout(f"no data for {cfg.idle_timeout:g}s") from None
-                if time.monotonic() - t0 > cfg.total_timeout:
+                elapsed = time.monotonic() - t0
+                if elapsed > cfg.total_timeout:
                     raise BlobTimeout(f"upload took longer than {cfg.total_timeout:g}s")
-                up.feed(chunk)
-            meta, created = up.finish()
+                if cfg.min_rate and elapsed > RATE_GRACE and up.wire < cfg.min_rate * elapsed:
+                    raise BlobTimeout(f"upload slower than {cfg.min_rate} bytes/s "
+                                      "(X3D_MCP_BLOB_MIN_RATE)")
+                # decoding, hashing and compressing a chunk can take a while (a 256 KiB gzip
+                # chunk may expand to 60 MB): do it off the event loop
+                await anyio.to_thread.run_sync(up.feed, chunk)
+            meta, created = await anyio.to_thread.run_sync(up.finish)
             return _json(201 if created else 200, _with_ratio(meta, created))
         except BlobError as e:
             return _error(e)
@@ -165,9 +184,8 @@ def register(mcp, cfg=None) -> None:
         bad = await check(request)
         if bad is not None:
             return bad
-        store = get_store()
         try:
-            lease = store.acquire(request.path_params["blob_id"])
+            lease = get_store().acquire(request.path_params["blob_id"])
         except BlobError as e:
             return _error(e)
         stored_ok = lease.encoding != "identity" and lease.encoding in _accepted(request)
@@ -194,7 +212,8 @@ def register(mcp, cfg=None) -> None:
             for piece in pieces:
                 yield piece
 
-        return _Leased(lease, body(), media_type=lease.media_type, headers=headers)
+        return _Leased(lease, body(), write_timeout=cfg.idle_timeout, media_type=lease.media_type,
+                       headers=headers)
 
     async def delete(request: Request):
         bad = await check(request)

@@ -661,6 +661,104 @@ def test_real_server_process_serves_blob_routes_and_tools():
         assert TOKEN not in (p.stderr.read().decode() if p.stderr else "")           # never logged
 
 
+# ---------------------------------------------------------------- review fixes: routes
+
+def test_ingest_runs_off_the_event_loop(tmp_path, monkeypatch):
+    """A 256 KiB gzip chunk can expand to tens of MB; decoding, hashing and compressing it
+    on the loop thread stalled /pulse and /mcp."""
+    from transfer.blobs import Upload
+    seen = []
+    real_feed, real_finish = Upload.feed, Upload.finish
+    monkeypatch.setattr(Upload, "feed", lambda self, chunk: (seen.append(threading.get_ident()), real_feed(self, chunk))[1])
+    monkeypatch.setattr(Upload, "finish", lambda self: (seen.append(threading.get_ident()), real_finish(self))[1])
+    srv = Live(live_cfg(tmp_path, max_ratio=0))
+    try:
+        body = gzip.compress(b"\0" * (8 << 20), 6)
+        r = httpx.post(srv.url + "/blob", content=body, headers={**AUTH, "Content-Encoding": "gzip"})
+        assert r.status_code == 201 and r.json()["size"] == 8 << 20
+        assert seen and srv.thread.ident not in seen
+    finally:
+        srv.close()
+
+
+def test_a_trickling_upload_is_cut_off_by_the_minimum_rate(tmp_path, monkeypatch):
+    monkeypatch.setattr(routes, "RATE_GRACE", 0.4)
+    srv = Live(live_cfg(tmp_path, idle_timeout=2.0, total_timeout=30.0, min_rate=1000))
+    try:
+        s = socket.create_connection(("127.0.0.1", srv.port))
+        s.sendall((f"POST /blob HTTP/1.1\r\nHost: 127.0.0.1:{srv.port}\r\nAuthorization: Bearer {TOKEN}\r\n"
+                   "Content-Length: 1000000\r\n\r\n").encode())
+        t0 = time.perf_counter()
+        reply = b""
+        try:
+            s.settimeout(0.25)
+            while not reply and time.perf_counter() - t0 < 8:
+                try:
+                    s.sendall(b"x")                     # one byte every quarter second stays under the idle timeout
+                except OSError:
+                    break
+                try:
+                    reply = s.recv(4000)
+                except socket.timeout:
+                    pass
+        finally:
+            s.close()
+        assert reply.startswith(b"HTTP/1.1 408") and b"X3D_MCP_BLOB_MIN_RATE" in reply
+        assert time.perf_counter() - t0 < 6
+        for _ in range(40):
+            if srv.stats()["uploads"] == 0:
+                break
+            time.sleep(0.1)
+        st = srv.stats()
+        assert st["uploads"] == 0 and st["inflight"] == 0 and st["blobs"] == 0
+    finally:
+        srv.close()
+
+
+def test_a_client_that_stops_reading_a_download_releases_its_lease(tmp_path):
+    srv = Live(live_cfg(tmp_path, idle_timeout=1.0, mem_bytes=1 << 20, max_bytes=128 << 20,
+                        quota_bytes=200 << 20))
+    try:
+        data = os.urandom(64 << 20)
+        r = httpx.post(srv.url + "/blob", content=data, headers=AUTH, timeout=60)
+        bid = r.json()["blob_id"]
+        s = socket.socket()
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4096)
+        s.connect(("127.0.0.1", srv.port))
+        s.sendall((f"GET /blob/{bid} HTTP/1.1\r\nHost: 127.0.0.1:{srv.port}\r\n"
+                   f"Authorization: Bearer {TOKEN}\r\n\r\n").encode())
+        s.recv(1024)                                      # read the start, then stop reading
+        entry = blobs.get_store()._d[bid]
+        time.sleep(0.3)
+        assert entry.refs == 1                            # pinned while the client is merely slow
+        for _ in range(60):
+            if entry.refs == 0:
+                break
+            time.sleep(0.1)
+        assert entry.refs == 0                            # ... but not for as long as the socket stays open
+        s.close()
+        assert httpx.head(f"{srv.url}/blob/{bid}", headers=AUTH).status_code == 200
+    finally:
+        srv.close()
+
+
+def test_an_unusable_spill_directory_is_a_clean_503_not_a_500(tmp_path):
+    loose = tmp_path / "loose"
+    loose.mkdir()
+    os.chmod(loose, 0o755)
+    srv = Live(live_cfg(None, spill_dir=str(loose)))
+    try:
+        for r in (httpx.post(srv.url + "/blob", content=b"x", headers=AUTH),
+                  httpx.get(f"{srv.url}/blob/{SHA}", headers=AUTH),
+                  httpx.delete(f"{srv.url}/blob/{SHA}", headers=AUTH),
+                  httpx.put(f"{srv.url}/blob/{SHA}", content=b"x", headers=AUTH)):
+            assert r.status_code == 503 and str(tmp_path) not in r.text and "server log" in r.json()["error"]
+        out = json.loads(call(srv.url, AUTH, "blob_put", {"content": "hello"}))
+        assert "server log" in out["error"] and str(tmp_path) not in out["error"]
+    finally:
+        srv.close()
+
+
 # ---------------------------------------------------------------- start-up checks (subprocess)
 
 def _clean_env(**extra) -> dict:
