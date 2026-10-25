@@ -701,6 +701,14 @@ def test_a_trickling_upload_is_cut_off_by_the_minimum_rate(tmp_path, monkeypatch
                     reply = s.recv(4000)
                 except socket.timeout:
                     pass
+            s.settimeout(1.0)
+            while reply and b"MIN_RATE" not in reply:             # the body may arrive in a second packet
+                more = s.recv(4000)
+                if not more:
+                    break
+                reply += more
+        except OSError:
+            pass
         finally:
             s.close()
         assert reply.startswith(b"HTTP/1.1 408") and b"X3D_MCP_BLOB_MIN_RATE" in reply
@@ -716,7 +724,7 @@ def test_a_trickling_upload_is_cut_off_by_the_minimum_rate(tmp_path, monkeypatch
 
 
 def test_a_client_that_stops_reading_a_download_releases_its_lease(tmp_path):
-    srv = Live(live_cfg(tmp_path, idle_timeout=1.0, mem_bytes=1 << 20, max_bytes=128 << 20,
+    srv = Live(live_cfg(tmp_path, idle_timeout=1.5, mem_bytes=1 << 20, max_bytes=128 << 20,
                         quota_bytes=200 << 20))
     try:
         data = os.urandom(64 << 20)
