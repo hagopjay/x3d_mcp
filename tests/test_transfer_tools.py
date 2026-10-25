@@ -149,7 +149,8 @@ def test_convert_gives_identical_output_for_blob_and_inline(mcp, to):
     assert by_blob == inline and len(inline) > 100
     assert run(mcp, "convert_x3d", content=SAMPLE, from_encoding="xml", to_encoding="yaml") \
         == "Unknown target encoding: yaml"
-    assert run(mcp, "convert_x3d", content=SAMPLE, from_encoding="json", to_encoding="xml").startswith("Parsing from")
+    assert run(mcp, "convert_x3d", content=SAMPLE, from_encoding="yaml", to_encoding="xml") \
+        == "Parsing from 'yaml' is not yet supported. Use 'xml' or 'json' as source."
 
 
 def test_scene_edit_tools_give_identical_output_for_blob_and_inline(mcp):

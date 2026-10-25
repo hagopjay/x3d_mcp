@@ -97,7 +97,8 @@ Everything is an environment variable with a default. Sizes accept `K`, `M`, `G`
 | `X3D_MCP_ALLOWED_HOSTS` / `X3D_MCP_ALLOWED_ORIGINS` | unset | Comma lists (SDK grammar, `host:*` allowed). When set, the SDK's Host/Origin checks apply to `/blob` **and** `/mcp`. Origins need hosts: the SDK refuses every request whose Host is not listed, so `ALLOWED_ORIGINS` alone is a start-up error over HTTP |
 | `X3D_MCP_SUMMARY_ITEMS` | `200` | Most list entries a `return_mode="summary"` answer carries |
 | `X3D_MCP_OFFLOAD_MIN` | `1M` | Documents at least this large are processed in a worker thread, one job at a time |
-| `X3D_MCP_TOOL_MAX_BYTES` | `64M` | Largest decoded size of a blob given to a tool as `blob_id` (checked from the stored size, before decoding). A blob can be tiny in the store and huge as text; see Deployment notes. `blob_info` and `blob_read` are not limited by it. Inline and `path` inputs are unchanged |
+| `X3D_MCP_TOOL_MAX_BYTES` | `96M` | Largest decoded size of a blob given to a tool as `blob_id` (checked from the stored size, before decoding). A blob can be tiny in the store and huge as text, and a tool holds about 12 times the decoded size while it works; see Deployment notes. `blob_info` and `blob_read` are not limited by it. Inline and `path` inputs are unchanged |
+| `X3D_MCP_TOOL_CONCURRENCY` | `2` | Tool calls on a `blob_id` that run at once; further calls wait. `convert_x3d` on JSON input always runs in the worker thread, and a vrml result expected above 64 MB is refused |
 | `X3D_MCP_BLOB_PATH_ROOTS` | unset | Directories (`os.pathsep`-separated) that `blob_put(path=)` may read under, any file name. Unset: scene, data and splat extensions only (see `blob_put`) |
 
 A bad value (not a size, below the minimum, unknown mode) stops the server at startup with a
@@ -172,7 +173,12 @@ means what it meant:
   same kind of summary, so the next call can name it.
 
 Tools: `validate_x3d`, `validate_semantic`, `autofix_x3d`, `repair_x3d`, `convert_x3d`,
-`modify_x3d_node`, `remove_x3d_node`, `move_x3d_node`.
+`modify_x3d_node`, `remove_x3d_node`, `move_x3d_node`. `convert_x3d` reads either encoding from a
+blob (`from_encoding="xml"` or `"json"`), so a scene a model wrote as JSON can be stored once and
+converted, validated and edited by id. `x3d_generation_schema` takes `return_mode` only: `"summary"`
+returns its report, notes and the schema's `sha256` and size, `"blob"` also stores the schema
+(`application/schema+json`) and returns its `blob_id`, so the program that calls the model fetches it
+over `GET /blob/<id>` and the schema never passes through the model's context.
 
 Tools that produce a document (`autofix_x3d`, `repair_x3d`, `convert_x3d`, the three edit tools)
 answer a summary with `ok`, `source`, `input` (`sha256`, `bytes`), `document` (`sha256`, `bytes`,

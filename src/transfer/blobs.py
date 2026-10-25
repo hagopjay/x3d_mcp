@@ -182,9 +182,10 @@ class BlobConfig:
     summary_items: int = 200
     offload_min: int = 1 << 20
     max_blobs: int = 10000
-    tool_max_bytes: int = 64 << 20
+    tool_max_bytes: int = 96 << 20        # largest decoded blob a tool will read (the store itself takes max_bytes)
     min_rate: int = 4096
     path_roots: tuple[str, ...] = ()
+    tool_concurrency: int = 2             # tool calls on blob inputs running at once; each holds several copies
 
     @property
     def quota(self) -> int:
@@ -248,10 +249,11 @@ class BlobConfig:
             summary_items=int(_env_size(env, "X3D_MCP_SUMMARY_ITEMS", 200, 1)),
             offload_min=_env_size(env, "X3D_MCP_OFFLOAD_MIN", 1 << 20),
             max_blobs=int(_env_size(env, "X3D_MCP_BLOB_MAX_COUNT", 10000, 1)),
-            tool_max_bytes=_env_size(env, "X3D_MCP_TOOL_MAX_BYTES", 64 << 20, 1),
+            tool_max_bytes=_env_size(env, "X3D_MCP_TOOL_MAX_BYTES", 96 << 20, 1),
             min_rate=_env_size(env, "X3D_MCP_BLOB_MIN_RATE", 4096),
             path_roots=tuple(r for r in (env.get("X3D_MCP_BLOB_PATH_ROOTS") or "").split(os.pathsep)
                              if r.strip()),
+            tool_concurrency=int(_env_size(env, "X3D_MCP_TOOL_CONCURRENCY", 2, 1)),
         )
         if cfg.page_default > cfg.page_max:
             cfg = replace(cfg, page_default=cfg.page_max)
