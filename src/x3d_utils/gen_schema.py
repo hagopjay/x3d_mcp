@@ -29,6 +29,7 @@ from x3d_utils.x3duom import get_x3duom
 
 SUPPORTED_VERSIONS = ("4.0", "4.1")
 DEFAULT_MAX_NODES = 70
+MAX_ASKED_NODES = 1000                   # names accepted in `nodes`; bounds the report that echoes the unknown ones
 
 # Nodes offered first when a profile holds more than max_nodes: how often they
 # occur in the 65-scene audit set, then the everyday authoring vocabulary.
@@ -261,15 +262,19 @@ def build_generation_schema(profile: str = "Interchange", nodes: list[str] | Non
     available = {n for n in uom if n in defs and n not in _EXCLUDED_NODES}
     by_profile = profile_nodes()
     if profile not in by_profile:
-        raise SchemaRequestError(f"Unknown profile '{profile}'; use one of {', '.join(sorted(by_profile))}.")
+        raise SchemaRequestError(f"Unknown profile '{str(profile)[:60]}'; use one of {', '.join(sorted(by_profile))}.")
     if version not in SUPPORTED_VERSIONS:
-        raise SchemaRequestError(f"Unsupported version '{version}'; use one of {', '.join(SUPPORTED_VERSIONS)}.")
+        raise SchemaRequestError(f"Unsupported version '{str(version)[:60]}'; use one of {', '.join(SUPPORTED_VERSIONS)}.")
     if max_nodes < 1:
         raise SchemaRequestError("max_nodes must be at least 1.")
     allowed = available if by_profile[profile] is None else by_profile[profile] & available
 
+    if nodes is not None and (not isinstance(nodes, (list, tuple)) or not all(isinstance(n, str) for n in nodes)):
+        raise SchemaRequestError("nodes must be a list of node names.")
+    if nodes and len(nodes) > MAX_ASKED_NODES:
+        raise SchemaRequestError(f"nodes names {len(nodes)} nodes; at most {MAX_ASKED_NODES} (X3D 4.0 has about 260).")
     asked = list(dict.fromkeys(nodes or []))
-    unknown = [n for n in asked if n not in available]
+    unknown = [n[:60] for n in asked if n not in available]
     wanted = [n for n in asked if n in available]
     ranked = sorted(allowed, key=lambda n: (PRIORITY.index(n) if n in PRIORITY else len(PRIORITY), n))
 

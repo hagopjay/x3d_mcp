@@ -36,6 +36,24 @@ KNOWN_VERSIONS = ("4.0", "4.1")
 # the interpreter's recursion limit.
 MAX_DEPTH = 200
 
+# Most elements accepted. The largest scene measured (a 37.6 MB JSON file of mesh
+# arrays) has about 5,400; a million nodes of a few bytes each would otherwise cost
+# seconds of CPU and several gigabytes per 100 MB of input. Arrays are not counted:
+# they are one attribute.
+MAX_ELEMENTS = 1_000_000
+
+# Indentation stops growing at this depth. It is cosmetic (XML ignores it between
+# elements) and without a cap a document of {"-children":[{"Group":...}]} levels
+# written 200 deep grows about 30-fold on output.
+MAX_INDENT = 24
+
+# Namespace prefixes the writer can use without declaring them: xml is built in,
+# xsd is declared on the root, xmlns is the declaration syntax itself.
+_PREFIXES = frozenset({"xml", "xsd", "xmlns"})
+
+# Longest JSON path quoted in an error message.
+_PATH_CLIP = 240
+
 # Members that exist for the JSON file format, not for the scene.
 _IGNORED_MEMBERS = frozenset({"#comment", "encoding", "JSON schema"})
 
@@ -51,8 +69,10 @@ _RANK = {
     "ShaderProgram": {"field": 0, "IS": 1},
 }
 
+_CHUNK = 1 << 16
+_NUMBER_TYPES = {int, float}      # bool is a separate type here, so True and False take the general path
 _NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_.-]*(:[A-Za-z_][A-Za-z0-9_.-]*)?$")
-_XML_BAD_CHARS = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f￾￿]")
+_XML_BAD_CHARS = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\ud800-\udfff￾￿]")
 
 
 class JsonConversionError(ValueError):
@@ -60,18 +80,24 @@ class JsonConversionError(ValueError):
 
 
 def _fail(path: list[str], message: str):
-    raise JsonConversionError(f"{'/'.join(path) or '(root)'}: {message}")
+    where = "/".join(path) or "(root)"
+    if len(where) > _PATH_CLIP:                  # a hostile document can nest 200 levels
+        where = f"{where[:_PATH_CLIP // 2]}.../{where[-_PATH_CLIP // 2:]}"
+    raise JsonConversionError(f"{where}: {message}")
 
 
 def _check_name(name: str, path: list[str], what: str) -> str:
     if not _NAME_RE.match(name):
-        _fail(path, f"{what} name {name!r} is not a valid XML name")
+        _fail(path, f"{what} name {name[:60]!r} is not a valid XML name")
+    prefix = name.partition(":")[0] if ":" in name else None
+    if prefix is not None and prefix not in _PREFIXES:
+        _fail(path, f"{what} name {name[:60]!r} uses the namespace prefix {prefix!r}, which the document does not declare")
     return name
 
 
 def _string(value: str, path: list[str]) -> str:
     if _XML_BAD_CHARS.search(value):
-        _fail(path, "string holds a control character XML 1.0 cannot carry")
+        _fail(path, "string holds a character XML 1.0 cannot carry (a control character, a lone surrogate or U+FFFE/U+FFFF)")
     return value
 
 
@@ -91,6 +117,12 @@ def _attribute(value, path: list[str]) -> str:
     """The XML attribute text for a JSON field value (the SF/MF text encodings)."""
     if not isinstance(value, list):
         return _scalar(value, path)
+    if set(map(type, value)) <= _NUMBER_TYPES:        # the common case, millions of numbers: no copy, no per-item call
+        text = " ".join([" ".join(map(repr, value[i:i + _CHUNK])) for i in range(0, len(value), _CHUNK)])   # chunks keep the strings alive briefly
+        if "n" in text:                                # repr of a non-finite float is nan, inf or -inf
+            bad = next(v for v in value if isinstance(v, float) and not math.isfinite(v))
+            _fail(path, f"{bad!r} is not an X3D number")
+        return text
     flat: list = []
     stack = [iter(value)]
     while stack:                                 # nested arrays (tuples) flatten
@@ -115,6 +147,7 @@ class _Writer:
     def __init__(self, canonical: bool):
         self.canonical = canonical
         self.out: list[str] = []
+        self.elements = 0
 
     def _rank(self, parent: str, name: str, field: str | None) -> int:
         table = _RANK.get(parent)
@@ -127,6 +160,9 @@ class _Writer:
     def node(self, name: str, body, field: str | None, depth: int, path: list[str]) -> None:
         if depth > MAX_DEPTH:
             _fail(path, f"nodes nested deeper than {MAX_DEPTH}")
+        self.elements += 1
+        if self.elements > MAX_ELEMENTS:
+            _fail(path, f"more than {MAX_ELEMENTS:,} elements; send a scene this large as XML")
         if not isinstance(body, dict):
             _fail(path, f"{name} is a {type(body).__name__}, not an object")
         attrs: list[tuple[str, str]] = []
@@ -142,6 +178,8 @@ class _Writer:
                     _fail(kpath, "-children is not an array")
                 self._nodes(kids, None, value, path, key)
             elif key.startswith("-"):
+                if key == "-":
+                    _fail(kpath, "'-' names no field")
                 self._nodes(kids, key[1:], value if isinstance(value, list) else [value], path, key)
             elif key == "#sourceCode" and self.canonical:
                 lines = value if isinstance(value, list) else [value]
@@ -157,10 +195,12 @@ class _Writer:
                                  path + [f"{key}[{i}]" if isinstance(value, list) else key]))
         default = _default_container_field(name) if field else None
         if field and default not in (None, field):
+            if any(a == "containerField" for a, _ in attrs):
+                _fail(path, f"@containerField is given and the member -{field} sets it too")
             attrs.append(("containerField", field))
         if self.canonical:
             kids.sort(key=lambda k: self._rank(name, k[0], k[1]))     # stable
-        pad = "  " * depth
+        pad = "  " * min(depth, MAX_INDENT)
         open_tag = f"{pad}<{name}" + "".join(f" {a}={quoteattr(b)}" for a, b in attrs)
         if not kids and text is None:
             self.out.append(open_tag + " />")
@@ -184,18 +224,39 @@ class _Writer:
                     kids.append((_check_name(cname, ipath + [cname], "node"), field, cbody, ipath + [cname]))
 
 
+def _no_duplicate_members(pairs: list[tuple[str, object]]) -> dict:
+    """json's object_pairs_hook: a member written twice in one object is an error.
+
+    json.loads keeps the last of two equal keys, so a reader that keeps the first
+    (or a person reading the file) sees a different scene. "#comment" may repeat:
+    it is dropped anyway.
+    """
+    obj = dict(pairs)
+    if len(obj) != len(pairs):
+        seen: set[str] = set()
+        for key, _ in pairs:
+            if key in seen and key != "#comment":
+                raise JsonConversionError(f"(root): member {key[:60]!r} is written twice in one object")
+            seen.add(key)
+    return obj
+
+
 def json_to_xml(text: str | dict, canonical: bool = True) -> str:
     """Convert X3D JSON (text or an already parsed object) to X3D XML text.
 
     Raises JsonConversionError when the document is not JSON, has no top-level
-    "X3D" object, or holds a value XML cannot carry. canonical=False keeps the
-    member order as written (the A/B "v1" mode, for sensitivity checks).
+    "X3D" object, writes a member twice, nests too deeply, or holds a value XML
+    cannot carry (NaN, infinity, control characters, undeclared namespace prefixes).
+    canonical=False keeps the member order as written (the A/B "v1" mode, for
+    sensitivity checks).
     """
     if isinstance(text, str):
         try:
-            doc = json.loads(text)
+            doc = json.loads(text, object_pairs_hook=_no_duplicate_members)
         except RecursionError:
             raise JsonConversionError("(root): JSON nested too deeply") from None
+        except JsonConversionError:
+            raise
         except ValueError as exc:
             raise JsonConversionError(f"(root): invalid JSON: {str(exc)[:120]}") from None
     else:

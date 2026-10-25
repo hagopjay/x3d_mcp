@@ -222,7 +222,7 @@ def test_comments_are_dropped():
     (_doc({"Group": {"-children": [3]}}), "child is a int, not an object"),
     (_doc({"Group": {"@a b": 1}}), "not a valid XML name"),
     (_doc({"Gro<up": {}}), "not a valid XML name"),
-    (_doc({"WorldInfo": {"@title": "a\u0001b"}}), "control character"),
+    (_doc({"WorldInfo": {"@title": "a\u0001b"}}), "character XML 1.0 cannot carry"),
     (_doc({"WorldInfo": {"@title": {"x": 1}}}), "unsupported attribute value of type dict"),
     (_doc({"Script": {"#sourceCode": [1]}}), "#sourceCode is not a string"),
 ])
@@ -264,3 +264,141 @@ def test_real_scene_converts_to_valid_xml(name):
 def test_canonical_helloworld_converts():
     xml = json_to_xml((FIXTURES / "HelloWorld.json").read_text())
     assert validate_xml(xml)["valid"]
+
+
+# -- hostile documents -------------------------------------------------------
+
+def _raw(*children) -> str:
+    return '{"X3D": {"@profile": "Core", "@version": "4.0", "Scene": {"-children": [%s]}}}' % ",".join(children)
+
+
+@pytest.mark.parametrize("text, member", [
+    ('{"X3D": {"Scene": {}}, "X3D": {"Scene": {"-children": [{"Box": {}}]}}}', "X3D"),
+    ('{"X3D": {"@profile": "Core", "@profile": "Full", "Scene": {}}}', "@profile"),
+    (_raw('{"Shape": {}, "Shape": {"@DEF": "a"}}'), "Shape"),
+    (_raw('{"Viewpoint": {"@position": [0, 0, 1], "@position": [9, 9, 9]}}'), "@position"),
+])
+def test_a_member_written_twice_is_refused(text, member):
+    """json.loads would keep the last one; another reader keeps the first."""
+    with pytest.raises(JsonConversionError, match=f"member '{member}' is written twice"):
+        json_to_xml(text)
+
+
+def test_repeated_comment_members_are_dropped_not_refused():
+    text = _raw('{"Group": {"#comment": "a", "#comment": "b"}}')
+    assert etree.fromstring(json_to_xml(text).encode()).find("Scene/Group") is not None
+
+
+@pytest.mark.parametrize("literal", ["NaN", "Infinity", "-Infinity", "1e999", "-1e999"])
+def test_non_finite_numbers_are_refused_wherever_they_sit(literal):
+    for value in (f"[{literal}, 0, 0]", f"[[0, 0, 1], [{literal}, 0, 0]]", f"[true, {literal}]", literal):
+        with pytest.raises(JsonConversionError, match="is not an X3D number"):
+            json_to_xml(_raw('{"Transform": {"@translation": %s}}' % value))
+
+
+def test_numbers_beyond_the_integer_digit_limit_are_a_json_error():
+    with pytest.raises(JsonConversionError, match="invalid JSON"):
+        json_to_xml(_raw('{"Transform": {"@scale": [%s, 1, 1]}}' % ("9" * 5000)))
+
+
+def test_numeric_arrays_keep_their_text_form():
+    """The fast path for number arrays and the general path write the same text."""
+    root = _tree(_doc({"Transform": {"@translation": [1, -0.5, 1e-07], "@scale": [1e+22, 2.5, 3]}},
+                      {"Transform": {"@translation": [[1, -0.5], [1e-07]], "@scale": [True, 2.5, 3]}}))
+    a, b = root.findall("Scene/Transform")
+    assert a.get("translation") == b.get("translation") == "1 -0.5 1e-07"
+    assert a.get("scale") == "1e+22 2.5 3" and b.get("scale") == "true 2.5 3"
+
+
+@pytest.mark.parametrize("title", ["\ud800", "x\udfffy", "￾", "\x00"])
+def test_characters_xml_cannot_carry_are_refused(title):
+    with pytest.raises(JsonConversionError, match="character XML 1.0 cannot carry"):
+        json_to_xml(_doc({"WorldInfo": {"@title": title}}))
+
+
+def test_a_lone_surrogate_written_as_an_escape_never_reaches_the_xml():
+    with pytest.raises(JsonConversionError, match="cannot carry"):
+        json_to_xml(_raw('{"WorldInfo": {"@title": "\\ud800"}}'))
+    xml = json_to_xml(_raw('{"WorldInfo": {"@title": "\\ud83d\\ude00"}}'))     # a pair is one character
+    assert chr(0x1F600) in xml
+    xml.encode("utf-8")
+
+
+@pytest.mark.parametrize("count", [3000, 100_000])
+def test_deeply_nested_json_is_an_error_not_a_crash(count):
+    for text in ('{"X3D":{"Scene":' + '{"-children":[{"Group":' * count + "{}" + "}]}" * count + "}}",
+                 '{"a":' * count + "1" + "}" * count):
+        with pytest.raises(JsonConversionError):
+            json_to_xml(text)
+    arrays = '{"X3D":{"Scene":{"-children":[{"Transform":{"@scale":' + "[" * count + "1" + "]" * count + "}}]}}}"
+    try:
+        assert json_to_xml(arrays).count('scale="1"') == 1     # nested arrays flatten iteratively, or the parser's limit is reported
+    except JsonConversionError as exc:
+        assert "nested too deeply" in str(exc)
+
+
+def test_nesting_just_inside_the_cap_converts_and_the_error_path_stays_short():
+    def nested(n):
+        inner = {"Box": {}}
+        for _ in range(n):
+            inner = {"Group": {"-children": [inner]}}
+        return _doc(inner)
+    xml = json_to_xml(nested(190))
+    assert xml.count("<Group") == 190 and "".join(xml.split()).endswith("</Scene></X3D>")
+    with pytest.raises(JsonConversionError) as err:
+        json_to_xml(nested(400))
+    assert len(str(err.value)) < 400 and "..." in str(err.value)
+
+
+def test_indentation_stops_growing_so_deep_documents_do_not_balloon():
+    inner = {"Group": {"-children": [{"Group": {} } for _ in range(2000)]}}
+    for _ in range(150):
+        inner = {"Group": {"-children": [inner]}}
+    text = _doc(inner)
+    assert len(json_to_xml(text)) < 6 * len(text)
+    assert all(len(line) - len(line.lstrip()) <= 2 * 24 + 2 for line in json_to_xml(text).splitlines())
+
+
+def test_the_element_count_is_capped(monkeypatch):
+    import x3d_utils.json2xml as mod
+    monkeypatch.setattr(mod, "MAX_ELEMENTS", 50)
+    json_to_xml(_doc(*[{"Group": {}}] * 40))
+    with pytest.raises(JsonConversionError, match="more than 50 elements"):
+        json_to_xml(_doc(*[{"Group": {}}] * 60))
+
+
+def test_a_container_field_given_twice_is_refused():
+    """A '-normal' member on a node whose default is something else writes containerField itself."""
+    scene = _doc({"Shape": {"-geometry": {"IndexedFaceSet": {"-coord": {"Normal": {"@containerField": "x"}}}}}})
+    with pytest.raises(JsonConversionError, match="@containerField is given and the member -coord sets it too"):
+        json_to_xml(scene)
+    xml = etree.fromstring(json_to_xml(_doc({"Shape": {"-geometry": {"IndexedFaceSet": {"-coord": {"Normal": {}}}}}})).encode())
+    assert xml.find(".//Normal").get("containerField") == "coord"
+
+
+@pytest.mark.parametrize("scene, fragment", [
+    (_doc({"Group": {"@foo:bar": 1}}), "namespace prefix 'foo'"),
+    (_doc({"foo:Group": {}}), "namespace prefix 'foo'"),
+    (_doc({"Group": {"-": {"Box": {}}}}), "'-' names no field"),
+])
+def test_names_that_make_ill_formed_xml_are_refused(scene, fragment):
+    with pytest.raises(JsonConversionError, match=fragment):
+        json_to_xml(scene)
+
+
+def test_declared_prefixes_pass_and_the_result_is_well_formed():
+    xml = json_to_xml(_doc({"Group": {"@xml:lang": "en", "@xsd:foo": "1"}}))
+    etree.fromstring(xml.encode())
+
+
+@pytest.mark.parametrize("seed", range(40))
+def test_random_garbage_never_escapes_as_another_exception(seed):
+    """Whatever the document, the answer is XML or a JsonConversionError."""
+    rng = random.Random(seed)
+    pool = ['{"Box": {}}', '{"Group": {"-children": []}}', '{"Shape": []}', "3", "null", '"s"', "[[]]", "NaN",
+            '{"": 1}', '{"@a": {"b": 1}}', '{"-x": 3}', '{"#comment": 1}', '{"Script": {"#sourceCode": 5}}']
+    text = _raw(*[rng.choice(pool) for _ in range(rng.randint(0, 6))])
+    try:
+        etree.fromstring(json_to_xml(text).encode())
+    except JsonConversionError:
+        pass

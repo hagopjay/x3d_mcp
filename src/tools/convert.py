@@ -206,11 +206,17 @@ def _coerce_value(value_str: str, field_type: str):
 
 
 def _json_scene_as_xml(xml: str) -> str:
-    """The XML json_to_xml wrote, with every DEF ahead of its USEs and an XML declaration."""
+    """The XML json_to_xml wrote, with every DEF ahead of its USEs and an XML declaration.
+
+    Raises etree.XMLSyntaxError if the text is not well-formed XML even with the parser's
+    size limits lifted (json_to_xml should never write that; this is the check).
+    """
     try:
         xml = reorder_defs_xml(xml)
-    except etree.XMLSyntaxError:      # a parser size limit, not a fault of the document: keep the text as written
-        pass
+    except etree.XMLSyntaxError:
+        # Either a parser size limit (one attribute above about 10 MB), which is no fault of
+        # the document: keep the text as written. Or ill-formed XML, which must not pass as a result.
+        etree.fromstring(xml.encode("utf-8"), _HUGE_PARSER)
     return xml if xml.startswith("<?xml") else _XML_DECLARATION + xml
 
 
@@ -229,8 +235,13 @@ def _convert_json(content: str, to_encoding: str) -> tuple[str, bool]:
         xml = json_to_xml(content)
     except JsonConversionError as exc:
         return f"Cannot read X3D JSON: {exc}", False
+    except RecursionError:
+        return "Cannot read X3D JSON: (root): nested too deeply", False
     if to_encoding == "xml":
-        return _json_scene_as_xml(xml), True
+        try:
+            return _json_scene_as_xml(xml), True
+        except etree.XMLSyntaxError as exc:
+            return f"Cannot read X3D JSON: the XML written for it is not well-formed: {str(exc)[:160]}", False
     if to_encoding == "json":
         return content, True          # already JSON; json_to_xml has checked that it reads
     if to_encoding != "vrml":
@@ -240,6 +251,9 @@ def _convert_json(content: str, to_encoding: str) -> tuple[str, bool]:
         dropped = _dropped_elements(xml, model.XML())
     except etree.XMLSyntaxError as exc:
         return f"Cannot convert to {to_encoding}: {exc}. Use to_encoding='xml' for a scene this large.", False
+    except (ValueError, TypeError, AttributeError, RecursionError) as exc:      # x3d.py refusing a value: "oops" for a SFVec3f
+        return (f"Cannot convert to {to_encoding}: x3d.py cannot hold this scene ({type(exc).__name__}: "
+                f"{str(exc)[:160]}). Use to_encoding='xml', which keeps the scene as written."), False
     if dropped:
         names = ", ".join(f"{tag} x{n}" for tag, n in sorted(dropped.items()))
         return (f"Cannot convert to {to_encoding}: x3d.py would drop {names}. "
