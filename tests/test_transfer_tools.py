@@ -919,3 +919,70 @@ def test_blob_put_path_refuses_directories_and_oversized_files(mcp, tmp_path):
     big = tmp_path / "big.x3d"
     big.write_bytes(b"x" * 5000)
     assert "X3D_MCP_BLOB_MAX_BYTES" in json.loads(run(mcp, "blob_put", path=str(big)))["error"]
+
+
+# ---------------------------------------------------------------- review fixes: memory and threads
+
+def test_a_blob_over_the_tool_limit_is_refused_before_it_is_decoded(mcp, monkeypatch):
+    blobs.configure(BlobConfig(tool_max_bytes=200_000))
+    store = blobs.get_store()
+    big = big_scene(4000)
+    assert len(big) > 200_000
+    bid = store.put(big.encode())["blob_id"]
+    small = store_doc(SAMPLE)
+
+    def no_decode(self, e):
+        raise AssertionError("decoded a blob that is over the limit")
+
+    monkeypatch.setattr(blobs.BlobStore, "_iter_decoded", no_decode)
+    out = json.loads(run(mcp, "validate_x3d", blob_id=bid))
+    assert out["valid"] is False and "X3D_MCP_TOOL_MAX_BYTES" in out["errors"][0]
+    assert "X3D_MCP_TOOL_MAX_BYTES" in run(mcp, "validate_semantic", blob_id=bid)
+    assert json.loads(run(mcp, "repair_x3d", blob_id=bid))["error"].count("X3D_MCP_TOOL_MAX_BYTES") == 1
+    out = json.loads(run(mcp, "modify_x3d_node", content="", blob_id=bid, def_name="T1",
+                         field_changes='{"a": "b"}', return_mode="summary"))
+    assert out["ok"] is False and "X3D_MCP_TOOL_MAX_BYTES" in out["error"]
+    monkeypatch.undo()
+    assert json.loads(run(mcp, "validate_x3d", blob_id=small))["valid"] is True
+    # looking inside the blob is not limited by it
+    assert json.loads(run(mcp, "blob_info", blob_id=bid))["size"] == len(big)
+    assert json.loads(run(mcp, "blob_read", blob_id=bid, length=100))["length"] == 100
+
+
+def test_queued_heavy_jobs_hold_no_worker_threads():
+    """Each waiting call used to sit in a pool thread; 40 of them starved every other
+    asyncio.to_thread caller, including the blob tools."""
+    import anyio
+    blobs.configure(BlobConfig(offload_min=1000))
+
+    async def go():
+        tooling._HEAVY.acquire()                                  # a long job is running
+        try:
+            waiting = [asyncio.create_task(tooling.run_heavy(lambda i=i: i, size=5000)) for i in range(80)]
+            await asyncio.sleep(0.2)
+            probe = await asyncio.wait_for(anyio.to_thread.run_sync(lambda: "served"), timeout=3)
+        finally:
+            tooling._HEAVY.release()
+        done = await asyncio.wait_for(asyncio.gather(*waiting), timeout=30)
+        return probe, done
+
+    probe, done = asyncio.run(go())
+    assert probe == "served" and sorted(done) == list(range(80))
+
+
+def test_a_cancelled_heavy_job_releases_the_lock():
+    blobs.configure(BlobConfig(offload_min=1000))
+
+    async def go():
+        t = asyncio.create_task(tooling.run_heavy(lambda: __import__("time").sleep(0.3), size=5000))
+        await asyncio.sleep(0.1)
+        t.cancel()
+        try:
+            await t
+        except asyncio.CancelledError:
+            pass
+        return await asyncio.wait_for(tooling.run_heavy(lambda: "next", size=5000), timeout=5)
+
+    assert asyncio.run(go()) == "next"
+    assert tooling._HEAVY.acquire(blocking=False)
+    tooling._HEAVY.release()

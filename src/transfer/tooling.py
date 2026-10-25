@@ -8,6 +8,7 @@ from .auth import tool_gate
 from .blobs import get_config, resolve_text
 
 _HEAVY = threading.Lock()
+HEAVY_POLL = 0.02         # seconds between looks at the heavy-job lock while it is taken
 
 
 async def resolve_input(content: str = "", path: str = "", blob_id: str = "", ctx=None) -> tuple[str, str]:
@@ -15,10 +16,14 @@ async def resolve_input(content: str = "", path: str = "", blob_id: str = "", ct
     (over HTTP) and decoded in a worker thread; inline and path inputs behave exactly as before.
     Raises ValueError with a message the tool can return."""
     if blob_id and blob_id.strip():
-        denied = tool_gate(ctx, get_config())
+        cfg = get_config()
+        denied = tool_gate(ctx, cfg)
         if denied:
             raise ValueError(denied)
-        return await anyio.to_thread.run_sync(resolve_text, content or "", path or "", blob_id)
+        # a stored document may be far larger than an inline one could be (X3D_MCP_TOOL_MAX_BYTES):
+        # a 34 KB blob can be 250 MiB of text, and a parse costs about 15 times that in memory
+        return await anyio.to_thread.run_sync(resolve_text, content or "", path or "", blob_id,
+                                              cfg.tool_max_bytes)
     return resolve_text(content or "", path or "", blob_id or "")
 
 
@@ -35,9 +40,11 @@ async def run_heavy(fn, *args, size: int = 0, **kwargs):
     uploads) while a 50 MB scene is parsed. Smaller work runs inline exactly as before."""
     if size < get_config().offload_min:
         return fn(*args, **kwargs)
-
-    def locked():
-        with _HEAVY:
-            return fn(*args, **kwargs)
-
-    return await anyio.to_thread.run_sync(locked)
+    # Wait for the lock on the event loop, not in a pool thread: queued jobs would otherwise
+    # hold a thread each and, past 40, starve every other caller of the pool (the blob tools).
+    while not _HEAVY.acquire(blocking=False):
+        await anyio.sleep(HEAVY_POLL)
+    try:
+        return await anyio.to_thread.run_sync(lambda: fn(*args, **kwargs))
+    finally:
+        _HEAVY.release()
