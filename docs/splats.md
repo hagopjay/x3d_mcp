@@ -206,6 +206,8 @@ variable.
 | `X3D_MCP_SPLAT_MAX_PAYLOAD_BYTES` | 512M | most decoded SPZ stream bytes a file may declare (10,000,000 splats are 200 MB at SH degree 0 and 650 MB at degree 3). Checked from the header, before anything is allocated |
 | `X3D_MCP_SPLAT_MAX_TEXT_BYTES` | 256M | largest X3D text scene or ASCII PLY body the tools will read (text parses to arrays larger than itself: measured peaks above the input are 4 times for X3D text with many small nodes and 5.6 times for ASCII PLY of one-digit numbers; plan for that at the cap) |
 | `X3D_MCP_SPLAT_MAX_OUTPUT_BYTES` | 512M | most X3D text one `splat_chunk` call may produce, estimated from a sample before cutting; the files are held in memory until stored |
+| `X3D_MCP_SPLAT_MAX_QUEUE` | 8 | calls that may wait for the one running splat job; more get a busy error at once. Waiting calls hold no worker thread |
+| `X3D_MCP_SPLAT_JOB_SECONDS` | 600 | how long a call waits for its own job once it has started; `0` for no limit. The job itself cannot be stopped and keeps the one job slot until it ends |
 | `X3D_MCP_XML_HUGE`, `X3D_MCP_XML_HUGE_MAX_BYTES` | off, 128M | see above |
 
 Memory, Confirmed on synthetic 10,000,000-splat files (random bytes in a valid layout; the cost

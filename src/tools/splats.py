@@ -30,7 +30,7 @@ from transfer.blobs import get_config, get_store, transport_is_http
 from transfer.errors import StoreFull
 from transfer.limits import SplatLimits
 from transfer.outputs import cap_items, clip
-from transfer.tooling import run_heavy
+from transfer.jobs import run_exclusive
 
 _NO_NUMPY = "the splat tools need numpy: pip install 'x3d-mcp[splat]'"
 _X3D_TYPE = "model/x3d+xml"
@@ -61,9 +61,9 @@ def _finite(obj):
     return obj
 
 
-def _always() -> int:
-    """A `size` for run_heavy that always offloads: a splat file decodes to many times its own size."""
-    return get_config().offload_min
+async def _run(fn, data, limits: SplatLimits, *extra):
+    """Run a splat job in a worker thread, one heavy job at a time, with a bounded queue and a time budget."""
+    return await run_exclusive(fn, data, limits, *extra, max_queue=limits.max_queue, budget=limits.job_seconds or None)
 
 
 # ---------------------------------------------------------------- jobs (run in a worker thread)
@@ -225,7 +225,7 @@ def register(mcp: FastMCP):
         """
         try:
             data, label = await resolve_bytes_input(path, blob_id, ctx)
-            report = await run_heavy(_inspect_job, data, SplatLimits.from_env(), size=_always())
+            report = await _run(_inspect_job, data, SplatLimits.from_env())
         except ImportError:
             return _err(_NO_NUMPY)
         except MemoryError:
@@ -290,7 +290,7 @@ def register(mcp: FastMCP):
             opts = dict(target=int(target), method=method, precision=precision, coordinate_system=coordinate_system,
                         bbox_mode=bbox_mode, name=name, out_dir=out_dir, url_prefix=url_prefix,
                         drop_invalid=bool(drop_invalid), validate=bool(validate), bundle=bool(bundle))
-            result = await run_heavy(_chunk_job, data, SplatLimits.from_env(), opts, size=_always())
+            result = await _run(_chunk_job, data, SplatLimits.from_env(), opts)
         except ImportError:
             return _err(_NO_NUMPY)
         except MemoryError:

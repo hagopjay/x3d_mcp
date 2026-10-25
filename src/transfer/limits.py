@@ -15,6 +15,9 @@
   X3D_MCP_SPLAT_MAX_OUTPUT_BYTES  largest X3D text a single splat_chunk call may produce, estimated from a sample
                                   before anything is cut. Default 512M. The files are held in memory until stored.
 
+  X3D_MCP_SPLAT_MAX_QUEUE         calls that may wait for the one running heavy job (default 8); more get a busy error.
+  X3D_MCP_SPLAT_JOB_SECONDS       how long a call waits for its own job once it has started (default 600; 0: no limit).
+
 Sizes accept K, M, G suffixes (binary units). A bad value is a startup error (the server checks them once).
 """
 
@@ -31,6 +34,8 @@ class SplatLimits:
     max_payload_bytes: int = 512 << 20
     max_text_bytes: int = 256 << 20
     max_output_bytes: int = 512 << 20
+    max_queue: int = 8
+    job_seconds: float = 600.0
 
     @classmethod
     def from_env(cls, environ=None) -> "SplatLimits":
@@ -43,4 +48,6 @@ class SplatLimits:
             max_payload_bytes=_env_size(env, "X3D_MCP_SPLAT_MAX_PAYLOAD_BYTES", cls.max_payload_bytes, 1),
             max_text_bytes=_env_size(env, "X3D_MCP_SPLAT_MAX_TEXT_BYTES", cls.max_text_bytes, 1),
             max_output_bytes=_env_size(env, "X3D_MCP_SPLAT_MAX_OUTPUT_BYTES", cls.max_output_bytes, 1),
+            max_queue=_env_size(env, "X3D_MCP_SPLAT_MAX_QUEUE", cls.max_queue, 1),
+            job_seconds=_env_float(env, "X3D_MCP_SPLAT_JOB_SECONDS", cls.job_seconds, 0.0),
         )
