@@ -14,6 +14,11 @@ slices instead (a 256-byte slice expands to at most a few MiB).
 brotli needs brotli>=1.2.0 for output_buffer_limit; older wheels cannot be
 bounded, so brotli is refused rather than decoded unbounded. zstd needs the
 zstandard package. gzip and identity use only the standard library.
+
+A gzip stream may hold several members (bgzip, `cat a.gz b.gz`) and a zstd stream several
+frames (pzstd, a writer that flushes frames), as gunzip and zstd -d accept; the decoded
+size and ratio limits count them together. Bytes after the last member that do not start
+another one are refused as trailing data.
 """
 
 import zlib
@@ -103,15 +108,26 @@ class Capped:
         self.ratio_after = ratio_after
         self.wire = 0
         self.out = 0
+        self._members = 1
         if self.encoding == "identity":
             self._d = None
         elif self.encoding == "gzip":
-            self._d = zlib.decompressobj(31)
+            self._d = self._new_member()
         elif self.encoding == "br":
             import brotli
             self._d = brotli.Decompressor()
         else:
-            self._d = zstd_module().ZstdDecompressor().decompressobj()
+            self._d = self._new_member()
+
+    def _new_member(self):
+        if self.encoding == "gzip":
+            return zlib.decompressobj(31)
+        return zstd_module().ZstdDecompressor().decompressobj()
+
+    def _next_member(self) -> None:
+        """The current gzip member or zstd frame ended and more bytes follow: start the next."""
+        self._d = self._new_member()
+        self._members += 1
 
     def _account(self, n: int) -> None:
         self.out += n
@@ -136,14 +152,12 @@ class Capped:
                 buf = chunk
                 while buf:
                     if self._d.eof:
-                        raise BlobCorrupt("trailing data after the compressed stream")
+                        self._next_member()
                     o = self._d.decompress(buf, OUT_PIECE)
-                    buf = self._d.unconsumed_tail
+                    buf = self._d.unused_data if self._d.eof else self._d.unconsumed_tail
                     if o:
                         self._account(len(o))
                         yield o
-                    if self._d.eof and (buf or self._d.unused_data):
-                        raise BlobCorrupt("trailing data after the compressed stream")
             elif enc == "br":
                 o = self._d.process(chunk, output_buffer_limit=OUT_PIECE)
                 while True:
@@ -158,23 +172,27 @@ class Capped:
                 # or the caller sees thousands of tiny pieces
                 acc, n = [], 0
                 for i in range(0, len(chunk), ZSTD_SLICE):
-                    if self._d.eof:
-                        raise BlobCorrupt("trailing data after the compressed stream")
-                    o = self._d.decompress(chunk[i:i + ZSTD_SLICE])
-                    if o:
-                        self._account(len(o))
-                        acc.append(o)
-                        n += len(o)
-                        if n >= COALESCE:
-                            yield b"".join(acc)
-                            acc, n = [], 0
-                    if self._d.eof and self._d.unused_data:
-                        raise BlobCorrupt("trailing data after the compressed stream")
+                    piece = chunk[i:i + ZSTD_SLICE]
+                    while piece:
+                        if self._d.eof:
+                            self._next_member()
+                        o = self._d.decompress(piece)
+                        piece = self._d.unused_data if self._d.eof else b""
+                        if o:
+                            self._account(len(o))
+                            acc.append(o)
+                            n += len(o)
+                            if n >= COALESCE:
+                                yield b"".join(acc)
+                                acc, n = [], 0
                 if acc:
                     yield b"".join(acc)
         except (BlobCorrupt, BlobTooLarge):
             raise
         except Exception as e:           # zlib.error, brotli.error, zstandard.ZstdError
+            if self._members > 1:
+                raise BlobCorrupt(f"trailing data after the compressed stream is not a valid "
+                                  f"next {enc} member: {e}") from e
             raise BlobCorrupt(f"corrupt {enc} stream: {e}") from e
 
     def finish(self):

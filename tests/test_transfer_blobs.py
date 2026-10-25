@@ -691,3 +691,46 @@ def test_in_process_validation_signatures_are_unchanged():
     }
     for (mod, name), want in expected.items():
         assert str(inspect.signature(getattr(mod, name))) == want, f"{mod.__name__}.{name}"
+
+
+# ---------------------------------------------------------------- review fixes: multi-member streams
+
+def _feed_all(enc, data, size=1000):
+    d = Capped(enc, 1 << 30)
+    out = []
+    for i in range(0, max(len(data), 1), size):
+        out.extend(d.feed(data[i:i + size]))
+    out.extend(d.finish())
+    return b"".join(out)
+
+
+def test_multi_member_gzip_and_multi_frame_zstd_streams_are_decoded():
+    a, b = os.urandom(3000) + b"A" * 50_000, b"B" * 70_000
+    gz = gzip.compress(a, 6, mtime=0) + gzip.compress(b, 6, mtime=0) + gzip.compress(b"", 6, mtime=0)
+    comp = zstandard.ZstdCompressor(level=3)
+    z = comp.compress(a) + comp.compress(b)
+    with_skippable = comp.compress(a) + b"\x50\x2a\x4d\x18" + (4).to_bytes(4, "little") + b"meta" + comp.compress(b)
+    for size in (1, 7, 1000, 1 << 20):
+        assert _feed_all("gzip", gz, size) == a + b
+        assert _feed_all("zstd", z, size) == a + b
+        assert _feed_all("zstd", with_skippable, size) == a + b
+    s = BlobStore(cfg())
+    for enc, body in (("gzip", gz), ("zstd", z)):
+        m = s.put(body, enc)
+        assert m["blob_id"] == sha(a + b) and s.get_bytes(m["blob_id"]) == a + b
+
+
+def test_garbage_or_a_cut_second_member_is_still_refused():
+    a = b"x" * 5000
+    for enc, comp in (("gzip", lambda b: gzip.compress(b, 6, mtime=0)),
+                      ("zstd", zstandard.ZstdCompressor(level=3).compress)):
+        good = comp(a)
+        for bad in (good + b"garbage", good + b"\0" * 20, good + comp(a)[:-3]):
+            with pytest.raises(BlobCorrupt):
+                _feed_all(enc, bad, 100)
+        with pytest.raises(BlobCorrupt, match="trailing data"):
+            _feed_all(enc, good + b"garbage trailing bytes", 1 << 20)
+    bomb = gzip.compress(b"\0" * (30 << 20), 9) * 3
+    with pytest.raises(BlobTooLarge):
+        d = Capped("gzip", 50 << 20)
+        list(d.feed(bomb))                                    # members add up against the cap
