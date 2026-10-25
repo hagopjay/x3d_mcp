@@ -258,6 +258,21 @@ def _inspect(cloud: SplatCloud, *, file_bytes: int, fmt: str, extra: dict | None
 MAX_TEXT_BYTES = 256 * 1024 * 1024      # X3D text parses to float64 (8 bytes per number, 1.5 to 4 times the text), so it is capped by size
 
 
+def _ply_refusal(hdr, max_points: int) -> str:
+    """Why this PLY is not decoded here ("" when it is)."""
+    if not hdr.is_gaussian_splat:
+        return "not a 3DGS layout (no f_dc/opacity/scale/rot properties)"
+    if hdr.is_compressed_variant:
+        return hdr.is_compressed_variant
+    if hdr.format not in ("binary_little_endian", "ascii"):
+        return f"{hdr.format} PLY is not decoded here"
+    if hdr.format == "ascii" and len(hdr.elements) != 1:
+        return "an ASCII PLY with elements besides vertex is not decoded here"
+    if hdr.count > max_points:
+        return f"{hdr.count:,} splats is above the inspect limit of {max_points:,}"
+    return ""
+
+
 def load_cloud(data: bytes, *, max_points: int = 10_000_000, max_ratio: float | None = None,
                max_text_bytes: int = MAX_TEXT_BYTES) -> tuple[SplatCloud, str, dict]:
     """Decode the bytes of an SPZ, PLY or X3D text file into (cloud, format, facts). Raises SplatError for unreadable
@@ -267,7 +282,7 @@ def load_cloud(data: bytes, *, max_points: int = 10_000_000, max_ratio: float | 
     if fmt == "spz":
         return spzmod.read_spz(data, max_points=max_points, max_ratio=max_ratio), fmt, {}
     if fmt == "ply":
-        return plymod.read_ply(data, max_points=max_points), fmt, {}
+        return plymod.read_ply(data, max_points=max_points, max_ascii_bytes=max_text_bytes), fmt, {}
     if len(data) > max_text_bytes:
         raise SplatError(f"X3D text of {len(data):,} bytes is above the limit of {max_text_bytes:,}; use the SPZ or PLY it came from")
     cloud, facts = cloud_from_x3d(data.decode("utf-8", "replace"), max_points=max_points)
@@ -292,13 +307,12 @@ def inspect_bytes(data: bytes, *, max_points: int = 10_000_000, max_text_bytes: 
         hdr = plymod.read_header(data)
         facts = {"ply": {"format": hdr.format, "properties": len(hdr.vertex.properties) if hdr.vertex else 0,
                          "elements": [e.name for e in hdr.elements], "gaussian_layout": hdr.is_gaussian_splat}}
-        if not hdr.is_gaussian_splat or hdr.format != "binary_little_endian" or hdr.is_compressed_variant or hdr.count > max_points:
-            why = ("not a 3DGS layout (no f_dc/opacity/scale/rot properties)" if not hdr.is_gaussian_splat else
-                   hdr.is_compressed_variant or (f"{hdr.format} PLY is not decoded here" if hdr.format != "binary_little_endian"
-                                                  else f"{hdr.count:,} splats is above the inspect limit of {max_points:,}"))
+        why = _ply_refusal(hdr, max_points)
+        if why:
             return {"format": "ply", "bytes": size, "count": hdr.count, **facts,
                     "verdict": {"level": "unusable", "reasons": [{"level": "error", "code": "ply-not-decoded", "message": why + "; header facts only"}]}}
-        return inspect_cloud(plymod.read_ply(data, max_points=max_points), file_bytes=size, fmt="ply", extra=facts, max_points=max_points)
+        return inspect_cloud(plymod.read_ply(data, max_points=max_points, max_ascii_bytes=max_text_bytes), file_bytes=size, fmt="ply",
+                             extra=facts, max_points=max_points)
     if size > max_text_bytes:
         raise SplatError(f"X3D text of {size:,} bytes is above the limit of {max_text_bytes:,}; inspect the SPZ or PLY it came from")
     cloud, facts = cloud_from_x3d(data.decode("utf-8", "replace"), max_points=max_points)

@@ -9,6 +9,7 @@ import pytest
 
 from . import splat_fixtures as spzfix
 from . import splat_fixtures as plyfix
+from . import test_splat_ply
 from .splat_fixtures import SPLAT_PLY as SYNTH, make_cloud, needs_real, real
 from transfer import chunk
 from transfer.cloud import SplatError
@@ -77,8 +78,25 @@ def test_non_splat_and_unsupported_ply_say_so():
     head = b"ply\nformat binary_little_endian 1.0\nelement vertex 2\nproperty float x\nproperty float y\nproperty float z\nend_header\n"
     rep = inspect_bytes(head + bytes(24))
     assert rep["verdict"]["level"] == "unusable" and "not a 3DGS layout" in rep["verdict"]["reasons"][0]["message"]
-    rep = inspect_bytes(plyfix.write_ply(make_cloud(10)).replace(b"binary_little_endian", b"ascii"))
-    assert "ascii PLY is not decoded" in rep["verdict"]["reasons"][0]["message"]
+    rep = inspect_bytes(plyfix.write_ply(make_cloud(10)).replace(b"binary_little_endian", b"binary_big_endian"))
+    assert "binary_big_endian PLY is not decoded" in rep["verdict"]["reasons"][0]["message"]
+    two = test_splat_ply.ascii_ply(make_cloud(10), extra_element="element face 0\nproperty uchar x\n")
+    assert "besides vertex" in inspect_bytes(two)["verdict"]["reasons"][0]["message"]
+
+
+def test_ascii_ply_is_inspected_like_its_binary_twin():
+    src = make_cloud(400, sh_degree=1)
+    a = inspect_bytes(test_splat_ply.ascii_ply(src))
+    b = inspect_bytes(plyfix.write_ply(src))
+    assert a["format"] == "ply" and a["count"] == 400 and a["sh_degree"] == 1
+    assert a["verdict"]["level"] == b["verdict"]["level"] and a["bbox"] == b["bbox"]
+    assert a["ply"]["format"] == "ascii"
+
+
+def test_ascii_ply_body_is_held_to_the_text_cap():
+    from transfer.cloud import SplatError
+    with pytest.raises(SplatError, match="above the limit"):
+        inspect_bytes(test_splat_ply.ascii_ply(make_cloud(100)), max_text_bytes=1000)
 
 
 def test_x3d_without_splats_is_an_error():

@@ -80,8 +80,8 @@ defects and on the real files listed below, not calibrated against rendering):
 - Info: the file needs `splat_chunk` before X3D validation; SPZ and PLY record no axes
   (`coordinate-frame`); spherical harmonics present; SH degree 4 trimmed to 3.
 
-A file it cannot decode (ASCII PLY, big-endian PLY, a compressed PLY dialect, a PLY that is not a
-3DGS layout, a count above the limit) gets header facts and an `unusable` verdict with the reason;
+A file it cannot decode (big-endian PLY, an ASCII PLY with elements besides `vertex`, a compressed PLY
+dialect, a PLY that is not a 3DGS layout, a count above the limit) gets header facts and an `unusable` verdict with the reason;
 it is never an exception.
 
 ## `splat_chunk(...)`
@@ -203,7 +203,7 @@ variable.
 |---|---|---|
 | `X3D_MCP_SPLAT_MAX_POINTS` | 10,000,000 | most splats a file may declare. The header is checked before anything is allocated |
 | `X3D_MCP_SPLAT_MAX_RATIO` | unset | refuse an SPZ whose streams expand to more than this many times its size. Real files measure 1.2; 100 leaves wide headroom |
-| `X3D_MCP_SPLAT_MAX_TEXT_BYTES` | 256M | largest X3D text scene the tools will read (text parses to float64, 1.5 to 4 times its size) |
+| `X3D_MCP_SPLAT_MAX_TEXT_BYTES` | 256M | largest X3D text scene or ASCII PLY body the tools will read (text parses to float64, 1.5 to 4 times its size) |
 | `X3D_MCP_SPLAT_MAX_OUTPUT_BYTES` | 512M | most X3D text one `splat_chunk` call may produce, estimated from a sample before cutting; the files are held in memory until stored |
 | `X3D_MCP_XML_HUGE`, `X3D_MCP_XML_HUGE_MAX_BYTES` | off, 128M | see above |
 
@@ -267,8 +267,8 @@ different largest component, not a reader error). Lattice-digit text read back a
 the same integers.
 
 The inspect rules were also run over every SPZ and PLY file found in the project (23 files, 9 SPZ
-and 14 PLY; a few are copies of each other). Seventeen get `ok`; two ASCII PLY files (16 and 50,058
-splats) get `unusable` with "ascii PLY is not decoded here"; the 84-splat SPZ gets `mostly-transparent`;
+and 14 PLY; a few are copies of each other). Nineteen get `ok`, among them the two ASCII PLY files (16 and 50,058
+splats); the 84-splat SPZ gets `mostly-transparent`;
 three trained PLY files (60,163 to 457,385 splats) get `needle-splats`, with 11.6% to 14.8% of their
 splats over 1000:1 (the Pantheon PLY has 0.0%, the 408,711-splat Sphinx PLY 3.6%). Whether those
 render badly is not known, so read that warning as "look", not "bad".
@@ -286,7 +286,11 @@ render badly is not known, so read that warning as "look", not "bad".
   with SH degree 0. The other paths follow the reference source and are tested against files this
   repository's test writer builds, which follows the same source. The SH layout (`[coefficient][R G B]`
   per splat) is the one most likely to be wrong. Real PLY files do exercise SH degree 3.
-- **ASCII PLY and compressed PLY dialects** are recognised and refused with a named reason.
+- **Compressed PLY dialects and big-endian PLY** are recognised and refused with a named reason.
+- **ASCII PLY** is read (whitespace-separated numbers, the vertex element only) and checked against its binary twin
+  on the two ASCII files found in the project (positions agree to the printed precision, 5.0e-4 at most
+  on the 50,058-splat file). Both files came from one producer; other writers' number formats
+  (`1e-3`, `nan`, `inf`, `+1`) rely on numpy's float parser and were not tried on real files.
 - **The inspect thresholds** separate constructed defects from the real files; whether they separate
   bad scenes from good ones is not known.
 - **The XSD engine's failure point** was measured for three number shapes. The code does not depend on
