@@ -8,9 +8,12 @@ jsonschema (Draft 2020-12).
 
 import json
 import re
+import threading
 from pathlib import Path
 from lxml import etree
 from jsonschema import Draft202012Validator
+
+from validation import oversize
 
 
 SCHEMAS_DIR = Path(__file__).resolve().parent / "schemas"
@@ -167,6 +170,50 @@ def _strip_xsi(root: etree._Element) -> None:
         pass
 
 
+_reentry = threading.local()
+_VERSION_RE = re.compile(r"<X3D\b[^>]{0,2000}?\bversion\s*=\s*[\"']([^\"']*)[\"']")
+_field_lookups: dict[str, object] = {}
+
+
+def _field_type_lookup(schema_version: str):
+    """Return f(node, attribute) -> X3D field type name, from the X3DUOM of `schema_version`."""
+    lookup = _field_lookups.get(schema_version)
+    if lookup is None:
+        from x3d_utils.x3duom import X3DUOM
+        nodes = X3DUOM(SCHEMAS_DIR / f"X3dUnifiedObjectModel-{schema_version}.xml").get_concrete_nodes()
+
+        def lookup(node: str, attr: str) -> str | None:
+            return next((f.get("type") for f in nodes.get(node, {}).get("fields", []) if f["name"] == attr), None)
+
+        _field_lookups[schema_version] = lookup
+    return lookup
+
+
+def _not_checkable(xml_string: str, version: str | None, why: str, exc: etree.XMLSyntaxError | None = None) -> dict:
+    """The result for a document an XML limit stopped before the XSD could run (see validation.oversize).
+
+    `exc` is the parse error that hit the limit; without it (the XSD engine gave up after a huge_tree parse) the
+    cause is a big start tag.
+    """
+    declared = version or (_VERSION_RE.search(xml_string[:4096]) or [None, None])[1]
+    schema_version, note = resolve_xsd_version(declared)
+    kind = oversize.limit_kind(exc) if exc is not None else "start-tag"
+    if kind == "start-tag" and not getattr(_reentry, "active", False):
+        _reentry.active = True            # the structure check re-enters validate_xml; a second oversize result must not recurse
+        try:
+            result = oversize.oversize_result(
+                xml_string, schema_version=schema_version, huge_note=why,
+                validate_reduced=lambda reduced: validate_xml(reduced, schema_version),
+                field_types=_field_type_lookup(schema_version))
+        finally:
+            _reentry.active = False
+    else:
+        result = oversize.limit_result(kind=kind, libxml2_message=str(exc), schema_version=schema_version, huge_note=why)
+    if note:
+        result["notes"].insert(0, note)
+    return result
+
+
 def validate_xml(xml_string: str, version: str | None = None) -> dict:
     """Validate X3D XML content against the XSD schema for its declared version.
 
@@ -174,15 +221,29 @@ def validate_xml(xml_string: str, version: str | None = None) -> dict:
     4.1 draft), or from `version` when given, which overrides the document.
 
     Returns {"valid": bool, "errors": list[str], "schema_version": str} plus
-    "notes" when a substitution or a version hint applies.
+    "notes" when a substitution or a version hint applies. A document with one
+    start tag over libxml2's 10,000,000-byte limit cannot be parsed by default:
+    the result then has "checked": false, "verdict": "not-checkable-at-this-size"
+    and an "oversize" report (see validation.oversize); X3D_MCP_XML_HUGE=on allows
+    a bounded retry with huge_tree.
     """
     errors = []
+    huge_used = False
 
     # Step 1: Parse XML (well-formedness)
     try:
         doc = etree.fromstring(xml_string.encode("utf-8"))
     except etree.XMLSyntaxError as e:
-        return {"valid": False, "errors": [f"XML parse error: {e}"]}
+        if not oversize.is_resource_limit(e):
+            return {"valid": False, "errors": [f"XML parse error: {e}"]}
+        refusal = oversize.huge_refusal(xml_string)
+        if refusal:
+            return _not_checkable(xml_string, version, refusal, e)
+        try:
+            doc = oversize.parse_huge(xml_string)
+        except etree.XMLSyntaxError as e2:
+            return {"valid": False, "errors": [f"XML parse error: {e2}"]}
+        huge_used = True
 
     # Step 2: Strip xsi attributes that x3d.py adds
     _strip_xsi(doc)
@@ -194,12 +255,18 @@ def validate_xml(xml_string: str, version: str | None = None) -> dict:
 
     # Step 4: Validate against XSD
     schema = _get_schema(schema_version)
-    valid = schema.validate(doc)
+    try:
+        valid = schema.validate(doc)
+    except etree.XMLSchemaValidateError as e:
+        # libxml2's regexp engine gives up on one attribute of about 1.3 million numbers
+        return _not_checkable(xml_string, version, f"used, but the XSD engine failed: {e}")
     if not valid:
         for entry in schema.error_log:
             errors.append(f"Line {entry.line}: {entry.message}")
         notes.extend(_version_hints(doc, schema_version))
         notes.extend(_content_model_hints(doc, errors))
+    if huge_used:
+        notes.append("Parsed with huge_tree (X3D_MCP_XML_HUGE=on): libxml2's 10 MB start-tag limit was lifted for this document.")
 
     result = {"valid": valid, "errors": errors, "schema_version": schema_version}
     if notes:
