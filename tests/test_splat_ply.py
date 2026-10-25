@@ -93,11 +93,11 @@ def test_count_larger_than_data_is_refused_before_allocating():
         ply.read_ply(head + b"end_header\n" + bytes(100), max_points=10 ** 10)
 
 
-def test_zero_quaternion_becomes_identity():
+def test_zero_quaternion_is_kept_zero():
     src = make_cloud(3)
     src.orientations[1] = 0
     c = ply.read_ply(plyfix.write_ply(src))
-    assert c.orientations[1].tolist() == [0, 0, 0, 1]
+    assert c.orientations[1].tolist() == [0, 0, 0, 0]       # splat_inspect reports it; it is not silently made identity
 
 
 @pytest.mark.skipif(not (SYNTH and os.path.exists(SYNTH)), reason="real PLY fixture not available")
@@ -201,3 +201,51 @@ def test_ascii_never_returns_uninitialised_values():
     for cut in (len(good) - 500, len(good) // 2, len(good) // 10):
         with pytest.raises(PlyError):
             ply.read_ply(good[:cut])
+
+
+# ---- odd values and malformed headers
+
+_BASE = ["x", "y", "z", "f_dc_0", "f_dc_1", "f_dc_2", "opacity", "scale_0", "scale_1", "scale_2", "rot_0", "rot_1", "rot_2", "rot_3"]
+
+
+def raw_ply(props, rows, extra=""):
+    rows = np.asarray(rows, dtype="<f4")
+    head = f"ply\nformat binary_little_endian 1.0\n{extra}element vertex {len(rows)}\n" + \
+           "".join(f"property float {p}\n" for p in props) + "end_header\n"
+    return head.encode() + rows.tobytes()
+
+
+def good_rows(n=4):
+    a = np.zeros((n, 14), np.float32)
+    a[:, 10] = 1                                            # rot_0 = w = 1
+    return a
+
+
+def test_nan_and_zero_rotations_are_kept_so_inspect_can_report_them():
+    from transfer.inspect_splats import inspect_bytes
+    rows = good_rows()
+    rows[0, 10:14] = 0                                      # all-zero quaternion
+    rows[1, 10] = np.nan
+    rows[2, 10:14] = [np.inf, 0, 0, 0]
+    data = raw_ply(_BASE, rows)
+    q = ply.read_ply(data).orientations
+    assert np.all(q[0] == 0) and np.isnan(q[1]).any() and np.allclose(q[3], [0, 0, 0, 1])
+    codes = {r["code"] for r in inspect_bytes(data)["verdict"]["reasons"]}
+    assert "zero-quaternion" in codes and "non-finite" in codes
+
+
+def test_end_header_inside_a_comment_does_not_end_the_header():
+    data = raw_ply(_BASE, good_rows(), extra="comment see end_header below\n")
+    assert len(ply.read_ply(data)) == 4
+
+
+def test_duplicate_property_names_are_named():
+    with pytest.raises(PlyError, match="'x' is listed twice"):
+        ply.read_header(raw_ply(_BASE + ["x"], np.zeros((2, 15))))
+
+
+def test_f_rest_names_must_be_numbered_without_gaps():
+    rows = np.zeros((3, 14 + 9), np.float32)
+    props = _BASE + [f"f_rest_{i + 1}" for i in range(9)]
+    with pytest.raises(PlyError, match="f_rest_0 to f_rest_8"):
+        ply.read_ply(raw_ply(props, rows))

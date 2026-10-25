@@ -23,6 +23,7 @@ DEFAULT_MAX_POINTS = 10_000_000
 DEFAULT_MAX_ASCII_BYTES = 256 * 1024 * 1024    # an ASCII body parses to float64, 1.5 to 4 times its size
 _ASCII_BLOCK = 8 * 1024 * 1024
 _WHITESPACE = re.compile(rb"\s")
+_END_HEADER = re.compile(rb"^end_header[ \t]*\r?$", re.MULTILINE)     # a whole line; a comment may mention the word
 _NUMPY_TYPES = {"char": "i1", "int8": "i1", "uchar": "u1", "uint8": "u1", "short": "i2", "int16": "i2",
                 "ushort": "u2", "uint16": "u2", "int": "i4", "int32": "i4", "uint": "u4", "uint32": "u4",
                 "float": "f4", "float32": "f4", "double": "f8", "float64": "f8"}
@@ -70,9 +71,12 @@ class PlyHeader:
     def sh_degree(self) -> int:
         """SH degree implied by the f_rest_* property count (0 when there are none)."""
         v = self.vertex
-        rest = sum(1 for n, _ in v.properties if n.startswith("f_rest_")) if v else 0
+        names = {n for n, _ in v.properties if n.startswith("f_rest_")} if v else set()
+        rest = len(names)
         if rest % 3:
             raise PlyError(f"{rest} f_rest properties is not a multiple of 3")
+        if names != {f"f_rest_{i}" for i in range(rest)}:
+            raise PlyError(f"the f_rest properties must be numbered f_rest_0 to f_rest_{rest - 1} without gaps")
         return sh_degree_for_dim(rest // 3) if rest else 0
 
     @property
@@ -93,10 +97,11 @@ def read_header(data: bytes) -> PlyHeader:
     head = bytes(data[:HEADER_LIMIT])
     if not head.startswith(b"ply"):
         raise PlyError("not a PLY file (no 'ply' magic)")
-    end = head.find(b"end_header")
-    if end < 0:
+    m = _END_HEADER.search(head)
+    if m is None:
         raise PlyError(f"no end_header within the first {HEADER_LIMIT:,} bytes")
-    nl = head.find(b"\n", end)
+    end = m.start()
+    nl = head.find(b"\n", m.end())
     if nl < 0:
         raise PlyError("end_header is not followed by a newline")
     lines = head[:end].decode("ascii", "replace").replace("\r", "").split("\n")
@@ -119,11 +124,14 @@ def read_header(data: bytes) -> PlyHeader:
             if not elements:
                 raise PlyError("property before any element")
             if tok[1] == "list":
-                elements[-1].properties.append((tok[-1], "list " + " ".join(tok[2:-1])))
+                prop = (tok[-1], "list " + " ".join(tok[2:-1]))
             elif len(tok) == 3 and tok[1] in _NUMPY_TYPES:
-                elements[-1].properties.append((tok[2], tok[1]))
+                prop = (tok[2], tok[1])
             else:
                 raise PlyError(f"unsupported property: {line!r}")
+            if any(prop[0] == n for n, _ in elements[-1].properties):
+                raise PlyError(f"property {prop[0]!r} is listed twice in element {elements[-1].name!r}")
+            elements[-1].properties.append(prop)
     if fmt not in ("ascii", "binary_little_endian", "binary_big_endian"):
         raise PlyError(f"unknown PLY format {fmt!r}")
     return PlyHeader(fmt, elements, nl + 1, comments)
@@ -201,7 +209,8 @@ def read_ply(data: bytes, *, max_points: int = DEFAULT_MAX_POINTS, max_ascii_byt
     with np.errstate(all="ignore"):                    # odd values become inf or NaN and are reported by splat_inspect
         quat = f32("rot_1", "rot_2", "rot_3", "rot_0")      # file order w x y z -> x y z w
         norm = np.linalg.norm(quat, axis=1, keepdims=True)
-        quat = np.where(norm > 0, quat / np.where(norm > 0, norm, 1), np.float32([0, 0, 0, 1]))
+        # NaN and all-zero rotations are kept as they are, so splat_inspect reports them (and chunk refuses or drops them)
+        quat = np.where(norm > 0, quat / np.where(norm > 0, norm, 1), quat)
         cloud = SplatCloud(
             positions=f32("x", "y", "z"),
             scales=np.exp(f32("scale_0", "scale_1", "scale_2")),
