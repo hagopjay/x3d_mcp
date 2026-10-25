@@ -22,6 +22,7 @@ from starlette.responses import JSONResponse
 
 from transfer import blobs as _blobs
 from transfer.errors import ConfigError
+from transfer.limits import SplatLimits
 
 _TRANSPORT = os.environ.get("MCP_TRANSPORT", "stdio").lower()
 _IS_HTTP = _TRANSPORT in ("http", "streamable-http")
@@ -29,6 +30,7 @@ _IS_HTTP = _TRANSPORT in ("http", "streamable-http")
 # Blob store settings come from X3D_MCP_BLOB* variables; a bad value stops the server here.
 try:
     _blob_cfg = _blobs.configure()
+    SplatLimits.from_env()          # X3D_MCP_SPLAT_* are checked here too
 except ConfigError as _exc:
     raise SystemExit(f"x3d-mcp: {_exc}")
 
@@ -39,6 +41,7 @@ from tools import (
     prompts, semantics,
 )
 from tools import transfer as blob_tools
+from tools import splats as splat_tools
 sys.stdout = _real_stdout
 
 # Surfaced to the client on connect -- the proactive "read me first" that keeps a
@@ -92,6 +95,19 @@ when you must see part of it."""
 if _blob_cfg.enabled:
     INSTRUCTIONS += BLOB_INSTRUCTIONS
 
+# Gaussian splat files are too big for any tool call: they are named, inspected and cut on the server.
+# Registered when numpy is installed, and over HTTP only with the blob store (a hosted client has no path).
+_SPLATS = splat_tools.numpy_available() and (_blob_cfg.enabled or not _IS_HTTP)
+SPLAT_INSTRUCTIONS = """
+
+GAUSSIAN SPLATS: a splat scene is 5 to 65 MB and one GaussianSplats node cannot be validated past roughly \
+60,000 to 100,000 splats (libxml2's 10 MB start-tag limit). Do not paste splat data. Name the file (`blob_id=`, or \
+`path=` under stdio) and call `splat_inspect` for its facts and a verdict, then `splat_chunk` to cut it \
+into small valid X3D files plus a master scene of Inline nodes and a manifest; the answer lists blob ids, \
+never contents. validate_x3d on an oversize scene answers "not-checkable-at-this-size" (not a parse error)."""
+if _SPLATS:
+    INSTRUCTIONS += SPLAT_INSTRUCTIONS
+
 _fastmcp_kwargs = {}
 if _IS_HTTP:
     _fastmcp_kwargs["host"] = os.environ.get("HOST", "0.0.0.0")
@@ -118,6 +134,9 @@ scene_ops.register(mcp)
 animate.register(mcp)
 prompts.register(mcp)
 semantics.register(mcp)
+
+if _SPLATS:
+    splat_tools.register(mcp)
 
 if _blob_cfg.enabled:
     blob_tools.register(mcp)

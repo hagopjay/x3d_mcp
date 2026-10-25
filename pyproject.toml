@@ -24,11 +24,19 @@ dev = [
     "pytest>=8.0",
     "brotli>=1.2.0",     # the transfer-layer tests exercise every upload codec (see [blob])
     "zstandard>=0.23",
+    "numpy>=1.26",       # the splat tests (see [splat])
 ]
 # Brotli and zstd uploads/downloads for the blob store (docs/transfer-layer.md). Without them
 # the store still works: br and zstd answer 415 and blobs are kept with the standard library.
 blob = [
     "brotli>=1.2.0",     # older wheels cannot bound their output, so br is refused below this
+    "zstandard>=0.23",
+]
+# Gaussian splat tools (splat_inspect, splat_chunk; docs/splats.md): numpy decodes SPZ and PLY, and
+# zstandard reads SPZ version 4. Without numpy the tools are not registered and validate_xml still
+# answers an oversize scene with a plain verdict (it only skips the value checks).
+splat = [
+    "numpy>=1.26",
     "zstandard>=0.23",
 ]
 # render_image renders scenes to PNG via headless Chromium. Heavy, so optional:
