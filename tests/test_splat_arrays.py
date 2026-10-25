@@ -83,3 +83,35 @@ def test_without_numpy_counts_still_checked(monkeypatch):
     monkeypatch.setitem(sys.modules, "numpy", None)
     out = check_splat_arrays({"positions": "0 0 0 1 1 1", "opacities": "0.5", "scales": "-1 -1 -1 1 1 1"})
     assert [f.check for f in out] == ["splat-array-length", "splat-no-color", "splat-values-unchecked"]
+
+
+def _numpy1_fromstring(monkeypatch):
+    """numpy 1.26 np.fromstring: a bad token only warns and the numbers before it are returned."""
+    import warnings
+    real = np.fromstring
+
+    def old_behaviour(text, dtype=float, sep=""):
+        out = []
+        for tok in text.split():
+            try:
+                out.append(float(tok))
+            except ValueError:
+                warnings.warn("string or file could not be read to its end due to unmatched data", DeprecationWarning)
+                break
+        return np.array(out, dtype=dtype)
+    monkeypatch.setattr(np, "fromstring", old_behaviour)
+    return real
+
+
+def test_a_bad_token_is_found_where_numpy_only_warns(monkeypatch):
+    from validation.splat_arrays import first_bad_token, parse_numbers, ArrayError
+    import pytest
+    _numpy1_fromstring(monkeypatch)
+    attrs = {"positions": "0 0 0 1 1 1 x", "scales": "1 1 1 1 1 1", "orientations": "0 0 0 1 0 0 0 1", "opacities": "1 1",
+             "sphericalHarmonicsDegree0Coef0": "0 0 0 0 0 0"}
+    found = check_splat_arrays(attrs, strict_numbers=True)
+    assert [f.check for f in found] == ["splat-array-syntax", "tuple-count"] and "'x'" in found[0].message
+    with pytest.raises(ArrayError, match="not a number: 'x'"):
+        parse_numbers("1 2 x", strict=True)
+    assert parse_numbers("1 2 x").size == 0
+    assert first_bad_token("1 2 , 3 4 y 5") == "y" and first_bad_token("1 2") is None

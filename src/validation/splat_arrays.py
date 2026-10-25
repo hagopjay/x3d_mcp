@@ -6,13 +6,13 @@ findings, so semantic.py can adopt it later without a change of behaviour.
 """
 
 import re
+import warnings
 from dataclasses import dataclass
 
 
 SPLAT_ARRAYS = {"positions": 3, "scales": 3, "orientations": 4, "opacities": 1}
 SPLAT_SH = {(d, c): f"sphericalHarmonicsDegree{d}Coef{c}" for d in range(4) for c in range(2 * d + 1)}
 ORDER_MIN = 100                      # too few splats to guess the quaternion order below this
-_SEP = re.compile(r"[\s,]+")
 _NUMBER_CHARS = b"0123456789.+-eE \t\r\n,"
 
 
@@ -35,6 +35,18 @@ def count_numbers(text: str) -> int:
     return sum(1 for _ in _TOKEN.finditer(text))
 
 
+def _fromstring(flat: str):
+    """float64 vector from numbers separated by spaces. Raises ValueError on a token that is not a number: numpy 2
+    does it itself, numpy 1.26 only warns (DeprecationWarning) and returns the numbers before the bad token."""
+    import numpy as np
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        try:
+            return np.fromstring(flat, dtype=np.float64, sep=" ")
+        except DeprecationWarning as exc:
+            raise ValueError(str(exc)) from exc
+
+
 def parse_numbers(text: str, *, strict: bool = False):
     """MF attribute value -> float64 vector (numpy). A bad token gives an empty vector, or ArrayError when `strict`."""
     import numpy as np
@@ -42,7 +54,7 @@ def parse_numbers(text: str, *, strict: bool = False):
     if not flat.strip():
         return np.empty(0)      # np.fromstring("  ", sep=" ") returns [-1.]
     try:
-        return np.fromstring(flat, dtype=np.float64, sep=" ")
+        return _fromstring(flat)
     except ValueError as exc:
         if strict:
             raise ArrayError(f"not a number: {(first_bad_token(flat) or '?')[:40]!r}") from exc
@@ -59,7 +71,7 @@ def _is_number(token: str) -> bool:
 
 def first_bad_token(text: str) -> str | None:
     """The first token of an MF value that is not a number, or None. Plain Python, so it works without numpy."""
-    return next((t for t in _SEP.split(text.strip()) if t and not _is_number(t)), None)
+    return next((m.group(0) for m in _TOKEN.finditer(text) if not _is_number(m.group(0))), None)   # lazy: no token list
 
 
 def looks_numeric(text: str) -> bool:
@@ -77,7 +89,7 @@ def _vector(value: str):
     if not flat.strip():
         return np.empty(0)      # np.fromstring("  ", sep=" ") returns [-1.]
     try:
-        return np.fromstring(flat, dtype=np.float64, sep=" ")
+        return _fromstring(flat)
     except ValueError:
         return None
 
