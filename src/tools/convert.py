@@ -10,8 +10,10 @@ import keyword
 from lxml import etree
 import x3d.x3d as x3d_mod
 from x3d.x3d import X3D, Scene, component, head, meta, unit
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import Context, FastMCP
 
+from transfer.outputs import XML_TYPE, document_info, envelope, error_envelope, input_info, parse_mode
+from transfer.tooling import require_blob_access, resolve_input, run_heavy
 from validation.defuse import reorder_defs_xml
 from x3d_utils.gen_schema import DEFAULT_MAX_NODES, SchemaRequestError, build_generation_schema
 from x3d_utils.json2xml import JsonConversionError, json_to_xml
@@ -19,6 +21,8 @@ from x3d_utils.x3duom import get_x3duom
 
 _XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n'
 _HUGE_PARSER = etree.XMLParser(huge_tree=True)    # counting elements must not hit lxml's per-attribute size limit
+_MEDIA_TYPES = {"xml": XML_TYPE, "json": "model/x3d+json", "vrml": "model/x3d+vrml"}
+SCHEMA_TYPE = "application/schema+json"
 
 
 def _parse_xml_to_model(xml_string: str) -> X3D:
@@ -199,6 +203,8 @@ def _coerce_value(value_str: str, field_type: str):
     return value_str
 
 
+
+
 def _json_scene_as_xml(xml: str) -> str:
     """The XML json_to_xml wrote, with every DEF ahead of its USEs and an XML declaration."""
     try:
@@ -217,11 +223,55 @@ def _dropped_elements(source_xml: str, written_xml: str) -> dict[str, int]:
     return {tag: n - after.get(tag, 0) for tag, n in before.items() if n > after.get(tag, 0)}
 
 
+def _convert_json(content: str, to_encoding: str) -> tuple[str, bool]:
+    """(output, True) for a conversion of X3D JSON; (message, False) for a refusal."""
+    try:
+        xml = json_to_xml(content)
+    except JsonConversionError as exc:
+        return f"Cannot read X3D JSON: {exc}", False
+    if to_encoding == "xml":
+        return _json_scene_as_xml(xml), True
+    if to_encoding == "json":
+        return content, True          # already JSON; json_to_xml has checked that it reads
+    if to_encoding != "vrml":
+        return f"Unknown target encoding: {to_encoding}", False
+    try:
+        model = _parse_xml_to_model(xml)
+        dropped = _dropped_elements(xml, model.XML())
+    except etree.XMLSyntaxError as exc:
+        return f"Cannot convert to {to_encoding}: {exc}. Use to_encoding='xml' for a scene this large.", False
+    if dropped:
+        names = ", ".join(f"{tag} x{n}" for tag, n in sorted(dropped.items()))
+        return (f"Cannot convert to {to_encoding}: x3d.py would drop {names}. "
+                "Use to_encoding='xml', which keeps the scene as written."), False
+    return model.VRML(), True
+
+
+def _convert(content: str, from_encoding: str, to_encoding: str) -> tuple[str, bool]:
+    """(output, True) for a conversion; (message, False) for an unsupported encoding or a refusal."""
+    if from_encoding == "json":
+        return _convert_json(content, to_encoding)
+    if from_encoding == "xml":
+        model = _parse_xml_to_model(content)
+    else:
+        return f"Parsing from '{from_encoding}' is not yet supported. Use 'xml' or 'json' as source.", False
+
+    if to_encoding == "xml":
+        return reorder_defs_xml(model.XML()), True      # x3d.py writes joints before bodies
+    elif to_encoding == "json":
+        return model.JSON(), True
+    elif to_encoding == "vrml":
+        return model.VRML(), True
+    else:
+        return f"Unknown target encoding: {to_encoding}", False
+
+
 def register(mcp: FastMCP):
 
     @mcp.tool()
-    def convert_x3d(content: str, from_encoding: str,
-                    to_encoding: str) -> str:
+    async def convert_x3d(content: str, from_encoding: str, to_encoding: str,
+                          blob_id: str = "", return_mode: str = "full",
+                          ctx: Context = None) -> str:
         """Convert X3D content between encodings.
 
         JSON is read as the X3D JSON encoding (ISO/IEC 19776-5, the layout of
@@ -232,48 +282,44 @@ def register(mcp: FastMCP):
         refused, naming the elements, if x3d.py would drop any.
 
         Args:
-            content: The X3D content string.
+            content: The X3D content string. Pass an empty string when blob_id is given.
             from_encoding: Source encoding - "xml" or "json".
             to_encoding: Target encoding - "xml", "json", or "vrml".
+            blob_id: Id of a stored blob holding the document (instead of content).
+            return_mode: "full" (default) returns the converted document. "summary" returns
+                JSON: the result's sha256, size and (for xml) node counts, not the document.
+                "blob" also stores the result and returns its blob_id.
         """
-        if from_encoding == "xml":
-            model = _parse_xml_to_model(content)
-        elif from_encoding == "json":
-            try:
-                xml = json_to_xml(content)
-            except JsonConversionError as exc:
-                return f"Cannot read X3D JSON: {exc}"
-            if to_encoding == "xml":
-                return _json_scene_as_xml(xml)
-            if to_encoding == "json":
-                return content          # already JSON; json_to_xml has checked that it reads
-            if to_encoding != "vrml":
-                return f"Unknown target encoding: {to_encoding}"
-            try:
-                model = _parse_xml_to_model(xml)
-                dropped = _dropped_elements(xml, model.XML())
-            except etree.XMLSyntaxError as exc:
-                return f"Cannot convert to {to_encoding}: {exc}. Use to_encoding='xml' for a scene this large."
-            if dropped:
-                names = ", ".join(f"{tag} x{n}" for tag, n in sorted(dropped.items()))
-                return (f"Cannot convert to {to_encoding}: x3d.py would drop {names}. "
-                        "Use to_encoding='xml', which keeps the scene as written.")
-        else:
-            return f"Parsing from '{from_encoding}' is not yet supported. Use 'xml' or 'json' as source."
+        try:
+            mode = parse_mode(return_mode)
+        except ValueError as e:
+            return str(e)
+        label = "inline content"
+        try:
+            if blob_id.strip():
+                content, label = await resolve_input(content, "", blob_id, ctx)
+            if mode == "blob":
+                require_blob_access(ctx)
+        except ValueError as e:
+            return str(e) if mode == "full" else error_envelope(mode, str(e))
+        out, ok = await run_heavy(_convert, content, from_encoding, to_encoding, size=len(content))
+        if mode == "full":
+            return out
+        if not ok:
+            return error_envelope(mode, out, label)
+        media = _MEDIA_TYPES[to_encoding]
+        try:
+            doc = await run_heavy(document_info, out, media, mode == "blob", size=len(out))
+            inp = await run_heavy(input_info, content, blob_id, size=len(content))
+        except ValueError as e:
+            return error_envelope(mode, str(e), label)
+        return envelope(mode, label, ok=True, input=inp, document=doc)
 
-        if to_encoding == "xml":
-            return reorder_defs_xml(model.XML())      # x3d.py writes joints before bodies
-        elif to_encoding == "json":
-            return model.JSON()
-        elif to_encoding == "vrml":
-            return model.VRML()
-        else:
-            return f"Unknown target encoding: {to_encoding}"
-
-    @mcp.tool()
-    def x3d_generation_schema(profile: str = "Interchange", nodes: list[str] | None = None,
-                              max_nodes: int = DEFAULT_MAX_NODES, version: str = "4.0",
-                              include_schema: bool = True) -> str:
+    @mcp.tool(structured_output=False)
+    async def x3d_generation_schema(profile: str = "Interchange", nodes: list[str] | None = None,
+                                    max_nodes: int = DEFAULT_MAX_NODES, version: str = "4.0",
+                                    include_schema: bool = True, return_mode: str = "full",
+                                    ctx: Context = None) -> str:
         """A strict JSON Schema for generating an X3D scene as JSON under schema-constrained decoding.
 
         Give it to a provider's structured-output option (or a local grammar) so the
@@ -287,6 +333,10 @@ def register(mcp: FastMCP):
         for Interchange, 40 KB for Interactive. Providers cap schema size and some reject
         large ones; lower max_nodes or name only the nodes you need if yours does.
 
+        The schema is for the program that calls the model, not for the model to read: with
+        return_mode="blob" it stays on the server and comes back as a blob_id to fetch
+        (GET /blob/<id>, or blob_read), so it never passes through the model's context.
+
         Args:
             profile: Profile whose nodes are offered - Core, Interchange, Interactive,
                 Immersive, Full, CADInterchange, MedicalInterchange or MPEG4Interactive.
@@ -296,11 +346,24 @@ def register(mcp: FastMCP):
                 named in `nodes` are always offered.
             version: "4.0" (what the official JSON Schema describes) or "4.1".
             include_schema: false returns the report alone, to check the size first.
+            return_mode: "full" (default) returns report, notes and schema as JSON.
+                "summary" returns the report, the notes and the schema's sha256 and size,
+                without the schema. "blob" also stores the schema (application/schema+json)
+                and adds its blob_id.
         """
+        try:
+            mode = parse_mode(return_mode)
+        except ValueError as e:
+            return json_mod.dumps({"error": str(e)})
+        try:
+            if mode == "blob" and include_schema:
+                require_blob_access(ctx)
+        except ValueError as e:
+            return error_envelope(mode, str(e))
         try:
             built = build_generation_schema(profile, nodes, max_nodes, version)
         except SchemaRequestError as exc:
-            return json_mod.dumps({"error": str(exc)})
+            return json_mod.dumps({"error": str(exc)}) if mode == "full" else error_envelope(mode, str(exc))
         report = built["report"]
         notes = [
             f"{report['size']['bytes']} bytes, {report['node_count']} nodes. Providers cap schema size and "
@@ -319,7 +382,16 @@ def register(mcp: FastMCP):
         if version == "4.1":
             notes.append("No X3D 4.1 JSON Schema exists: the nodes are the 4.0 set, and validate_x3d(encoding="
                          "'json') still rejects @version 4.1 because the 4.0 schema's enum stops there.")
-        result = {"report": report, "notes": notes}
+        if mode == "full":
+            result = {"report": report, "notes": notes}
+            if include_schema:
+                result["schema"] = built["schema"]
+            return json_mod.dumps(result, separators=(",", ":"))
+        fields = {"report": report, "notes": notes}
         if include_schema:
-            result["schema"] = built["schema"]
-        return json_mod.dumps(result, separators=(",", ":"))
+            text = json_mod.dumps(built["schema"], separators=(",", ":"))
+            try:
+                fields["document"] = await run_heavy(document_info, text, SCHEMA_TYPE, mode == "blob", size=len(text))
+            except ValueError as e:
+                return error_envelope(mode, str(e))
+        return envelope(mode, f"generated {profile} {version}", ok=True, **fields)

@@ -305,6 +305,17 @@ Operate on serialized X3D content (file path or inline XML) and return the modif
 | `remove_x3d_node` | Remove a node and its children. Identify by DEF name or by node type plus index. |
 | `move_x3d_node` | Reparent a DEF'd node. Empty `new_parent_def` moves it to the Scene root. Rejects moves that would create a cycle. |
 
+### Blob Tools
+
+For documents too large to pass through the model (a 10 MB scene, a splat file). Store the bytes once, then name them with `blob_id` on `validate_x3d`, `validate_semantic`, `autofix_x3d`, `repair_x3d`, `convert_x3d` and the three scene manipulation tools; add `return_mode="summary"` or `"blob"` to get a digest or a new id back instead of the document. On by default under stdio; over HTTP only when `X3D_MCP_BLOB_TOKEN` is set. See [docs/transfer-layer.md](docs/transfer-layer.md).
+
+| Tool | Description |
+|------|-------------|
+| `blob_put` | Store a small document (text, or base64 with an optional gzip/br/zstd stream) and return its `blob_id`, the SHA-256 of the content. Larger files go to `PUT /blob` over HTTP, or `path=` under stdio. |
+| `blob_info` | Size, stored size, media type, expiry and a text preview of a stored blob. |
+| `blob_read` | A window of a blob's bytes, paged with `offset` / `length`. |
+| `blob_delete` | Drop a blob now (blobs also expire on their own). |
+
 ### Animation Tools
 
 Generate event-driven animation in X3D content (TimeSensor + Interpolator + ROUTE chains). Adapted from [niknarra/x3d-mcp](https://github.com/niknarra/x3d-mcp).
@@ -449,6 +460,7 @@ The test container mounts `src/` and `tests/` from the host. Logs are written to
 | [docs/x3d-tools-and-references.md](docs/x3d-tools-and-references.md) | URLs for schemas, DTDs, X3DUOM, validators, viewers, converters, libraries |
 | [docs/x3d-validation-strategy.md](docs/x3d-validation-strategy.md) | Validation approach: X3DUOM parsing, XSD, Schematron, containerField rules |
 | [docs/ecosystem-research.md](docs/ecosystem-research.md) | Survey of existing tools, Python vs TypeScript analysis, community resources |
+| [docs/transfer-layer.md](docs/transfer-layer.md) | Large scenes: the blob store, `/blob` upload routes, `blob_id` / `return_mode` on the tools, operator settings |
 
 ## External References
 
