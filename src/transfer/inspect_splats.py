@@ -39,58 +39,115 @@ def detect_format(data: bytes) -> str:
         return "spz"
     if head[:3] == b"ply":
         return "ply"
-    if re.match(rb"\s*(<\?xml|<X3D|<!--)", head):
+    if re.match(rb"(?:\xef\xbb\xbf)?\s*(<\?xml|<X3D|<!--)", head):     # a UTF-8 byte order mark may lead
         return "x3d-xml"
     raise SplatError("unrecognised input: expected an SPZ, a PLY or an X3D XML scene with GaussianSplats nodes")
 
 
-_OPENER = re.compile(r"<GaussianSplats\b")
+# One pass over the text: a comment or CDATA section matches without a group (and is skipped), a GaussianSplats start tag
+# matches with group 1.  An unterminated comment or CDATA section runs to the end, as an XML parser would refuse it.
+_SCAN = re.compile(r"<!--.*?(?:-->|\Z)|<!\[CDATA\[.*?(?:\]\]>|\Z)|(<GaussianSplats\b)", re.DOTALL)
+_REF = re.compile(r"&(?:#x([0-9a-fA-F]+)|#([0-9]+)|(amp|lt|gt|quot|apos));")
+_PREDEFINED = {"amp": "&", "lt": "<", "gt": ">", "quot": '"', "apos": "'"}
+MAX_NODES = 100_000                    # GaussianSplats nodes in one text scene (each one is kept as arrays until the end)
+_DATA_FIELDS = ("positions", "scales", "orientations", "opacities", "sphericalHarmonicsDegree0Coef0")
+_SH_NAMES = [f"sphericalHarmonicsDegree{d}Coef{c}" for d in range(1, 4) for c in range(2 * d + 1)]
+
+
+def _unescape(value: str, field: str, where: str) -> str:
+    """Resolve character references and the five predefined entities in an attribute value; any other entity is refused."""
+    if "&" not in value:
+        return value
+
+    def sub(m):
+        if m.group(3):
+            return _PREDEFINED[m.group(3)]
+        try:
+            return chr(int(m.group(1), 16) if m.group(1) else int(m.group(2)))
+        except (ValueError, OverflowError):
+            raise SplatError(f"{where}: {field} holds a character reference that is not a character") from None
+    out = _REF.sub(sub, value)
+    if "&" in out:
+        raise SplatError(f"{where}: {field} holds an entity reference other than &amp; &lt; &gt; &quot; &apos; and character "
+                         "references, which are not resolved here; write the numbers out (validate_x3d reports the exact error)")
+    return out
 
 
 def cloud_from_x3d(text: str, *, max_points: int) -> tuple[SplatCloud, dict]:
-    """Concatenate every GaussianSplats node of an X3D XML text. No XML parser runs, so no size limit applies."""
-    from validation.splat_arrays import parse_numbers
-    nodes, biggest = [], 0
-    for m in _OPENER.finditer(text):
+    """Concatenate every GaussianSplats node of an X3D XML text. No XML parser runs, so no size limit applies.
+
+    Comments and CDATA sections are skipped, character references in the values are resolved, and a node with only a USE
+    is counted in the facts but adds no splats. Each node's arrays are parsed to float32 as it is found, and the splat
+    count is checked against `max_points` as it grows, so a large file is not held twice."""
+    from validation.splat_arrays import ArrayError, parse_numbers
+    per_key: dict[str, list] = {k: [] for k in _DATA_FIELDS}
+    sh_nodes: dict[str, dict[int, object]] = {k: {} for k in _SH_NAMES}
+    counts: list[int] = []            # splats per node
+    biggest = used = total = 0
+    for m in _SCAN.finditer(text):
+        if not m.group(1):
+            continue
         tag = parse_start_tag(text, m.start())
         if tag is None:
             raise SplatError(f"the GaussianSplats start tag at line {text.count(chr(10), 0, m.start()) + 1} is not well-formed "
                              f"(unterminated, an unquoted value, or more than {MAX_ATTRS} attributes); run validate_x3d for the exact error")
         _, spans, end = tag
-        nodes.append({k: text[a:b] for k, (a, b) in spans.items()})
         biggest = max(biggest, end - m.start())
-    if not nodes:
-        raise SplatError("no GaussianSplats node found")
-    parts = {k: [] for k in ("positions", "scales", "orientations", "opacities", "sphericalHarmonicsDegree0Coef0")}
-    sh_names = [f"sphericalHarmonicsDegree{d}Coef{c}" for d in range(1, 4) for c in range(2 * d + 1)]
-    sh_parts = {k: [] for k in sh_names}
-    for a in nodes:
-        for k in parts:
-            if k in a:
-                parts[k].append(parse_numbers(a[k], strict=True))
-        for k in sh_names:
-            if k in a:
-                sh_parts[k].append(parse_numbers(a[k], strict=True))
-    vec = {k: (np.concatenate(v) if v else np.empty(0)) for k, v in parts.items()}
-    n = vec["positions"].size // 3
-    if n > max_points:
-        raise SplatError(f"{n:,} splats is above the limit of {max_points:,}")
-    problems = [k for k, per in (("scales", 3), ("orientations", 4), ("opacities", 1), ("sphericalHarmonicsDegree0Coef0", 3))
-                if vec[k].size != per * n]
-    if vec["positions"].size % 3 or problems:
-        raise SplatError("arrays disagree on the splat count (" + ", ".join(problems or ["positions"]) +
-                         "); run validate_semantic for the exact diagnosis")
-    f32 = lambda a, w: a.reshape(n, w).astype(np.float32)
+        if "USE" in spans:
+            used += 1
+            continue
+        i = len(counts)
+        if i >= MAX_NODES:
+            raise SplatError(f"more than {MAX_NODES:,} GaussianSplats nodes; read the SPZ or PLY the scene came from")
+        where = f"GaussianSplats node {i + 1}"
+        vec = {}
+        for k in (*_DATA_FIELDS, *_SH_NAMES):
+            if k in spans:
+                a, b = spans[k]
+                try:
+                    vec[k] = parse_numbers(_unescape(text[a:b], k, where), strict=True).astype(np.float32)
+                except ArrayError as exc:
+                    raise SplatError(f"{where}: {k}: {exc}") from exc
+        n = vec["positions"].size // 3 if "positions" in vec else 0
+        total += n
+        if total > max_points:
+            raise SplatError(f"{total:,} splats is above the limit of {max_points:,}")
+        problems = [k for k, per in (("positions", 3), ("scales", 3), ("orientations", 4), ("opacities", 1), ("sphericalHarmonicsDegree0Coef0", 3))
+                    if (vec[k].size if k in vec else 0) != per * n]
+        if problems:
+            raise SplatError(f"arrays disagree on the splat count in node {i + 1} (" + ", ".join(problems) +
+                             "); run validate_semantic for the exact diagnosis")
+        counts.append(n)
+        for k in _DATA_FIELDS:
+            if k in vec:
+                per_key[k].append(vec[k])
+        for k in _SH_NAMES:
+            if k in vec:
+                sh_nodes[k][i] = vec[k]
+    if not counts:
+        raise SplatError("no GaussianSplats node found" + (f" with data (only {used} USE nodes)" if used else ""))
+    n = total
+    f32 = lambda k, w: (np.concatenate(per_key[k]) if per_key[k] else np.empty(0, np.float32)).reshape(n, w)
     degree_names = []
     for d in range(1, 4):
         names = [f"sphericalHarmonicsDegree{d}Coef{c}" for c in range(2 * d + 1)]
-        if not all(sh_parts[k] for k in names):
-            break                                   # a partial degree is dropped, like the renderers do
+        full = [i for i in range(len(counts)) if all(i in sh_nodes[k] for k in names)]
+        if not full:
+            break                                   # absent or a partial degree in every node: dropped, like the renderers do
+        if len(full) != len(counts):
+            partial = next(i for i in range(len(counts)) if i not in full)
+            raise SplatError(f"spherical harmonics degree {d} is complete in node {full[0] + 1} but not in node {partial + 1}; "
+                             "write the same degrees on every GaussianSplats node, or none")
+        for k in names:
+            for i, c in enumerate(counts):
+                if sh_nodes[k][i].size != 3 * c:
+                    raise SplatError(f"GaussianSplats node {i + 1}: {k} has {sh_nodes[k][i].size} numbers for {c} splats "
+                                     f"(expected {3 * c}); run validate_semantic for the exact diagnosis")
         degree_names += names
-    sh = np.stack([np.concatenate(sh_parts[k]).reshape(n, 3) for k in degree_names], axis=1).astype(np.float32) if degree_names else None
-    return SplatCloud(f32(vec["positions"], 3), f32(vec["scales"], 3), f32(vec["orientations"], 4), vec["opacities"].astype(np.float32),
-                      f32(vec["sphericalHarmonicsDegree0Coef0"], 3), sh, "x3d-xml", {"nodes": len(nodes)}), \
-        {"nodes": len(nodes), "max_start_tag_bytes": biggest}
+    sh = np.stack([np.concatenate([sh_nodes[k][i] for i in range(len(counts))]).reshape(n, 3) for k in degree_names], axis=1) if degree_names else None
+    facts = {"nodes": len(counts), "max_start_tag_bytes": biggest, **({"use_only_nodes": used} if used else {})}
+    return SplatCloud(f32("positions", 3), f32("scales", 3), f32("orientations", 4), f32("opacities", 1).reshape(n),
+                      f32("sphericalHarmonicsDegree0Coef0", 3), sh, "x3d-xml", {"nodes": len(counts)}), facts
 
 
 def _q(a: np.ndarray, qs=(0.01, 0.5, 0.99)) -> list[float]:
@@ -285,7 +342,7 @@ def load_cloud(data: bytes, *, max_points: int = 10_000_000, max_ratio: float | 
         return plymod.read_ply(data, max_points=max_points, max_ascii_bytes=max_text_bytes), fmt, {}
     if len(data) > max_text_bytes:
         raise SplatError(f"X3D text of {len(data):,} bytes is above the limit of {max_text_bytes:,}; use the SPZ or PLY it came from")
-    cloud, facts = cloud_from_x3d(data.decode("utf-8", "replace"), max_points=max_points)
+    cloud, facts = cloud_from_x3d(data.decode("utf-8-sig", "replace"), max_points=max_points)
     return cloud, fmt, facts
 
 
@@ -315,5 +372,5 @@ def inspect_bytes(data: bytes, *, max_points: int = 10_000_000, max_text_bytes: 
                              extra=facts, max_points=max_points)
     if size > max_text_bytes:
         raise SplatError(f"X3D text of {size:,} bytes is above the limit of {max_text_bytes:,}; inspect the SPZ or PLY it came from")
-    cloud, facts = cloud_from_x3d(data.decode("utf-8", "replace"), max_points=max_points)
+    cloud, facts = cloud_from_x3d(data.decode("utf-8-sig", "replace"), max_points=max_points)
     return inspect_cloud(cloud, file_bytes=size, fmt="x3d-xml", extra=facts, max_points=max_points)

@@ -335,3 +335,60 @@ def test_odd_values_do_not_raise_numpy_warnings():
         warnings.simplefilter("error")
         rep = inspect_bytes(data)
     assert rep["verdict"]["level"] in ("suspect", "unusable")
+
+
+# ---- X3D text scanning: comments, CDATA, references, BOM, USE, mixed spherical harmonics
+
+def _node(n, sh=False, extra=""):
+    rep = lambda s: " ".join([s] * n)
+    out = (f'<GaussianSplats {extra} positions="{rep("1 2 3")}" scales="{rep("0.1 0.1 0.1")}" orientations="{rep("0 0 0 1")}" '
+           f'opacities="{rep("0.5")}" sphericalHarmonicsDegree0Coef0="{rep("0 0 0")}"')
+    if sh:
+        out += "".join(f' sphericalHarmonicsDegree1Coef{c}="{rep("0 0 0")}"' for c in range(3))
+    return out + "/>"
+
+
+def _scene(body):
+    return ('<X3D version="4.1"><Scene>' + body + "</Scene></X3D>").encode()
+
+
+def test_nodes_inside_comments_and_cdata_are_not_splats():
+    assert inspect_bytes(_scene("<!-- " + _node(10) + " -->" + _node(5)))["count"] == 5
+    assert inspect_bytes(_scene("<Script><![CDATA[" + _node(10) + "]]></Script>" + _node(5)))["count"] == 5
+    assert inspect_bytes(_scene(_node(5) + "<!-- <![CDATA[ --><GaussianSplats " + _node(10)[16:]))["count"] == 15      # a CDATA opener inside a comment is text
+
+
+def test_character_references_are_resolved_and_other_entities_are_named():
+    ref = _scene('<GaussianSplats positions="1&#32;2&#x20;3" scales="1 1 1" orientations="0 0 0 1" opacities="1" '
+                 'sphericalHarmonicsDegree0Coef0="0 0 0"/>')
+    assert inspect_bytes(ref)["count"] == 1
+    with pytest.raises(SplatError, match="entity reference"):
+        inspect_bytes(ref.replace(b"1&#32;2&#x20;3", b"&a;"))
+
+
+def test_a_byte_order_mark_is_accepted():
+    assert inspect_bytes(b"\xef\xbb\xbf" + _scene(_node(3)))["count"] == 3
+
+
+def test_use_only_nodes_are_counted_not_read():
+    rep = inspect_bytes(_scene(_node(5, extra='DEF="a"') + '<GaussianSplats USE="a"/>'))
+    assert rep["count"] == 5 and rep["nodes"] == 1 and rep["use_only_nodes"] == 1
+    with pytest.raises(SplatError, match="only 1 USE"):
+        inspect_bytes(_scene('<GaussianSplats USE="a"/>'))
+
+
+def test_spherical_harmonics_on_only_some_nodes_is_diagnosed():
+    with pytest.raises(SplatError, match="degree 1 is complete in node 1 but not in node 2"):
+        inspect_bytes(_scene(_node(5, sh=True) + _node(5)))
+    bad = _scene(_node(5, sh=True)).replace(b'sphericalHarmonicsDegree1Coef0="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"', b'sphericalHarmonicsDegree1Coef0="0 0 0"')
+    with pytest.raises(SplatError, match="node 1: sphericalHarmonicsDegree1Coef0 has 3 numbers for 5 splats"):
+        inspect_bytes(bad)
+
+
+def test_node_count_and_splat_count_are_capped_while_scanning(monkeypatch):
+    from transfer import inspect_splats
+    monkeypatch.setattr(inspect_splats, "MAX_NODES", 3)
+    with pytest.raises(SplatError, match="more than 3 GaussianSplats nodes"):
+        inspect_bytes(_scene(_node(1) * 4))
+    with pytest.raises(SplatError, match="above the limit of 7"):
+        inspect_bytes(_scene(_node(5) + _node(5)), max_points=7)

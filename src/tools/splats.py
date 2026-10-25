@@ -164,7 +164,8 @@ def _chunk_job(data: bytes, limits: SplatLimits, opts: dict) -> dict:
     notes = []
     if fmt == "x3d-xml":
         notes.append(f"Only the GaussianSplats nodes were read from the X3D text ({facts.get('nodes', 0)} of them); any other "
-                     "node, and any Transform around the splats, is not in the envelope.")
+                     "node, and any Transform around the splats, is not in the envelope."
+                     + (f" {facts['use_only_nodes']} GaussianSplats nodes that only USE another were skipped." if facts.get("use_only_nodes") else ""))
     result = {"name": manifest["name"], "source": manifest["source"], "partition": manifest["partition"],
               "digits": manifest["digits"], "coordinate_system": manifest["coordinate_system"],
               "bbox_mode": manifest["bbox_mode"], "totals": manifest["totals"]}
