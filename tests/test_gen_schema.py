@@ -329,3 +329,87 @@ def test_a_scene_the_schema_admits_converts_and_validates():
     xml = _call("convert_x3d", {"content": json.dumps(scene), "from_encoding": "json", "to_encoding": "xml"})
     assert validate_xml(xml)["valid"] and etree.fromstring(xml.encode()).get("profile") == "Interchange"
     assert sampler is not None and DEFAULT_MAX_NODES >= 49
+
+
+# -- return modes: the schema can stay on the server ------------------------------------------------
+
+@pytest.fixture
+def store(monkeypatch):
+    import os
+    from transfer import blobs
+    for name in [n for n in os.environ if n.startswith(("X3D_MCP_BLOB", "X3D_MCP_ALLOWED", "X3D_MCP_SUMMARY",
+                                                        "X3D_MCP_OFFLOAD"))]:
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.delenv("MCP_TRANSPORT", raising=False)
+    blobs.reset()
+    yield blobs.get_store()
+    blobs.reset()
+
+
+def test_blob_mode_stores_the_schema_and_leaves_it_out_of_the_reply(store):
+    import hashlib
+    full = json.loads(_call("x3d_generation_schema", {"profile": "Interactive"}))
+    out = json.loads(_call("x3d_generation_schema", {"profile": "Interactive", "return_mode": "blob"}))
+    assert out["ok"] and "schema" not in out and out["report"] == full["report"] and out["notes"] == full["notes"]
+    doc = out["document"]
+    assert doc["media_type"] == "application/schema+json" and doc["bytes"] == full["report"]["size"]["bytes"]
+    stored = store.get_text(doc["blob_id"])
+    assert json.loads(stored) == full["schema"] and hashlib.sha256(stored.encode()).hexdigest() == doc["sha256"]
+    Draft202012Validator.check_schema(json.loads(stored))
+    assert len(json.dumps(out)) < len(json.dumps(full)) // 10
+
+
+def test_summary_mode_gives_the_digest_without_storing(store):
+    out = json.loads(_call("x3d_generation_schema", {"profile": "Interchange", "return_mode": "summary"}))
+    assert "blob_id" not in out["document"] and out["document"]["bytes"] > 20_000
+    assert store.stats()["blobs"] == 0
+
+
+def test_blob_mode_with_include_schema_false_stores_nothing(store):
+    out = json.loads(_call("x3d_generation_schema", {"include_schema": False, "return_mode": "blob"}))
+    assert out["ok"] and "document" not in out and store.stats()["blobs"] == 0
+
+
+def test_bad_requests_are_errors_in_every_mode(store):
+    assert "Unknown profile" in json.loads(_call("x3d_generation_schema", {"profile": "Nope"}))["error"]
+    for mode in ("summary", "blob"):
+        body = json.loads(_call("x3d_generation_schema", {"profile": "Nope", "return_mode": mode}))
+        assert body["ok"] is False and "Unknown profile" in body["error"]
+    assert "return_mode must be" in json.loads(_call("x3d_generation_schema", {"return_mode": "zip"}))["error"]
+
+
+def test_default_reply_is_unchanged_by_the_return_modes(store):
+    """return_mode defaults to full: report, notes and schema as one compact JSON object."""
+    text = _call("x3d_generation_schema", {})
+    assert list(json.loads(text)) == ["report", "notes", "schema"] and ": " not in text[:60]
+
+
+def test_the_tool_signature_gained_only_return_mode_after_the_original_parameters():
+    m = FastMCP("sig")
+    register(m)
+    props = {t.name: t.inputSchema for t in asyncio.run(m.list_tools())}["x3d_generation_schema"]
+    assert list(props["properties"]) == ["profile", "nodes", "max_nodes", "version", "include_schema", "return_mode"]
+    assert props.get("required", []) == []
+
+
+# -- hostile requests --------------------------------------------------------------------------------
+
+def test_the_node_list_and_what_the_report_echoes_are_bounded():
+    from x3d_utils.gen_schema import MAX_ASKED_NODES
+    with pytest.raises(SchemaRequestError, match="at most"):
+        build_generation_schema("Interchange", [f"N{i}" for i in range(MAX_ASKED_NODES + 1)])
+    with pytest.raises(SchemaRequestError, match="list of node names"):
+        build_generation_schema("Interchange", [1, 2])
+    report = build_generation_schema("Interchange", ["N" * 100_000, "Box"])["report"]
+    assert [len(n) for n in report["unknown_nodes"]] == [60]
+    with pytest.raises(SchemaRequestError) as err:
+        build_generation_schema("P" * 100_000)
+    assert len(str(err.value)) < 300
+    big = json.loads(_call("x3d_generation_schema", {"nodes": ["Z" * 5000] * 3 + [f"Q{i}" for i in range(900)],
+                                                      "include_schema": False}))
+    assert len(json.dumps(big)) < 120_000
+
+
+@pytest.mark.parametrize("max_nodes", [-5, 0])
+def test_a_non_positive_max_nodes_is_a_request_error_in_the_tool(max_nodes):
+    assert "max_nodes" in json.loads(_call("x3d_generation_schema", {"max_nodes": max_nodes}))["error"]
