@@ -22,6 +22,7 @@ SCHEMA = "x3d-mcp-splat-envelope/1"
 METHODS = ("kd", "octree", "grid")
 FRAMES = {"as-is": None, "rub": None, "rdf": "1 0 0 3.14159265"}    # coordinate_system -> rotation of the wrapping Transform
 MAX_CHUNKS = 4096
+MAX_URL_PREFIX = 1024          # written once per chunk into the master, so output grows by chunks x len(url_prefix)
 _BAD_URL_CHARS = re.compile(r"[\s\"'\\<>\x00-\x1f\x7f]")
 
 
@@ -131,6 +132,8 @@ def partition(points: np.ndarray, *, target: int, method: str = "kd", min_fracti
         raise SplatError("target must be at least 1")
     if n == 0:
         return []
+    if -(-n // target) > MAX_CHUNKS:          # refuse before building one index array per chunk
+        raise SplatError(f"{-(-n // target)} chunks is above the limit of {MAX_CHUNKS}; raise target")
     pts = np.asarray(points, dtype=np.float64)
     if method == "kd":
         out: list[np.ndarray] = []
@@ -180,6 +183,8 @@ def build_envelope(cloud: SplatCloud, *, name: str = "scene", target: int = 5000
     if _BAD_URL_CHARS.search(url_prefix):
         raise SplatError("url_prefix must not contain spaces, quotes, backslashes, angle brackets or control characters "
                          "(it is written inside an MFString)")
+    if len(url_prefix) > MAX_URL_PREFIX:
+        raise SplatError(f"url_prefix is {len(url_prefix):,} characters; the limit is {MAX_URL_PREFIX:,} (it is repeated in every Inline)")
     finite = cloud.finite_mask()
     dropped = int((~finite).sum())
     if dropped:
@@ -189,12 +194,16 @@ def build_envelope(cloud: SplatCloud, *, name: str = "scene", target: int = 5000
     if len(cloud) == 0:
         raise SplatError("the cloud holds no splats" + (" once the non-finite ones are dropped" if dropped else ""))
     specs = digit_specs(precision, cloud)
+    eff_target = min(target, max_splats_per_node(cloud, specs))
+    est_chunks = -(-len(cloud) // max(1, eff_target))
+    if est_chunks > MAX_CHUNKS:
+        raise SplatError(f"{est_chunks} chunks is above the limit of {MAX_CHUNKS}; raise target")
     if max_total_bytes is not None:
-        estimate = int(bytes_per_splat(cloud, specs) * len(cloud))
+        # the master repeats url_prefix and a bbox in one Inline per chunk (about 300 bytes besides the prefix)
+        estimate = int(bytes_per_splat(cloud, specs) * len(cloud)) + est_chunks * (300 + len(url_prefix))
         if estimate > max_total_bytes:
             raise SplatError(f"{len(cloud):,} splats would be about {estimate:,} bytes of X3D text, above the limit of "
                              f"{max_total_bytes:,} (X3D_MCP_SPLAT_MAX_OUTPUT_BYTES); chunk a smaller file or drop spherical harmonics")
-    eff_target = min(target, max_splats_per_node(cloud, specs))
     scene_lo, scene_hi = cloud.positions.min(0).astype(np.float64), cloud.positions.max(0).astype(np.float64)
 
     def cut(eff: int):

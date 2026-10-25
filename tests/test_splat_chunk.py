@@ -309,3 +309,28 @@ def test_a_budget_no_splat_can_meet_is_an_error(monkeypatch):
     monkeypatch.setattr(chunk, "START_TAG_BUDGET", 100)
     with pytest.raises(SplatError, match="single splat"):
         chunk.build_envelope(spz_cloud(200), target=50)
+
+
+def test_a_long_url_prefix_is_refused():
+    with pytest.raises(SplatError, match="url_prefix is"):
+        chunk.build_envelope(spz_cloud(100), url_prefix="h" * (chunk.MAX_URL_PREFIX + 1))
+    chunk.build_envelope(spz_cloud(100), url_prefix="h" * chunk.MAX_URL_PREFIX)
+
+
+def test_url_prefix_counts_toward_the_output_limit():
+    cloud = spz_cloud(2000)
+    _, man = chunk.build_envelope(cloud, target=10)
+    limit = man["totals"]["bytes"]
+    chunk.build_envelope(cloud, target=10, max_total_bytes=limit * 2)
+    with pytest.raises(SplatError, match="above the limit"):
+        chunk.build_envelope(cloud, target=10, url_prefix="h" * 1000, max_total_bytes=limit + 100_000)
+
+
+def test_too_many_chunks_is_refused_before_partitioning(monkeypatch):
+    def boom(*a, **k):
+        raise AssertionError("partitioned")
+    monkeypatch.setattr(chunk, "_kd", boom)
+    with pytest.raises(SplatError, match="chunks is above the limit"):
+        chunk.partition(pts(chunk.MAX_CHUNKS + 5), target=1)
+    with pytest.raises(SplatError, match="chunks is above the limit"):
+        chunk.build_envelope(spz_cloud(chunk.MAX_CHUNKS + 5), target=1)
