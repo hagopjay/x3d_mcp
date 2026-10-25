@@ -296,6 +296,27 @@ def test_a_failed_chunk_leaves_no_out_dir_behind(mcp, tmp_path):
     assert not out.exists()
 
 
+def test_an_envelope_that_does_not_fit_the_store_is_an_error_and_leaves_nothing_behind(mcp, monkeypatch):
+    src = spz_bytes(6000, sh_degree=0)
+    bid = put(src)
+    ok = run(mcp, "splat_chunk", blob_id=bid, target=1000)
+    assert "error" not in ok
+    total = blobs.get_store().stats()["total"]
+    blobs.reset()
+    quota = (total - len(src)) * 3 // 4                    # room for any one file, not for all of them
+    monkeypatch.setenv("X3D_MCP_BLOB_QUOTA_BYTES", str(quota))
+    monkeypatch.setenv("X3D_MCP_BLOB_MEM_BYTES", str(quota))
+    bid = put(src)
+    err = run(mcp, "splat_chunk", blob_id=bid, target=1000)
+    assert isinstance(err, dict) and "do not fit in the blob store" in err["error"] and "X3D_MCP_BLOB_QUOTA_BYTES" in err["error"]
+    assert blobs.get_store().stats()["blobs"] <= 1                     # at most the input; no part of the envelope stays
+    monkeypatch.setenv("X3D_MCP_BLOB_QUOTA_BYTES", str(total * 2))      # a store that fits gives ids that all resolve
+    monkeypatch.setenv("X3D_MCP_BLOB_MEM_BYTES", str(total * 2))
+    blobs.reset()
+    good = run(mcp, "splat_chunk", blob_id=put(src), target=1000)
+    assert len(stored_files(good)) == 2 + len(good["chunk_files"])
+
+
 # ---------------------------------------------------------------- limits
 
 def test_server_limits_apply_to_both_tools(mcp, monkeypatch):

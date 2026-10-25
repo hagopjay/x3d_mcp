@@ -27,6 +27,7 @@ from mcp.server.fastmcp import Context, FastMCP
 from transfer.auth import tool_gate
 from transfer.binary import resolve_bytes_input
 from transfer.blobs import get_config, get_store, transport_is_http
+from transfer.errors import StoreFull
 from transfer.limits import SplatLimits
 from transfer.outputs import cap_items, clip
 from transfer.tooling import run_heavy
@@ -122,10 +123,30 @@ def _write_dir(files: dict[str, bytes], out_dir: str) -> str:
 
 
 def _store_blobs(files: dict[str, bytes]) -> dict[str, dict]:
-    """Put every file in the blob store; the blob id of a file is its sha256, which the manifest also records."""
+    """Put every file in the blob store; the blob id of a file is its sha256, which the manifest also records.
+
+    The store is an LRU with a quota, so a later put could evict an earlier file of the same call. Each stored file
+    is pinned until the whole set is in; if the set does not fit, the files this call added are removed and the
+    error names the quota instead of returning ids that are already gone."""
     store = get_store()
-    return {rel: store.put(data, media_type=_MEDIA.get(Path(rel).suffix, "application/octet-stream"), name=rel)
-            for rel, data in sorted(files.items())}
+    metas: dict[str, dict] = {}
+    pins, added = [], []
+    try:
+        for rel, data in sorted(files.items()):
+            meta = store.put(data, media_type=_MEDIA.get(Path(rel).suffix, "application/octet-stream"), name=rel)
+            metas[rel] = meta
+            pins.append(store.acquire(meta["blob_id"]))
+            if meta.get("created"):
+                added.append(meta["blob_id"])
+    except StoreFull as exc:
+        for blob_id in added:
+            store.delete(blob_id)
+        raise StoreFull(f"the {len(files)} files of the envelope do not fit in the blob store together ({exc}); raise "
+                        "X3D_MCP_BLOB_QUOTA_BYTES (or set X3D_MCP_BLOB_DIR), or raise target, or drop spherical harmonics") from exc
+    finally:
+        for pin in pins:
+            pin.close()
+    return metas
 
 
 def _chunk_job(data: bytes, limits: SplatLimits, opts: dict) -> dict:
