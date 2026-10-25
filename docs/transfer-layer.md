@@ -196,6 +196,25 @@ Blob input is always a document: a blob that begins with a comment or a byte-ord
 mistaken for a file path. (Inline `content` keeps its old rule, so inline text that does not start
 with `<?xml`, `<X3D` or `<!DOCTYPE` is still treated as a path by the scene-editing tools.)
 
+## Splats and JSON scenes
+
+Two more tools and one more input encoding ride on the same store:
+
+- `splat_inspect(path | blob_id)` and `splat_chunk(path | blob_id, ...)` (registered when numpy is
+  installed and, over HTTP, when the store is on) read an SPZ, 3DGS PLY or X3D text splat file on the
+  server and answer with a report or a list of blob ids, never the data. Details, limits and the
+  `X3D_MCP_SPLAT_*` settings are in [splats.md](splats.md). Splat jobs queue on the same heavy-job
+  lock as the document tools.
+- `convert_x3d(from_encoding="json")` reads an X3D JSON scene (inline or from a blob) and writes XML or
+  VRML. Names are checked, the element count is capped, and a JSON source is refused if any element
+  would be dropped; the drop check does not cover an XML source, because x3d.py loses elements it has
+  no class for. A VRML result expected above 64 MiB is refused with a pointer to `to_encoding="xml"`.
+  `convert_x3d` on JSON input always runs in the worker thread.
+
+Every tool that takes `blob_id` also holds one of `X3D_MCP_TOOL_CONCURRENCY` places for the whole
+call (calls without a `blob_id` never wait), on top of the in-flight decoded-bytes budget described
+under Deployment notes.
+
 ## Compression at rest
 
 | Upload | Stored as |
@@ -289,6 +308,25 @@ The `blob` extra installs the codecs (`pip install 'x3d-mcp[blob]'`, done in the
   scenes. The blob store only gets the bytes to the tool; [splats.md](splats.md) covers what the
   server does about it (a "not checkable at this size" verdict, and `splat_chunk`, which cuts a
   splat file into pieces that validate).
+
+## Checked on the merged tree
+
+Run on the merge of `blob-store`, `splat` and `json-input` (Confirmed, run here):
+
+- Full test suite: 1180 passed, 26 skipped. 21 of the skips need data that is not in the repository
+  (`X3D_SPLAT_FIXTURES`, `X3D_SPLAT_PLY`, `X3D_JSON_CONTROL_DIR`); with the real SPZ files and the
+  65-scene JSON control set supplied, the splat and JSON control tests give 312 passed, 2 skipped (no
+  PLY fixture). The remaining skips need playwright or PIL.
+- Over stdio and over streamable-http, a real MCP client called `blob_put`, `blob_info`, `blob_read`,
+  `validate_x3d` and `modify_x3d_node` on a blob, `convert_x3d` from a JSON blob, `x3d_generation_schema`
+  with `return_mode="blob"`, `splat_inspect` and `splat_chunk` on a 500k-splat SPZ. Over HTTP the
+  `/blob` upload (zstd) and download were checked against the original bytes, and an upload without
+  the bearer was answered 401.
+- Old tools called with their default arguments on the repository's example scenes and fixtures give
+  the same output as `main`, except: `convert_x3d` of `examples/scenes/doha_qatar.x3d` now succeeds
+  where `main` raised a tool error ("attribute name must be string"; the cause was not traced, the scene has no Script or field element); `convert_x3d` from
+  JSON, refused on `main`, now works; and `validate_x3d` with an unknown `return_mode` now answers
+  "return_mode must be one of full, summary, blob" where `main` ignored the parameter.
 
 ## Not built
 
