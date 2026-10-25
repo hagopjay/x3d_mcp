@@ -333,3 +333,27 @@ def test_count_numbers_matches_a_split_and_builds_no_list():
     from validation.splat_arrays import count_numbers
     for text in ("", "  ", "1", "1 2 3", "1,2 ,3,, 4\n5\t6", ",,,", " 1e-3,+2.5 "):
         assert count_numbers(text) == len([t for t in text.replace(",", " ").split() if t]), text
+
+
+def test_finding_big_tags_is_linear_on_a_long_run_of_name_characters():
+    import time
+    # '<' + a run of word characters, a '<', then more than 1 MB: a name group in the pattern backtracked quadratically
+    text = "<" + "a" * 400_000 + "<" + "b" * 1_100_000
+    t = time.perf_counter()
+    assert oversize.find_big_start_tags(text) == []
+    assert time.perf_counter() - t < 2.0
+    tag = "<Big " + 'a="' + "1 " * 600_000 + '"/>'
+    found = oversize.find_big_start_tags("<X>" + tag + "</X>")
+    assert [t.name for t in found] == ["Big"] and found[0].size == len(tag)
+
+
+def test_structure_check_says_which_big_values_nobody_checked(monkeypatch):
+    monkeypatch.delenv("X3D_MCP_XML_HUGE", raising=False)
+    numbers = " ".join(["0"] * 5_300_000 + ["0"] + ["0"])                  # 5,300,002 numbers: not a whole number of MFVec3f
+    doc = ('<?xml version="1.0" encoding="UTF-8"?>\n<X3D version="4.1" profile="Immersive"><Scene><Shape>'
+           f'<IndexedFaceSet coordIndex="0 1 2 -1"><Coordinate point="{numbers}"/></IndexedFaceSet></Shape></Scene></X3D>\n')
+    sc = validate_xml(doc)["oversize"]["structure_check"]
+    assert sc["ran"] is True and sc["valid"] is True
+    assert sc["values_not_checked"] == ["Coordinate.point (line 2)"] and "were not checked at all" in sc["note"]
+    ok = validate_xml(splat_doc(90_000))["oversize"]["structure_check"]
+    assert "values_not_checked" not in ok

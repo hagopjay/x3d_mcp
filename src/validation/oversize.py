@@ -132,7 +132,9 @@ class BigTag:
 def find_big_start_tags(text: str, min_bytes: int = REPORT_MIN_BYTES) -> list[BigTag]:
     """Start tags of at least `min_bytes`, found without libxml2. A candidate that is not a well-formed start tag is skipped."""
     out = []
-    cand = re.compile(rf"<[A-Za-z_][\w.:-]*[^<]{{{min_bytes},}}")
+    # A '<' followed by min_bytes non-'<' characters. The name is not part of the pattern (a name group before the long run
+    # backtracks quadratically on a long run of word characters); parse_start_tag checks it.
+    cand = re.compile(rf"<[^<]{{{min_bytes},}}")
     for m in cand.finditer(text):
         t = parse_start_tag(text, m.start())
         if t:
@@ -220,9 +222,14 @@ def oversize_result(text: str, *, schema_version: str, validate_reduced, field_t
         if sr.get("checked") is False:        # still over a libxml2 limit after the big values were replaced
             report["structure_check"] = {"ran": False, "reason": sr["errors"][0]}
         else:
-            report["structure_check"] = {"ran": True, "valid": sr["valid"], "errors": sr["errors"][:10],
-                                         "note": "the XSD ran on a copy with each big attribute value replaced by one minimal "
-                                                 "valid value; the replaced values were checked by the array check only"}
+            unchecked = [f"{t.name}.{k} (line {t.line})" for t in tags if t.name != "GaussianSplats"
+                         for k, (a, b) in t.attrs.items() if b - a >= SUBSTITUTE_MIN_BYTES]
+            note = ("the XSD ran on a copy with each big attribute value replaced by one minimal valid value; the replaced "
+                    "values of GaussianSplats nodes were checked by the array check")
+            note += ("; the replaced values listed in values_not_checked were not checked at all (their counts and numbers are "
+                     "unverified: validate_semantic checks tuple counts)" if unchecked else "")
+            report["structure_check"] = {"ran": True, "valid": sr["valid"], "errors": sr["errors"][:10], "note": note,
+                                         **({"values_not_checked": unchecked[:20]} if unchecked else {})}
     if tags:
         names = ", ".join(f"{t.name} (line {t.line}, {t.size:,} bytes)" for t in over or tags[:3])
         message = (f"Not checkable at this size: {names} is larger than libxml2's {START_TAG_LIMIT:,}-byte start-tag limit, "
