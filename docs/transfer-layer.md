@@ -269,7 +269,7 @@ The `blob` extra installs the codecs (`pip install 'x3d-mcp[blob]'`, done in the
   a 128 MiB budget holds about 3 GB of scene text. Concurrent 100 MB uploads were not measured
   (Likely about 20 MB each). A tool call on a blob costs about 15 times the decoded size in peak
   process memory (a 60 MiB scene: 1041 MB peak from a 100 MB baseline, Confirmed), outside `MEM_BYTES`,
-  which is why `X3D_MCP_TOOL_MAX_BYTES` exists (64 MiB by default; lower it on a small container). A
+  which is why `X3D_MCP_TOOL_MAX_BYTES` exists (96 MiB by default; lower it on a small container). A
   call decodes its document before it queues for the heavy-job lock, so concurrent calls are admitted
   only while the decoded text they hold stays within twice that limit (a lone document is always
   admitted); the rest wait on the event loop, holding neither text nor a thread. Eight concurrent

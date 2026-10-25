@@ -995,7 +995,8 @@ class BlobStore:
         with self._use(blob_id) as e:
             if max_bytes is not None and e.size > max_bytes:
                 raise BlobTooLarge(f"blob {e.id[:12]} is {e.size} bytes decoded; the limit here is "
-                                   f"{max_bytes} (X3D_MCP_TOOL_MAX_BYTES)")
+                                   f"{max_bytes} (X3D_MCP_TOOL_MAX_BYTES). Page it with blob_read, or ask the operator "
+                                   "to raise the limit.")
             hot = self._hot_get(e.id)
             if hot is not None:
                 return hot

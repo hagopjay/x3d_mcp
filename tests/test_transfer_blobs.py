@@ -973,7 +973,7 @@ def test_config_repr_does_not_show_the_token():
 
 def test_new_limits_have_defaults_and_env_names():
     c = BlobConfig.from_env({})
-    assert c.max_blobs == 10000 and c.tool_max_bytes == 64 << 20 and c.min_rate == 4096
+    assert c.max_blobs == 10000 and c.tool_max_bytes == 96 << 20 and c.min_rate == 4096
     assert c.path_roots == ()
     c = BlobConfig.from_env({"X3D_MCP_BLOB_MAX_COUNT": "50", "X3D_MCP_TOOL_MAX_BYTES": "8M",
                              "X3D_MCP_BLOB_MIN_RATE": "0",

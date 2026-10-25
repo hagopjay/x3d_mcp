@@ -12,6 +12,7 @@ import x3d.x3d as x3d_mod
 from x3d.x3d import X3D, Scene, component, head, meta, unit
 from mcp.server.fastmcp import Context, FastMCP
 
+from transfer.blobs import get_config
 from transfer.errors import BlobError
 from transfer.outputs import XML_TYPE, document_info, envelope, error_envelope, input_info, parse_mode
 from transfer.tooling import holds_input, require_blob_access, resolve_input, run_heavy
