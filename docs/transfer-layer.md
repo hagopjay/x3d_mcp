@@ -279,8 +279,10 @@ The `blob` extra installs the codecs (`pip install 'x3d-mcp[blob]'`, done in the
   starve the blob tools. Whether the X3D library underneath is safe to call from two threads at once
   was not established, which is why they do not.
 - **Limits that remain.** libxml2 refuses a start tag over 10 MB, so a splat scene stored as one
-  huge attribute still cannot be parsed, and the XSD check gives an "Internal error" on very large
-  scenes. Neither is changed here; the blob store only gets the bytes to the tool.
+  huge attribute cannot be parsed, and the XSD check gives an "Internal error" on very large
+  scenes. The blob store only gets the bytes to the tool; [splats.md](splats.md) covers what the
+  server does about it (a "not checkable at this size" verdict, and `splat_chunk`, which cuts a
+  splat file into pieces that validate).
 
 ## Not built
 

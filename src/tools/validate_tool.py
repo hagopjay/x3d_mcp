@@ -93,6 +93,9 @@ def register(mcp: FastMCP):
                 "error_count": len(result.get("errors", [])),
                 **cap_items([clip(e) for e in result.get("errors", [])], "errors"),
                 **cap_items([clip(n) for n in result.get("notes", [])], "notes")}
+        for key in ("checked", "verdict"):          # set when libxml2's size limits stopped the check (validation.oversize)
+            if key in result:
+                body[key] = result[key]
         if mode == "blob":
             body["report"] = report_info(json.dumps(result, indent=2), "application/json")
         inp = await run_heavy(input_info, text, blob_id, size=len(text))

@@ -6,6 +6,7 @@ errors    the exceptions the layer raises (all ValueError subclasses)
 auth      bearer-token check, the caller gate for the tools, Host/Origin settings
 routes    the HTTP upload/download routes (PUT/POST /blob, GET /blob/<id>)
 tooling   the shared input/return-mode plumbing of the tools, heavy-work offload
+jobs      one heavy job at a time, queued on the event loop (no worker thread per waiting call)
 outputs   summary building and clipping for return_mode="summary"/"blob"
 """
 
