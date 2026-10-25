@@ -250,7 +250,8 @@ x3d_mcp/
 
 | Tool | Description |
 |------|-------------|
-| `convert_x3d` | Convert X3D between encodings: xml, json, vrml. Uses x3d.py native serialization. |
+| `convert_x3d` | Convert X3D between encodings. Reads xml or json (the X3D JSON encoding, as in `x3d-4.0-JSONSchema.json`) and writes xml, json or vrml. XML input goes through x3d.py; JSON input is converted to XML by the server's own writer, which keeps the scene as written (vrml is refused, naming the elements, when x3d.py would drop any). Takes `blob_id` and `return_mode` (see `docs/transfer-layer.md`). |
+| `x3d_generation_schema` | A strict, small JSON Schema (about 30 to 50 KB for a profile) for generating a scene as JSON under a provider's schema-constrained decoding: closed objects, real field names, enumerated values, vector lengths. A first filter only: convert with `convert_x3d(from_encoding="json")`, then `validate_x3d` and `validate_semantic` decide. |
 
 ### Query Tools
 

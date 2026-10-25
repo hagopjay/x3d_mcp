@@ -167,7 +167,12 @@ means what it meant:
   same kind of summary, so the next call can name it.
 
 Tools: `validate_x3d`, `validate_semantic`, `autofix_x3d`, `repair_x3d`, `convert_x3d`,
-`modify_x3d_node`, `remove_x3d_node`, `move_x3d_node`.
+`modify_x3d_node`, `remove_x3d_node`, `move_x3d_node`. `convert_x3d` reads either encoding from a
+blob (`from_encoding="xml"` or `"json"`), so a scene a model wrote as JSON can be stored once and
+converted, validated and edited by id. `x3d_generation_schema` takes `return_mode` only: `"summary"`
+returns its report, notes and the schema's `sha256` and size, `"blob"` also stores the schema
+(`application/schema+json`) and returns its `blob_id`, so the program that calls the model fetches it
+over `GET /blob/<id>` and the schema never passes through the model's context.
 
 Tools that produce a document (`autofix_x3d`, `repair_x3d`, `convert_x3d`, the three edit tools)
 answer a summary with `ok`, `source`, `input` (`sha256`, `bytes`), `document` (`sha256`, `bytes`,
