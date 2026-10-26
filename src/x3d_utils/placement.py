@@ -9,6 +9,7 @@ same bytes and the same hash.
 
 import hashlib
 import json
+import re
 
 from x3d_utils.x3duom import get_x3duom
 
@@ -44,7 +45,7 @@ def _build() -> dict:
         for f in concrete[parent]["fields"]:
             if f["type"] not in _NODE_FIELD_TYPES or f.get("accessType") in ("inputOnly", "outputOnly"):
                 continue                    # addChildren and removeChildren carry events, they hold nothing
-            accepted = {t.strip() for t in (f.get("acceptableNodeTypes") or "").split() if t.strip()}
+            accepted = {t for t in re.split(r"[|\s]+", f.get("acceptableNodeTypes") or "") if t}   # space or pipe separated
             accepted.discard("IS")
             if not accepted:
                 continue

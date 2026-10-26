@@ -152,6 +152,19 @@ def test_where_can_place_paging_and_errors(mcp):
     assert "Unknown" in call(mcp, "where_can_place", {"child": "NoSuchNode"})["error"]
 
 
+def test_placement_splits_pipe_separated_types():
+    gain = {(r["parent"], r["field"]) for r in placement.where_can_place("Gain", 0, 500)["rows"]}
+    assert ("SpatialSound", "children") in gain
+    assert placement.get_table()["row_count"] == 6509
+
+
+def test_query_loads_ontology_in_parent(monkeypatch):
+    import x3d_utils.ontology as onto_mod
+    monkeypatch.setattr(onto_mod, "_instance", None)
+    semantics._ask("ASK { x3d:Sphere rdfs:subClassOf x3d:X3DGeometryNode }", False)
+    assert onto_mod._instance is not None
+
+
 def test_placement_excludes_event_fields():
     rows = placement.where_can_place("Shape", 0, 500)["rows"]
     assert not any(r["field"] in ("addChildren", "removeChildren") for r in rows)

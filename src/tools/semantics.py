@@ -40,6 +40,7 @@ def _row_key(row: dict) -> str:
 def _ask(sparql: str, include_extensions: bool, fold_blank: bool = False):
     """Guard, run with a deadline, cap. Returns (rows, total, truncated); raises QueryRefused/QueryTimeout."""
     guard_sparql(PREFIXES + sparql)
+    get_ontology()          # load it here: a forked worker that loads it parses the file again on every call
     cap = max_rows()
     total, rows = run_bounded(_run_query, sparql, include_extensions, fold_blank, cap)
     truncated = total > cap
@@ -179,7 +180,7 @@ def register(mcp: FastMCP):
         acceptableNodeTypes on every node-valued field, so each row is a real placement:
         the parent node, the field, and whether the child needs an explicit containerField.
         Rows are sorted, and the whole table is versioned by table_sha256. Most nodes have fewer
-        than 50 rows; MovieTexture and the other texture and sound nodes have more, so page with offset.
+        than 50 rows; MovieTexture and the Metadata* nodes have more, so page with offset.
 
         Args:
             child: The X3D node type name (e.g. "Sphere", "Material").
