@@ -1,0 +1,119 @@
+{ "X3D":
+  {
+    "encoding": "UTF-8",
+    "@profile": "Full",
+    "@version": "4.1",
+    "@xsd:noNamespaceSchemaLocation": "https://www.web3d.org/specifications/x3d-4.1.xsd",
+    "JSON schema": "https://www.web3d.org/specifications/x3d-4.1-JSONSchema.json",
+    "head": {
+      "meta": [
+        {
+          "@name": "title",
+          "@content": "BoxHighlightOnHover.x3d"
+        },
+        {
+          "@name": "description",
+          "@content": "A box that highlights with emissive yellow color while pointer is over it using TouchSensor isOver and a Script."
+        },
+        {
+          "@name": "generator",
+          "@content": "x3d-tidy V3.1.1, https://www.npmjs.com/package/x3d-tidy"
+        },
+        {
+          "@name": "modified",
+          "@content": "Sat, 17 Oct 2026 20:55:33 GMT"
+        }
+      ]
+    },
+    "Scene": {
+      "-children": [
+        { "WorldInfo":
+          {
+            "@title": "Box Highlight On Hover"
+          }
+        },
+        { "Viewpoint":
+          {
+            "@description": "View Box",
+            "@position": [ 0, 0, 5 ]
+          }
+        },
+        { "Transform":
+          {
+            "-children": [
+              { "TouchSensor":
+                {
+                  "@DEF": "BoxTouch",
+                  "@description": "Hover over box to highlight"
+                }
+              },
+              { "Shape":
+                {
+                  "-appearance": { "Appearance":
+                    {
+                      "-material": { "Material":
+                        {
+                          "@DEF": "BoxMaterial",
+                          "@diffuseColor": [ 0.2, 0.6, 0.9 ]
+                        }
+                      }
+                    }
+                  },
+                  "-geometry": { "Box":
+                    {
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        { "Script":
+          {
+            "@DEF": "HighlightScript",
+            "field": [
+              {
+                "@accessType": "inputOnly",
+                "@type": "SFBool",
+                "@name": "isOver"
+              },
+              {
+                "@accessType": "outputOnly",
+                "@type": "SFColor",
+                "@name": "emissiveColor_changed"
+              }
+            ],
+            "#sourceCode": [
+              "",
+              "        ecmascript:",
+              "        function isOver(val) {",
+              "          if (val) {",
+              "            emissiveColor_changed = new SFColor(0.8, 0.8, 0.0);",
+              "          } else {",
+              "            emissiveColor_changed = new SFColor(0.0, 0.0, 0.0);",
+              "          }",
+              "        }",
+              "      "
+            ]
+          }
+        },
+        { "ROUTE":
+          {
+            "@fromNode": "BoxTouch",
+            "@fromField": "isOver",
+            "@toNode": "HighlightScript",
+            "@toField": "isOver"
+          }
+        },
+        { "ROUTE":
+          {
+            "@fromNode": "HighlightScript",
+            "@fromField": "emissiveColor_changed",
+            "@toNode": "BoxMaterial",
+            "@toField": "set_emissiveColor"
+          }
+        }
+      ]
+    }
+  }
+}

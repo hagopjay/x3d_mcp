@@ -21,8 +21,10 @@ WORKDIR /app
 COPY pyproject.toml ./
 COPY src/ ./src/
 
-# Install runtime dependencies only (no [dev] / pytest).
-RUN pip install --no-cache-dir .
+# Install runtime dependencies only (no [dev] / pytest). [blob] adds the brotli and
+# zstd codecs for the blob store (docs/transfer-layer.md); [splat] adds numpy for the
+# splat tools (docs/splats.md).
+RUN pip install --no-cache-dir ".[blob,splat]"
 
 ENV PYTHONPATH=/app/src:/app
 ENV PYTHONUNBUFFERED=1

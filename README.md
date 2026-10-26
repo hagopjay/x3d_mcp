@@ -179,6 +179,7 @@ x3d_mcp/
       scene_ops.py         # Scene CRUD: modify, remove, move nodes
       animate.py           # Animation chain generation (TimeSensor + Interpolator + ROUTE)
       semantics.py         # SPARQL query tools over the bundled X3D Ontology
+      splats.py            # splat_inspect, splat_chunk (optional numpy)
       prompts.py           # MCP prompts for guided workflows
     x3d_utils/
       scene.py             # Scene graph state management
@@ -186,9 +187,12 @@ x3d_mcp/
       tooltips.py          # X3D-Edit tooltip overlay for enriched descriptions
       ontology.py          # rdflib loader for the X3D Ontology
       source.py            # Inline-content / file-path input resolver
+    transfer/              # Blob store and routes (blobs.py, routes.py); SPZ/PLY readers, chunker, inspector (spz.py, ply.py, chunk.py, inspect_splats.py)
     validation/
       validate.py          # XSD + JSON validation pipeline
       semantic.py          # Layer 4 semantic checks (DEF/USE, ROUTE validity, containerField, naming, ...)
+      oversize.py          # What validate_xml does when libxml2's 10 MB start-tag limit stops a scene
+      splat_arrays.py      # Vectorised GaussianSplats array checks for that case
       autofix.py           # containerField autofixer
       schemas/             # Bundled x3d-4.1.xsd, x3d-4.1.dtd, X3DUOM 4.1, X3dOntology4.0.ttl
   dataset/
@@ -250,7 +254,8 @@ x3d_mcp/
 
 | Tool | Description |
 |------|-------------|
-| `convert_x3d` | Convert X3D between encodings: xml, json, vrml. Uses x3d.py native serialization. |
+| `convert_x3d` | Convert X3D between encodings. Reads xml or json (the X3D JSON encoding, as in `x3d-4.0-JSONSchema.json`) and writes xml, json or vrml. XML input goes through x3d.py, which can drop elements it has no class for; JSON input is converted to XML by the server's own writer, which keeps the scene as written (vrml is refused, naming the elements, when x3d.py would drop any). Takes `blob_id` and `return_mode` (see `docs/transfer-layer.md`). |
+| `x3d_generation_schema` | A strict, small JSON Schema (about 30 to 50 KB for a profile) for generating a scene as JSON under a provider's schema-constrained decoding: closed objects, real field names, enumerated values, vector lengths. A first filter only: convert with `convert_x3d(from_encoding="json")`, then `validate_x3d` and `validate_semantic` decide. |
 
 ### Query Tools
 
@@ -304,6 +309,28 @@ Operate on serialized X3D content (file path or inline XML) and return the modif
 | `modify_x3d_node` | Update one or more attribute values on a DEF'd node. Field changes passed as a JSON object string. Adapted from [niknarra/x3d-mcp](https://github.com/niknarra/x3d-mcp). |
 | `remove_x3d_node` | Remove a node and its children. Identify by DEF name or by node type plus index. |
 | `move_x3d_node` | Reparent a DEF'd node. Empty `new_parent_def` moves it to the Scene root. Rejects moves that would create a cycle. |
+
+### Blob Tools
+
+For documents too large to pass through the model (a 10 MB scene, a splat file). Store the bytes once, then name them with `blob_id` on `validate_x3d`, `validate_semantic`, `autofix_x3d`, `repair_x3d`, `convert_x3d` and the three scene manipulation tools; add `return_mode="summary"` or `"blob"` to get a digest or a new id back instead of the document. On by default under stdio; over HTTP only when `X3D_MCP_BLOB_TOKEN` is set. See [docs/transfer-layer.md](docs/transfer-layer.md).
+
+| Tool | Description |
+|------|-------------|
+| `blob_put` | Store a small document (text, or base64 with an optional gzip/br/zstd stream) and return its `blob_id`, the SHA-256 of the content. Larger files go to `PUT /blob` over HTTP, or `path=` under stdio. |
+| `blob_info` | Size, stored size, media type, expiry and a text preview of a stored blob. |
+| `blob_read` | A window of a blob's bytes, paged with `offset` / `length`. |
+| `blob_delete` | Drop a blob now (blobs also expire on their own). |
+
+### Splat Tools
+
+Gaussian splat files are 5 to 65 MB and one `GaussianSplats` node cannot be validated past roughly 75,000 to 100,000 splats, fewer with spherical harmonics (libxml2's 10 MB start-tag limit), so they are read on the server and never pass through the model. Both tools take `path` (stdio only) or `blob_id`; they need numpy (`pip install 'x3d-mcp[splat]'`) and are not registered without it. See [docs/splats.md](docs/splats.md).
+
+| Tool | Description |
+|------|-------------|
+| `splat_inspect` | Report on an SPZ (v2, v3, v4), a binary 3DGS PLY or an X3D text scene: count, SH degree, bounding box, statistics, memory estimates, how many chunks X3D validation needs, and an ok / suspect / unusable verdict with a reason per finding. About half a second for 500,000 splats; builds no XML. |
+| `splat_chunk` | Cut the cloud into compact spatial chunks and write an envelope: `scene.x3d` (Inline nodes), `chunks/cNNN.x3d` (each valid, under 8 MB of start tag) and `manifest.json` with sha256 digests. Files go to the blob store (a file's blob id is its sha256) or, under stdio, to `out_dir`. The answer lists ids and sizes, never contents. |
+
+`validate_x3d` on a scene that is still too big answers `verdict: "not-checkable-at-this-size"` with an array-level check and a structure check, instead of `XML parse error`.
 
 ### Animation Tools
 
@@ -410,6 +437,7 @@ Full node reference: [docs/x3d-node-reference.md](docs/x3d-node-reference.md)
 | `xmlschema` | >=4.3 | Pure-Python XSD validation (fallback) |
 | `jsonschema` | >=4.26 | JSON Schema validation for X3D JSON encoding |
 | `rdflib` | >=7.0 | SPARQL queries over the bundled X3D Ontology |
+| `numpy`, `zstandard` | >=1.26, >=0.23 (optional `[splat]` extra) | Reading SPZ and PLY splat files (`splat_inspect`, `splat_chunk`); `zstandard` is for SPZ version 4 |
 | `playwright` | >=1.40 (optional `[render]` extra) | Headless Chromium for `render_image` / `render_current_scene` |
 | X\_ITE | 16.4.3, pinned, loaded from jsDelivr at render time | WebGL engine behind `render_image`; set `X3D_MCP_XITE_JS` to a locally served `x_ite.min.js` for offline use (see Rendering offline) |
 
@@ -449,6 +477,8 @@ The test container mounts `src/` and `tests/` from the host. Logs are written to
 | [docs/x3d-tools-and-references.md](docs/x3d-tools-and-references.md) | URLs for schemas, DTDs, X3DUOM, validators, viewers, converters, libraries |
 | [docs/x3d-validation-strategy.md](docs/x3d-validation-strategy.md) | Validation approach: X3DUOM parsing, XSD, Schematron, containerField rules |
 | [docs/ecosystem-research.md](docs/ecosystem-research.md) | Survey of existing tools, Python vs TypeScript analysis, community resources |
+| [docs/transfer-layer.md](docs/transfer-layer.md) | Large scenes: the blob store, `/blob` upload routes, `blob_id` / `return_mode` on the tools, operator settings |
+| [docs/splats.md](docs/splats.md) | Gaussian splats: `splat_inspect`, `splat_chunk`, the chunked envelope, the oversize verdict of `validate_x3d`, limits, what was and was not verified |
 
 ## External References
 

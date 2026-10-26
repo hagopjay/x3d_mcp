@@ -15,6 +15,8 @@ and nothing is generated from it.
 | [x3d-examples.md](x3d-examples.md) | Worked example scenes |
 | [x3d-tools-and-references.md](x3d-tools-and-references.md) | Browsers, converters, specifications |
 | [ecosystem-research.md](ecosystem-research.md) | The wider ecosystem the server sits in |
+| [transfer-layer.md](transfer-layer.md) | Moving large scenes in and out without the model: the blob store, `/blob` routes, `blob_id` and `return_mode`, settings, security |
+| [splats.md](splats.md) | Gaussian splat files: `splat_inspect`, `splat_chunk`, the chunked envelope, the oversize verdict of `validate_x3d`, settings, limits, what was verified |
 
 ## The Accountability Playground
 
