@@ -16,6 +16,8 @@ from pathlib import Path
 
 import rdflib
 
+from x3d_utils.ontology_guard import check_node_type
+
 
 SCHEMAS_DIR = Path(__file__).resolve().parent.parent / "validation" / "schemas"
 ONTOLOGY_PATH = SCHEMAS_DIR / "X3dOntology4.0.ttl"
@@ -133,7 +135,7 @@ class X3DOntology:
     def graph(self) -> rdflib.Graph:
         return self._graph
 
-    def query(self, sparql: str, include_extensions: bool = False) -> list[dict]:
+    def query(self, sparql: str, include_extensions: bool = False, fold_blank: bool = False) -> list[dict]:
         """Run a SPARQL SELECT/ASK query, prepending standard prefixes.
 
         With `include_extensions`, the query runs over the union of the bundled
@@ -141,6 +143,9 @@ class X3DOntology:
 
         Returns a list of {variable: value} dicts for SELECT, or a single
         {"ask": bool} dict for ASK.
+
+        With `fold_blank`, a blank node renders as "_:blank" instead of its random label, so the same
+        query gives the same rows on every run (the label is never needed to join, only to display).
         """
         graph = self._graph
         if include_extensions and len(self._extensions):
@@ -153,7 +158,7 @@ class X3DOntology:
             row = {}
             for var in result.vars:
                 value = binding[var]
-                row[str(var)] = self._render(value)
+                row[str(var)] = "_:blank" if fold_blank and isinstance(value, rdflib.BNode) else self._render(value)
             rows.append(row)
         return rows
 
@@ -163,7 +168,11 @@ class X3DOntology:
         Walks properties that are subproperties of x3d:hasChild whose
         rdfs:range subsumes the node type, reporting each property's
         rdfs:domain as a candidate parent.
+
+        `node_type` goes into the query text, so it must be a plain name; anything else
+        is refused with ValueError (QueryRefused) before a query is built.
         """
+        check_node_type(node_type)
         sparql = """
 SELECT DISTINCT ?parent ?field WHERE {
   ?field rdfs:subPropertyOf+ x3d:hasChild ;

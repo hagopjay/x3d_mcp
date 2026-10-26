@@ -42,7 +42,7 @@ _real_stdout = sys.stdout
 sys.stdout = sys.stderr
 from tools import (
     workflow, granular, convert, query, validate_tool, render, scene_ops, animate,
-    prompts, semantics,
+    claims as claim_tools, prompts, semantics,
 )
 from tools import transfer as blob_tools
 from tools import splats as splat_tools
@@ -133,6 +133,7 @@ scene_ops.register(mcp)
 animate.register(mcp)
 prompts.register(mcp)
 semantics.register(mcp)
+claim_tools.register(mcp)
 
 if _SPLATS:
     splat_tools.register(mcp)
