@@ -1,0 +1,23 @@
+{
+ "model": "gemini-2.5-flash-lite",
+ "cases": 60,
+ "calls": 132,
+ "log": "evaluation/exact_fix/model_runs/gemini-2.5-flash-lite-20261029T233617.jsonl",
+ "E_valid_round1": 53,
+ "E_valid_final": 57,
+ "E_kept_shapes": 60,
+ "H_valid_round1": 55,
+ "H_valid_final": 58,
+ "H_kept_shapes": 60,
+ "H_vs_E_valid_r1": {
+  "gained": 3,
+  "lost": 1,
+  "mcnemar_p": 0.625
+ },
+ "H_vs_E_valid": {
+  "gained": 1,
+  "lost": 0,
+  "mcnemar_p": 1.0
+ },
+ "spent": 15.280766
+}
