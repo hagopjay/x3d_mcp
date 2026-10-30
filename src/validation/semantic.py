@@ -986,6 +986,288 @@ def _check_rigid_body_physics(scene: etree._Element) -> list[Diagnostic]:
     return diagnostics
 
 
+def _check_undeclared_protos(scene: etree._Element) -> list[Diagnostic]:
+    """A ProtoInstance must name a ProtoDeclare or ExternProtoDeclare in the same file (19775-1 4.4.4).
+
+    Browsers drop an instance of an unknown prototype, usually with only a console
+    message, so whatever it was meant to draw is missing. XSD cannot see this
+    because the name is a plain string.
+    """
+    declared = {el.get("name") for el in scene.getroottree().iter()
+                if _local_tag(el) in ("ProtoDeclare", "ExternProtoDeclare")}
+    diagnostics: list[Diagnostic] = []
+    for el in scene.iter():
+        if _local_tag(el) != "ProtoInstance" or el.get("USE"):
+            continue
+        name = el.get("name")
+        if name and name not in declared:
+            diagnostics.append(Diagnostic(
+                level="error", check="proto-undeclared",
+                message=f"ProtoInstance name={name!r} has no ProtoDeclare or ExternProtoDeclare "
+                        f"in this file. Declare the prototype (or an ExternProtoDeclare pointing "
+                        f"at it) before the instance.",
+                node_tag="ProtoInstance", def_name=el.get("DEF", "")))
+    return diagnostics
+
+
+def _check_field_values(scene: etree._Element) -> list[Diagnostic]:
+    """Field values the spec restricts but the XSD lets through.
+
+    - SFRotation with a zero axis and a non-zero angle: the axis must be a
+      normalized vector (19775-1 5.3.14), so the rotation is undefined.
+    - TimeSensor cycleInterval is (0,inf) in 19775-1 8.4.1 but the XSD allows 0, so 0 is a warning.
+    - Box size, and Sphere, Cylinder and Cone radii and heights, must be greater than 0.
+    - A few enumerated strings that browsers silently fall back on when misspelt.
+    """
+    uom = get_x3duom()
+    nodes, types = uom.get_concrete_nodes(), uom.get_field_types()
+    diagnostics: list[Diagnostic] = []
+
+    def add(tag, el, check, msg, level="error"):
+        diagnostics.append(Diagnostic(level=level, check=check,
+                                      message=f"{tag}{_label(el)} {msg}", node_tag=tag,
+                                      def_name=el.get("DEF", "")))
+
+    for el in scene.iter():
+        tag = _local_tag(el)
+        if tag not in nodes or el.get("USE"):
+            continue
+        fields = _node_field_map(tag, nodes)
+        for name, value in el.attrib.items():
+            if fields.get(name, {}).get("type") != "SFRotation":
+                continue
+            v = _floats(value)
+            if len(v) == 4 and abs(v[3]) > 1e-9 and v[0] ** 2 + v[1] ** 2 + v[2] ** 2 < 1e-12:
+                add(tag, el, "rotation-zero-axis",
+                    f"{name}={value!r} turns {v[3]} radians about a zero-length axis, which is "
+                    f"undefined. Give a unit axis, or use '0 0 1 0' for no rotation.")
+        if tag == "TimeSensor" and el.get("cycleInterval") is not None:
+            v = _floats(el.get("cycleInterval"))
+            if v and v[0] <= 0:   # warning: the spec says (0,inf), the XSD and X3DUOM allow 0
+                add(tag, el, "cycle-interval-zero",
+                    f"cycleInterval={el.get('cycleInterval')!r}: 19775-1 gives the range as greater "
+                    f"than 0, so the sensor never completes a cycle (the schema itself allows 0).",
+                    level="warning")
+        for name in _POSITIVE.get(tag, ()):
+            if el.get(name) is None:
+                continue
+            v = _floats(el.get(name))
+            if v and min(v) <= 0:
+                add(tag, el, "value-out-of-range",
+                    f"{name}={el.get(name)!r} must be greater than 0.")
+        for name, allowed in _ENUMS.get(tag, {}).items():
+            if el.get(name) is None:
+                continue
+            raw = el.get(name)
+            vals = re.findall(r'"([^"]*)"', raw) if fields.get(name, {}).get("type") == "MFString" else [raw.strip()]
+            bad = [x for x in vals if x not in allowed]
+            if bad:
+                add(tag, el, "enum-invalid",
+                    f"{name} value {bad[0]!r} is not one of {', '.join(sorted(a for a in allowed if a))}.")
+    return diagnostics
+
+
+_POSITIVE = {"Box": ("size",), "Sphere": ("radius",), "Cylinder": ("radius", "height"),
+             "Cone": ("bottomRadius", "height")}
+_BOUNDARY = {"CLAMP", "CLAMP_TO_EDGE", "CLAMP_TO_BOUNDARY", "MIRRORED_REPEAT", "REPEAT"}
+_ENUMS = {
+    "Fog": {"fogType": {"LINEAR", "EXPONENTIAL"}},
+    "LocalFog": {"fogType": {"LINEAR", "EXPONENTIAL"}},
+    "NavigationInfo": {"transitionType": {"TELEPORT", "LINEAR", "ANIMATE"}},
+    "FontStyle": {"justify": {"BEGIN", "END", "FIRST", "MIDDLE", ""},
+                  "style": {"PLAIN", "BOLD", "ITALIC", "BOLDITALIC", ""}},
+    "ScreenFontStyle": {"justify": {"BEGIN", "END", "FIRST", "MIDDLE", ""},
+                        "style": {"PLAIN", "BOLD", "ITALIC", "BOLDITALIC", ""}},
+    "TextureProperties": {"boundaryModeS": _BOUNDARY, "boundaryModeT": _BOUNDARY, "boundaryModeR": _BOUNDARY},
+}
+
+
+def _label(el: etree._Element) -> str:
+    return f" (DEF={el.get('DEF')!r})" if el.get("DEF") else ""
+
+
+_INDEXED = {"IndexedFaceSet": "coordIndex", "IndexedLineSet": "coordIndex",
+            "IndexedTriangleSet": "index", "IndexedTriangleFanSet": "index",
+            "IndexedTriangleStripSet": "index", "IndexedQuadSet": "index"}
+
+
+def _check_index_bounds(scene: etree._Element) -> list[Diagnostic]:
+    """Every coordIndex / index entry must point at an existing coordinate (19775-1 11.2.1, 13.3).
+
+    An index past the end draws garbage or nothing, depending on the browser, and the
+    XSD only checks that the numbers are integers. -1 is the face separator in the
+    coordIndex fields; any other negative index is also an error.
+    """
+    defs = {el.get("DEF"): el for el in scene.getroottree().iter()
+            if isinstance(el.tag, str) and el.get("DEF")}
+    diagnostics: list[Diagnostic] = []
+    for el in scene.iter():
+        tag = _local_tag(el)
+        field = _INDEXED.get(tag)
+        if not field or el.get("USE") or el.get(field) is None:
+            continue
+        coord = None
+        for child in el:
+            if _local_tag(child) in ("Coordinate", "CoordinateDouble") and \
+                    child.get("containerField", "coord") == "coord":
+                coord = defs.get(child.get("USE")) if child.get("USE") else child
+                break
+        if coord is None or coord.get("point") is None:
+            continue
+        n_points = _count(coord.get("point")) // 3
+        try:
+            idx = [int(x) for x in re.split(r"[\s,]+", el.get(field).strip()) if x]
+        except ValueError:
+            continue
+        sep_ok = field == "coordIndex"
+        bad = [i for i in idx if i >= n_points or (i < 0 and not (sep_ok and i == -1))]
+        if bad:
+            diagnostics.append(Diagnostic(
+                level="error", check="index-out-of-range",
+                message=f"{tag}{_label(el)} {field} uses {bad[0]} but the coordinate node has "
+                        f"{n_points} point(s) (valid 0 to {n_points - 1}"
+                        f"{', -1 ends a face' if sep_ok else ''}); {len(bad)} bad entr"
+                        f"{'y' if len(bad) == 1 else 'ies'}.",
+                node_tag=tag, def_name=el.get("DEF", "")))
+    return diagnostics
+
+
+def _child_node(el: etree._Element, tags: tuple, field: str, defs: dict) -> etree._Element | None:
+    """The child node in `field` (by containerField) with one of `tags`, resolving USE."""
+    for child in el:
+        if isinstance(child.tag, str) and _local_tag(child) in tags and child.get("containerField", field) == field:
+            return defs.get(child.get("USE")) if child.get("USE") else child
+    return None
+
+
+# (index field, child tags, child containerField, values per entry, attribute holding the values,
+#  per-vertex flag that allows -1 separators)
+_ATTR_INDICES = {
+    "IndexedFaceSet": [("texCoordIndex", ("TextureCoordinate",), "texCoord", 2, "point", None),
+                       ("colorIndex", ("Color", "ColorRGBA"), "color", None, "color", "colorPerVertex"),
+                       ("normalIndex", ("Normal",), "normal", 3, "vector", "normalPerVertex")],
+    "IndexedLineSet": [("colorIndex", ("Color", "ColorRGBA"), "color", None, "color", "colorPerVertex")],
+}
+
+
+def _check_attribute_index_bounds(scene: etree._Element) -> list[Diagnostic]:
+    """texCoordIndex, colorIndex and normalIndex must point at existing values (19775-1 13.3.6, 11.3.3).
+
+    The same rule as coordIndex, for the per-vertex attributes. The XSD only checks that the
+    numbers are integers. -1 separates faces or polylines when the attribute is per vertex.
+    """
+    defs = {el.get("DEF"): el for el in scene.getroottree().iter()
+            if isinstance(el.tag, str) and el.get("DEF")}
+    diagnostics: list[Diagnostic] = []
+    for el in scene.iter():
+        tag = _local_tag(el)
+        if tag not in _ATTR_INDICES or el.get("USE"):
+            continue
+        for field, kids, cfield, per, values, per_vertex in _ATTR_INDICES[tag]:
+            if not el.get(field, "").strip():
+                continue
+            node = _child_node(el, kids, cfield, defs)
+            if node is None or node.get(values) is None:
+                continue
+            width = per or (4 if _local_tag(node) == "ColorRGBA" else 3)
+            n = _count(node.get(values)) // width
+            try:
+                idx = [int(x) for x in re.split(r"[\s,]+", el.get(field).strip()) if x]
+            except ValueError:
+                continue
+            # -1 separates faces in per-vertex lists; exporters also write it in per-face lists, which
+            # browsers skip, so only an index past the end or below -1 is reported.
+            sep_ok = True
+            bad = [i for i in idx if i >= n or i < -1]
+            if bad:
+                diagnostics.append(Diagnostic(
+                    level="error", check="index-out-of-range",
+                    message=f"{tag}{_label(el)} {field} uses {bad[0]} but the {_local_tag(node)} node has "
+                            f"{n} value(s) (valid 0 to {n - 1}, -1 as a separator); "
+                            f"{len(bad)} bad entr{'y' if len(bad) == 1 else 'ies'}.",
+                    node_tag=tag, def_name=el.get("DEF", "")))
+    return diagnostics
+
+
+def _check_array_counts(scene: etree._Element) -> list[Diagnostic]:
+    """Array lengths the spec ties together, which the XSD cannot see.
+
+    - ElevationGrid: height has xDimension x zDimension values (19775-1 13.3.4).
+    - IndexedTriangleSet: index count is a multiple of 3 (11.3.6).
+    - Background, TextureBackground: skyColor has one more colour than skyAngle, and groundColor one
+      more than groundAngle when groundAngle is set (24.2.1). Too few is an error; extra colours are
+      unused and only warned about.
+    - LOD: range values increase (25.3.3).
+    """
+    diagnostics: list[Diagnostic] = []
+
+    def err(el, check, msg, level="error"):
+        diagnostics.append(Diagnostic(level=level, check=check, message=f"{_local_tag(el)}{_label(el)} {msg}",
+                                      node_tag=_local_tag(el), def_name=el.get("DEF", "")))
+
+    for el in scene.iter():
+        if not isinstance(el.tag, str) or el.get("USE"):
+            continue
+        tag = _local_tag(el)
+        if tag == "ElevationGrid" and el.get("height") is not None:
+            try:
+                x, z = int(el.get("xDimension", "0")), int(el.get("zDimension", "0"))
+            except ValueError:
+                continue
+            n = _count(el.get("height"))
+            if n != x * z:
+                err(el, "array-count", f"height has {n} value(s) but xDimension x zDimension = {x} x {z} = {x * z}.")
+        elif tag == "IndexedTriangleSet" and el.get("index"):
+            n = _count(el.get("index"))
+            if n % 3:
+                err(el, "array-count", f"index has {n} entries, not a multiple of 3; the last "
+                                       f"{n % 3} do not make a triangle.")
+        elif tag in ("Background", "TextureBackground"):
+            for angle, color, default in (("skyAngle", "skyColor", "0 0 0"), ("groundAngle", "groundColor", "")):
+                a = _count(el.get(angle, ""))
+                if a == 0 and angle == "groundAngle":
+                    continue
+                c = _count(el.get(color, default)) // 3
+                if c < a + 1:
+                    err(el, "array-count", f"{color} has {c} colour(s) but {angle} has {a} angle(s); "
+                                           f"{color} needs {a + 1} (one more than {angle}).")
+                elif c > a + 1:   # extra colours are unused, not broken
+                    err(el, "array-count-extra", f"{color} has {c} colour(s) but {angle} has {a} angle(s); "
+                                                 f"only the first {a + 1} are used.", level="warning")
+        elif tag == "LOD" and el.get("range"):
+            r = _floats(el.get("range"))
+            drops = [i for i in range(1, len(r)) if r[i] < r[i - 1]]
+            if drops:
+                i = drops[0]
+                err(el, "lod-range-order", f"range is not increasing: range[{i - 1}]={r[i - 1]} is followed "
+                                           f"by range[{i}]={r[i]}. Each switch distance must be larger than the last.")
+    return diagnostics
+
+
+def _check_interpolator_key_order(scene: etree._Element) -> list[Diagnostic]:
+    """Interpolator and sequencer keys must be non-decreasing (19775-1 19.2.2, 30.2).
+
+    Out-of-order keys make the interpolation between them undefined; browsers
+    typically jump or freeze. The XSD sees only a list of floats.
+    """
+    diagnostics: list[Diagnostic] = []
+    for el in scene.iter():
+        tag = _local_tag(el)
+        if not (tag.endswith("Interpolator") or tag.endswith("Sequencer")) or el.get("key") is None:
+            continue
+        k = _floats(el.get("key"))
+        drops = [i for i in range(1, len(k)) if k[i] < k[i - 1]]
+        if drops:
+            i = drops[0]
+            diagnostics.append(Diagnostic(
+                level="error", check="interpolator-key-order",
+                message=f"{tag}{_label(el)} key is not in increasing order: key[{i - 1}]={k[i - 1]} "
+                        f"is followed by key[{i}]={k[i]}. Sort the keys and their keyValue "
+                        f"entries together.",
+                node_tag=tag, def_name=el.get("DEF", "")))
+    return diagnostics
+
+
 _ALL_CHECKS = [
     _check_duplicate_defs,
     _check_def_use_consistency,
@@ -1001,6 +1283,12 @@ _ALL_CHECKS = [
     _check_dead_boolean_routes,
     _check_rigid_body_physics,
     _check_missing_viewpoint,
+    _check_undeclared_protos,
+    _check_field_values,
+    _check_index_bounds,
+    _check_interpolator_key_order,
+    _check_attribute_index_bounds,
+    _check_array_counts,
 ]
 
 

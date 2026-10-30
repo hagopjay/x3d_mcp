@@ -662,3 +662,142 @@ def test_physics_non_finite_field(attr, value):
 def test_physics_non_finite_in_collection_attribute():
     assert "physics-non-finite" in _checks(validate_semantic(
         _rbc("<RigidBody DEF='B1'/>", attrs="gravity='0 nan 0'")))
+
+
+# ---- Spec value checks found by the data-spine mutation sweep (spine-mut v1) ----
+
+def test_undeclared_proto_instance_flagged():
+    assert "proto-undeclared" in validate_semantic(_wrap('<ProtoInstance name="Nowhere"/>'))
+
+
+def test_declared_and_extern_protos_not_flagged():
+    xml = _wrap(_PROTO + '<ExternProtoDeclare name="Far" url=\'"far.x3d#Far"\'/>'
+                '<ProtoInstance name="MyBox"/><ProtoInstance name="Far"/>')
+    assert "proto-undeclared" not in validate_semantic(xml)
+
+
+def test_zero_axis_rotation_flagged_only_with_an_angle():
+    assert "rotation-zero-axis" in validate_semantic(_wrap('<Transform rotation="0 0 0 1.57"><Group/></Transform>'))
+    assert "rotation-zero-axis" not in validate_semantic(_wrap('<Transform rotation="0 0 0 0"><Group/></Transform>'))
+    assert "rotation-zero-axis" not in validate_semantic(_wrap('<Transform rotation="0 1 0 1.57"><Group/></Transform>'))
+
+
+def test_cycle_interval_zero_is_a_warning():
+    report = validate_semantic(_wrap('<TimeSensor cycleInterval="0"/>'))
+    assert "cycle-interval-zero" in report and "## Errors" not in report
+
+
+@pytest.mark.parametrize("geom", ['<Box size="-1 2 2"/>', '<Sphere radius="0"/>',
+                                  '<Cylinder height="-2"/>', '<Cone bottomRadius="-1"/>'])
+def test_non_positive_sizes_flagged(geom):
+    assert "value-out-of-range" in validate_semantic(_wrap(f'<Shape>{geom}</Shape>'))
+
+
+def test_positive_sizes_ok():
+    assert "value-out-of-range" not in validate_semantic(_wrap('<Shape><Box size="1 2 3"/></Shape><Shape><Sphere radius="0.5"/></Shape>'))
+
+
+@pytest.mark.parametrize("node", ['<Fog fogType="CLOUDY"/>', '<NavigationInfo transitionType=\'"WARP"\'/>',
+                                  '<Shape><Text string=\'"a"\'><FontStyle justify=\'"CENTRE"\'/></Text></Shape>',
+                                  '<TextureProperties boundaryModeS="WRAP"/>'])
+def test_bad_enum_flagged(node):
+    assert "enum-invalid" in validate_semantic(_wrap(node))
+
+
+def test_good_enums_ok():
+    xml = _wrap('<Fog fogType="EXPONENTIAL"/><NavigationInfo transitionType=\'"ANIMATE" "LINEAR"\'/>'
+                '<Shape><Text string=\'"a"\'><FontStyle justify=\'"MIDDLE" "MIDDLE"\' style="BOLD"/></Text></Shape>')
+    assert "enum-invalid" not in validate_semantic(xml)
+
+
+def test_coord_index_past_end_flagged():
+    xml = _wrap('<Shape><IndexedFaceSet coordIndex="0 1 3 -1"><Coordinate point="0 0 0 1 0 0 0 1 0"/>'
+                '</IndexedFaceSet></Shape>')
+    assert "index-out-of-range" in validate_semantic(xml)
+
+
+def test_coord_index_in_range_and_used_coordinate_ok():
+    xml = _wrap('<Shape><IndexedFaceSet coordIndex="0 1 2 -1"><Coordinate DEF="C" point="0 0 0 1 0 0 0 1 0"/>'
+                '</IndexedFaceSet></Shape><Shape><IndexedLineSet coordIndex="2 0 -1"><Coordinate USE="C"/>'
+                '</IndexedLineSet></Shape>')
+    assert "index-out-of-range" not in validate_semantic(xml)
+
+
+def test_triangle_set_index_cannot_use_minus_one():
+    xml = _wrap('<Shape><IndexedTriangleSet index="0 1 -1"><Coordinate point="0 0 0 1 0 0 0 1 0"/>'
+                '</IndexedTriangleSet></Shape>')
+    assert "index-out-of-range" in validate_semantic(xml)
+
+
+def test_interpolator_keys_out_of_order_flagged():
+    # the pattern found in 13 archive H-Anim files: "0 0.76 0.8 0.82 0.87 0.86 1"
+    xml = _wrap('<OrientationInterpolator key="0 0.87 0.86 1" keyValue="0 1 0 0 0 1 0 1 0 1 0 2 0 1 0 3"/>')
+    assert "interpolator-key-order" in validate_semantic(xml)
+
+
+def test_interpolator_repeated_keys_ok():
+    xml = _wrap('<ScalarInterpolator key="0 0.5 0.5 1" keyValue="0 1 2 3"/>')
+    assert "interpolator-key-order" not in validate_semantic(xml)
+
+
+# ---- spine-mut v2 blind spots: attribute indices and tied array counts ----
+
+@pytest.mark.parametrize("ifs", [
+    '<IndexedFaceSet coordIndex="0 1 2 -1" texCoordIndex="0 1 7 -1"><Coordinate point="0 0 0 1 0 0 0 1 0"/>'
+    '<TextureCoordinate point="0 0 1 0 0 1"/></IndexedFaceSet>',
+    '<IndexedFaceSet colorPerVertex="false" coordIndex="0 1 2 -1" colorIndex="4"><Coordinate point="0 0 0 1 0 0 0 1 0"/>'
+    '<Color color="1 0 0"/></IndexedFaceSet>',
+    '<IndexedFaceSet coordIndex="0 1 2 -1" normalIndex="0 0 9 -1"><Coordinate point="0 0 0 1 0 0 0 1 0"/>'
+    '<Normal vector="0 0 1"/></IndexedFaceSet>',
+])
+def test_attribute_index_past_end_flagged(ifs):
+    assert "index-out-of-range" in validate_semantic(_wrap(f"<Shape>{ifs}</Shape>"))
+
+
+def test_attribute_indices_in_range_ok():
+    xml = _wrap('<Shape><IndexedFaceSet coordIndex="0 1 2 -1" texCoordIndex="0 1 2 -1" colorIndex="0 0 1 -1" '
+                'normalIndex="0 0 0 -1"><Coordinate point="0 0 0 1 0 0 0 1 0"/><TextureCoordinate point="0 0 1 0 0 1"/>'
+                '<ColorRGBA color="1 0 0 1 0 1 0 1"/><Normal vector="0 0 1"/></IndexedFaceSet></Shape>'
+                '<Shape><IndexedLineSet coordIndex="0 1 -1" colorIndex="0 0 -1"><Coordinate point="0 0 0 1 0 0"/>'
+                '<Color DEF="K" color="1 1 1"/></IndexedLineSet></Shape>')
+    assert "index-out-of-range" not in validate_semantic(xml)
+
+
+@pytest.mark.parametrize("node", [
+    '<Shape><ElevationGrid xDimension="3" zDimension="3" height="0 0 0 0 1 0 0 0"/></Shape>',
+    '<Shape><IndexedTriangleSet index="0 1 2 0"><Coordinate point="0 0 0 1 0 0 0 1 0"/></IndexedTriangleSet></Shape>',
+    '<Background skyAngle="0.8 1.4" skyColor="0 0 1 0.5 0.5 1"/>',
+    '<Background groundAngle="1.5" groundColor="0.2 0.2 0.2"/>',
+    '<Background skyAngle="1.2" skyColor="0 0 1"/>',
+])
+def test_tied_array_counts_flagged(node):
+    assert "array-count" in validate_semantic(_wrap(node))
+
+
+def test_tied_array_counts_ok():
+    xml = _wrap('<Shape><ElevationGrid xDimension="2" zDimension="2" height="0 1 1 0"/></Shape>'
+                '<Shape><IndexedTriangleSet index="0 1 2"><Coordinate point="0 0 0 1 0 0 0 1 0"/></IndexedTriangleSet></Shape>'
+                '<Background skyAngle="0.8 1.4" skyColor="0 0 1 0.5 0.5 1 1 1 1" groundAngle="1.5" '
+                'groundColor="0.1 0.1 0.1 0.2 0.2 0.2"/><Background/>')
+    assert "array-count" not in validate_semantic(xml)
+
+
+def test_lod_range_decreasing_flagged():
+    assert "lod-range-order" in validate_semantic(_wrap(
+        '<LOD range="50 10"><Shape><Box/></Shape><Shape><Sphere/></Shape><Group/></LOD>'))
+
+
+def test_lod_range_increasing_ok():
+    assert "lod-range-order" not in validate_semantic(_wrap(
+        '<LOD range="10 50"><Shape><Box/></Shape><Shape><Sphere/></Shape><Group/></LOD>'))
+
+
+def test_extra_sky_colours_only_warn():
+    report = validate_semantic(_wrap('<Background skyColor="0 0 1 0.5 0.5 1 1 1 1"/>'))
+    assert "array-count-extra" in report and "[array-count]" not in report
+
+
+def test_per_face_minus_one_tolerated():
+    xml = _wrap('<Shape><IndexedFaceSet normalPerVertex="false" coordIndex="0 1 2 -1" normalIndex="0 -1">'
+                '<Coordinate point="0 0 0 1 0 0 0 1 0"/><Normal vector="0 0 1"/></IndexedFaceSet></Shape>')
+    assert "index-out-of-range" not in validate_semantic(xml)
