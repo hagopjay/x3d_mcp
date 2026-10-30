@@ -319,16 +319,21 @@ def _check_route_validity(scene: etree._Element) -> list[Diagnostic]:
     proto_ifaces = _proto_interfaces(scene)
 
     def_map: dict[str, tuple[etree._Element, str]] = {}
+    imported: set[str] = set()      # IMPORT ... AS names: the node's type is known only once its Inline loads
     for el in scene.iter():
         def_name = el.get("DEF")
         if def_name:
             def_map[def_name] = (el, _local_tag(el))
+        if _local_tag(el) == "IMPORT" and (el.get("AS") or el.get("importedDEF")):
+            imported.add(el.get("AS") or el.get("importedDEF"))
 
     for route in scene.iter("ROUTE"):
         from_node = route.get("fromNode", "")
         from_field = route.get("fromField", "")
         to_node = route.get("toNode", "")
         to_field = route.get("toField", "")
+        if {from_node, to_node} & (imported - def_map.keys()):
+            continue
 
         if from_node not in def_map:
             available = ", ".join(sorted(def_map.keys())) or "(none)"
@@ -986,6 +991,516 @@ def _check_rigid_body_physics(scene: etree._Element) -> list[Diagnostic]:
     return diagnostics
 
 
+def _check_undeclared_protos(scene: etree._Element) -> list[Diagnostic]:
+    """A ProtoInstance must name a ProtoDeclare or ExternProtoDeclare in the same file (19775-1 4.4.4).
+
+    Browsers drop an instance of an unknown prototype, usually with only a console
+    message, so whatever it was meant to draw is missing. XSD cannot see this
+    because the name is a plain string.
+    """
+    declared = {el.get("name") for el in scene.getroottree().iter()
+                if _local_tag(el) in ("ProtoDeclare", "ExternProtoDeclare")}
+    diagnostics: list[Diagnostic] = []
+    for el in scene.iter():
+        if _local_tag(el) != "ProtoInstance" or el.get("USE"):
+            continue
+        name = el.get("name")
+        if name and name not in declared:
+            diagnostics.append(Diagnostic(
+                level="error", check="proto-undeclared",
+                message=f"ProtoInstance name={name!r} has no ProtoDeclare or ExternProtoDeclare "
+                        f"in this file. Declare the prototype (or an ExternProtoDeclare pointing "
+                        f"at it) before the instance.",
+                node_tag="ProtoInstance", def_name=el.get("DEF", "")))
+    return diagnostics
+
+
+def _check_field_values(scene: etree._Element) -> list[Diagnostic]:
+    """Field values the spec restricts but the XSD lets through.
+
+    - SFRotation with a zero axis and a non-zero angle: the axis must be a
+      normalized vector (19775-1 5.3.14), so the rotation is undefined.
+    - TimeSensor cycleInterval is (0,inf) in 19775-1 8.4.1 but the XSD allows 0, so 0 is a warning.
+    - Box size, and Sphere, Cylinder and Cone radii and heights, must be greater than 0.
+    - A few enumerated strings that browsers silently fall back on when misspelt.
+    """
+    uom = get_x3duom()
+    nodes, types = uom.get_concrete_nodes(), uom.get_field_types()
+    diagnostics: list[Diagnostic] = []
+
+    def add(tag, el, check, msg, level="error"):
+        diagnostics.append(Diagnostic(level=level, check=check,
+                                      message=f"{tag}{_label(el)} {msg}", node_tag=tag,
+                                      def_name=el.get("DEF", "")))
+
+    for el in scene.iter():
+        tag = _local_tag(el)
+        if tag not in nodes or el.get("USE"):
+            continue
+        fields = _node_field_map(tag, nodes)
+        for name, value in el.attrib.items():
+            if fields.get(name, {}).get("type") != "SFRotation":
+                continue
+            v = _floats(value)
+            if len(v) == 4 and abs(v[3]) > 1e-9 and v[0] ** 2 + v[1] ** 2 + v[2] ** 2 < 1e-12:
+                add(tag, el, "rotation-zero-axis",
+                    f"{name}={value!r} turns {v[3]} radians about a zero-length axis, which is "
+                    f"undefined. Give a unit axis, or use '0 0 1 0' for no rotation.")
+        if tag == "TimeSensor" and el.get("cycleInterval") is not None:
+            v = _floats(el.get("cycleInterval"))
+            if v and v[0] <= 0:   # warning: the spec says (0,inf), the XSD and X3DUOM allow 0
+                add(tag, el, "cycle-interval-zero",
+                    f"cycleInterval={el.get('cycleInterval')!r}: 19775-1 gives the range as greater "
+                    f"than 0, so the sensor never completes a cycle (the schema itself allows 0).",
+                    level="warning")
+        for name in _POSITIVE.get(tag, ()):
+            if el.get(name) is None:
+                continue
+            v = _floats(el.get(name))
+            if v and min(v) <= 0:
+                add(tag, el, "value-out-of-range",
+                    f"{name}={el.get(name)!r} must be greater than 0.")
+        for name, allowed in _ENUMS.get(tag, {}).items():
+            if el.get(name) is None:
+                continue
+            raw = el.get(name)
+            vals = re.findall(r'"([^"]*)"', raw) if fields.get(name, {}).get("type") == "MFString" else [raw.strip()]
+            bad = [x for x in vals if x not in allowed]
+            if bad:
+                add(tag, el, "enum-invalid",
+                    f"{name} value {bad[0]!r} is not one of {', '.join(sorted(a for a in allowed if a))}.")
+    return diagnostics
+
+
+_POSITIVE = {"Box": ("size",), "Sphere": ("radius",), "Cylinder": ("radius", "height"),
+             "Cone": ("bottomRadius", "height")}
+_BOUNDARY = {"CLAMP", "CLAMP_TO_EDGE", "CLAMP_TO_BOUNDARY", "MIRRORED_REPEAT", "REPEAT"}
+_ENUMS = {
+    "Fog": {"fogType": {"LINEAR", "EXPONENTIAL"}},
+    "LocalFog": {"fogType": {"LINEAR", "EXPONENTIAL"}},
+    "NavigationInfo": {"transitionType": {"TELEPORT", "LINEAR", "ANIMATE"}},
+    "FontStyle": {"justify": {"BEGIN", "END", "FIRST", "MIDDLE", ""},
+                  "style": {"PLAIN", "BOLD", "ITALIC", "BOLDITALIC", ""}},
+    "ScreenFontStyle": {"justify": {"BEGIN", "END", "FIRST", "MIDDLE", ""},
+                        "style": {"PLAIN", "BOLD", "ITALIC", "BOLDITALIC", ""}},
+    "TextureProperties": {"boundaryModeS": _BOUNDARY, "boundaryModeT": _BOUNDARY, "boundaryModeR": _BOUNDARY},
+}
+
+
+def _label(el: etree._Element) -> str:
+    return f" (DEF={el.get('DEF')!r})" if el.get("DEF") else ""
+
+
+_INDEXED = {"IndexedFaceSet": "coordIndex", "IndexedLineSet": "coordIndex",
+            "IndexedTriangleSet": "index", "IndexedTriangleFanSet": "index",
+            "IndexedTriangleStripSet": "index", "IndexedQuadSet": "index"}
+
+
+def _check_index_bounds(scene: etree._Element) -> list[Diagnostic]:
+    """Every coordIndex / index entry must point at an existing coordinate (19775-1 11.2.1, 13.3).
+
+    An index past the end draws garbage or nothing, depending on the browser, and the
+    XSD only checks that the numbers are integers. -1 is the face separator in the
+    coordIndex fields; any other negative index is also an error.
+    """
+    defs = {el.get("DEF"): el for el in scene.getroottree().iter()
+            if isinstance(el.tag, str) and el.get("DEF")}
+    diagnostics: list[Diagnostic] = []
+    for el in scene.iter():
+        tag = _local_tag(el)
+        field = _INDEXED.get(tag)
+        if not field or el.get("USE") or el.get(field) is None:
+            continue
+        coord = None
+        for child in el:
+            if _local_tag(child) in ("Coordinate", "CoordinateDouble") and \
+                    child.get("containerField", "coord") == "coord":
+                coord = defs.get(child.get("USE")) if child.get("USE") else child
+                break
+        if coord is None or coord.get("point") is None:
+            continue
+        n_points = _count(coord.get("point")) // 3
+        try:
+            idx = [int(x) for x in re.split(r"[\s,]+", el.get(field).strip()) if x]
+        except ValueError:
+            continue
+        sep_ok = field == "coordIndex"
+        bad = [i for i in idx if i >= n_points or (i < 0 and not (sep_ok and i == -1))]
+        if bad:
+            diagnostics.append(Diagnostic(
+                level="error", check="index-out-of-range",
+                message=f"{tag}{_label(el)} {field} uses {bad[0]} but the coordinate node has "
+                        f"{n_points} point(s) (valid 0 to {n_points - 1}"
+                        f"{', -1 ends a face' if sep_ok else ''}); {len(bad)} bad entr"
+                        f"{'y' if len(bad) == 1 else 'ies'}.",
+                node_tag=tag, def_name=el.get("DEF", "")))
+    return diagnostics
+
+
+def _child_node(el: etree._Element, tags: tuple, field: str, defs: dict) -> etree._Element | None:
+    """The child node in `field` (by containerField) with one of `tags`, resolving USE."""
+    for child in el:
+        if isinstance(child.tag, str) and _local_tag(child) in tags and child.get("containerField", field) == field:
+            return defs.get(child.get("USE")) if child.get("USE") else child
+    return None
+
+
+# (index field, child tags, child containerField, values per entry, attribute holding the values,
+#  per-vertex flag that allows -1 separators)
+_ATTR_INDICES = {
+    "IndexedFaceSet": [("texCoordIndex", ("TextureCoordinate",), "texCoord", 2, "point", None),
+                       ("colorIndex", ("Color", "ColorRGBA"), "color", None, "color", "colorPerVertex"),
+                       ("normalIndex", ("Normal",), "normal", 3, "vector", "normalPerVertex")],
+    "IndexedLineSet": [("colorIndex", ("Color", "ColorRGBA"), "color", None, "color", "colorPerVertex")],
+}
+
+
+def _check_attribute_index_bounds(scene: etree._Element) -> list[Diagnostic]:
+    """texCoordIndex, colorIndex and normalIndex must point at existing values (19775-1 13.3.6, 11.3.3).
+
+    The same rule as coordIndex, for the per-vertex attributes. The XSD only checks that the
+    numbers are integers. -1 separates faces or polylines when the attribute is per vertex.
+    """
+    defs = {el.get("DEF"): el for el in scene.getroottree().iter()
+            if isinstance(el.tag, str) and el.get("DEF")}
+    diagnostics: list[Diagnostic] = []
+    for el in scene.iter():
+        tag = _local_tag(el)
+        if tag not in _ATTR_INDICES or el.get("USE"):
+            continue
+        for field, kids, cfield, per, values, per_vertex in _ATTR_INDICES[tag]:
+            if not el.get(field, "").strip():
+                continue
+            node = _child_node(el, kids, cfield, defs)
+            if node is None or node.get(values) is None:
+                continue
+            width = per or (4 if _local_tag(node) == "ColorRGBA" else 3)
+            n = _count(node.get(values)) // width
+            try:
+                idx = [int(x) for x in re.split(r"[\s,]+", el.get(field).strip()) if x]
+            except ValueError:
+                continue
+            # -1 separates faces in per-vertex lists; exporters also write it in per-face lists, which
+            # browsers skip, so only an index past the end or below -1 is reported.
+            sep_ok = True
+            bad = [i for i in idx if i >= n or i < -1]
+            if bad:
+                diagnostics.append(Diagnostic(
+                    level="error", check="index-out-of-range",
+                    message=f"{tag}{_label(el)} {field} uses {bad[0]} but the {_local_tag(node)} node has "
+                            f"{n} value(s) (valid 0 to {n - 1}, -1 as a separator); "
+                            f"{len(bad)} bad entr{'y' if len(bad) == 1 else 'ies'}.",
+                    node_tag=tag, def_name=el.get("DEF", "")))
+    return diagnostics
+
+
+def _check_array_counts(scene: etree._Element) -> list[Diagnostic]:
+    """Array lengths the spec ties together, which the XSD cannot see.
+
+    - ElevationGrid: height has xDimension x zDimension values (19775-1 13.3.4).
+    - IndexedTriangleSet: index count is a multiple of 3 (11.3.6).
+    - Background, TextureBackground: skyColor has one more colour than skyAngle, and groundColor one
+      more than groundAngle when groundAngle is set (24.2.1). Too few is an error; extra colours are
+      unused and only warned about.
+    - LOD: range values increase (25.3.3).
+    """
+    diagnostics: list[Diagnostic] = []
+
+    def err(el, check, msg, level="error"):
+        diagnostics.append(Diagnostic(level=level, check=check, message=f"{_local_tag(el)}{_label(el)} {msg}",
+                                      node_tag=_local_tag(el), def_name=el.get("DEF", "")))
+
+    for el in scene.iter():
+        if not isinstance(el.tag, str) or el.get("USE"):
+            continue
+        tag = _local_tag(el)
+        if tag == "ElevationGrid" and el.get("height") is not None:
+            try:
+                x, z = int(el.get("xDimension", "0")), int(el.get("zDimension", "0"))
+            except ValueError:
+                continue
+            n = _count(el.get("height"))
+            if n != x * z:
+                err(el, "array-count", f"height has {n} value(s) but xDimension x zDimension = {x} x {z} = {x * z}.")
+        elif tag == "IndexedTriangleSet" and el.get("index"):
+            n = _count(el.get("index"))
+            if n % 3:
+                err(el, "array-count", f"index has {n} entries, not a multiple of 3; the last "
+                                       f"{n % 3} do not make a triangle.")
+        elif tag in ("Background", "TextureBackground"):
+            for angle, color, default in (("skyAngle", "skyColor", "0 0 0"), ("groundAngle", "groundColor", "")):
+                a = _count(el.get(angle, ""))
+                if a == 0 and angle == "groundAngle":
+                    continue
+                c = _count(el.get(color, default)) // 3
+                if c < a + 1:
+                    err(el, "array-count", f"{color} has {c} colour(s) but {angle} has {a} angle(s); "
+                                           f"{color} needs {a + 1} (one more than {angle}).")
+                elif c > a + 1:   # extra colours are unused, not broken
+                    err(el, "array-count-extra", f"{color} has {c} colour(s) but {angle} has {a} angle(s); "
+                                                 f"only the first {a + 1} are used.", level="warning")
+        elif tag == "LOD" and el.get("range"):
+            r = _floats(el.get("range"))
+            drops = [i for i in range(1, len(r)) if r[i] < r[i - 1]]
+            if drops:
+                i = drops[0]
+                err(el, "lod-range-order", f"range is not increasing: range[{i - 1}]={r[i - 1]} is followed "
+                                           f"by range[{i}]={r[i]}. Each switch distance must be larger than the last.")
+    return diagnostics
+
+
+def _check_interpolator_key_order(scene: etree._Element) -> list[Diagnostic]:
+    """Interpolator and sequencer keys must be non-decreasing (19775-1 19.2.2, 30.2).
+
+    Out-of-order keys make the interpolation between them undefined; browsers
+    typically jump or freeze. The XSD sees only a list of floats.
+    """
+    diagnostics: list[Diagnostic] = []
+    for el in scene.iter():
+        tag = _local_tag(el)
+        if not (tag.endswith("Interpolator") or tag.endswith("Sequencer")) or el.get("key") is None:
+            continue
+        k = _floats(el.get("key"))
+        drops = [i for i in range(1, len(k)) if k[i] < k[i - 1]]
+        if drops:
+            i = drops[0]
+            diagnostics.append(Diagnostic(
+                level="error", check="interpolator-key-order",
+                message=f"{tag}{_label(el)} key is not in increasing order: key[{i - 1}]={k[i - 1]} "
+                        f"is followed by key[{i}]={k[i]}. Sort the keys and their keyValue "
+                        f"entries together.",
+                node_tag=tag, def_name=el.get("DEF", "")))
+    return diagnostics
+
+
+def _name_scope(el: etree._Element) -> etree._Element | None:
+    """The DEF name scope `el` belongs to: its nearest ProtoBody, or None for the scene itself."""
+    for anc in el.iterancestors():
+        if _local_tag(anc) == "ProtoBody":
+            return anc
+    return None
+
+
+def _check_route_order(scene: etree._Element) -> list[Diagnostic]:
+    """A ROUTE must follow the nodes it names, in the same name scope.
+
+    The nodes a ROUTE names must be defined before the ROUTE, and each ProtoBody is a
+    name scope of its own: a ROUTE outside a prototype cannot reach a DEF inside it,
+    nor the other way round. The Web3D X3D Schematron reports "ROUTE precedes target"
+    as an error, and X_ITE warns and drops such a ROUTE. _check_route_validity looks
+    names up anywhere in the file, so it passes both mistakes. An IMPORT ... AS
+    defines its name where the IMPORT is.
+    """
+    first: dict[tuple, etree._Element] = {}     # (scope, name) -> first DEF or IMPORT
+    scopes: dict[str, list] = {}                # name -> scopes that define it
+    position: dict[etree._Element, int] = {}
+    for i, el in enumerate(scene.iter()):
+        position[el] = i
+        tag = _local_tag(el)
+        name = el.get("DEF") or ((el.get("AS") or el.get("importedDEF")) if tag == "IMPORT" else None)
+        if name:
+            scope = _name_scope(el)
+            if (scope, name) not in first:
+                first[(scope, name)] = el
+                scopes.setdefault(name, []).append(scope)
+
+    def scope_label(scope) -> str:
+        if scope is None:
+            return "the Scene"
+        decl = scope.getparent()
+        return f"ProtoDeclare '{decl.get('name', '')}'" if decl is not None else "a ProtoBody"
+
+    diagnostics: list[Diagnostic] = []
+    for route in scene.iter():
+        if _local_tag(route) != "ROUTE":
+            continue
+        scope = _name_scope(route)
+        for attr in ("fromNode", "toNode"):
+            name = route.get(attr, "")
+            target = first.get((scope, name))
+            if target is None:
+                elsewhere = scopes.get(name)
+                if elsewhere:      # missing everywhere is _check_route_validity's to report
+                    diagnostics.append(Diagnostic(
+                        level="error", check="route-out-of-scope",
+                        message=f"ROUTE {attr}='{name}' is in {scope_label(scope)}, but DEF='{name}' is only "
+                                f"defined in {scope_label(elsewhere[0])}. Each ProtoBody is its own name "
+                                f"scope, so this ROUTE cannot reach that node.",
+                        node_tag="ROUTE", def_name=name))
+                continue
+            if position[target] > position[route]:
+                tag = _local_tag(target)
+                where = f" at line {target.sourceline}" if target.sourceline else ""
+                diagnostics.append(Diagnostic(
+                    level="error", check="route-before-def",
+                    message=f"ROUTE {attr}='{name}' comes before DEF='{name}' ({tag}{where}). A ROUTE "
+                            f"must follow the nodes it names; X_ITE drops an early one. Move the ROUTE "
+                            f"after the {tag}, for example to the end of {scope_label(scope)}.",
+                    node_tag="ROUTE", def_name=name))
+    return diagnostics
+
+
+_COLOUR_WIDTH = {"SFColor": 3, "MFColor": 3, "SFColorRGBA": 4, "MFColorRGBA": 4}
+
+
+def _colour_problem(value: str, ftype: str) -> str | None:
+    """Where a colour value leaves 0..1, in words, or None when every component is in range."""
+    v = _floats(value)
+    bad = [i for i, x in enumerate(v) if not 0.0 <= x <= 1.0]   # NaN fails too
+    if not bad:
+        return None
+    width = _COLOUR_WIDTH[ftype]
+    k = bad[0] // width
+    entry = " ".join(f"{x:g}" for x in v[k * width:(k + 1) * width])
+    which = f"colour {k + 1} of {len(v) // width}" if ftype.startswith("MF") else "the colour"
+    return (f"{which} is '{entry}', but each component must be between 0 and 1 ({len(bad)} "
+            f"component{'s' if len(bad) != 1 else ''} out of range). Clamp to 0..1, or divide by "
+            f"255 if the values were written as 0..255")
+
+
+def _check_colour_range(scene: etree._Element) -> list[Diagnostic]:
+    """Colour components must lie in 0..1 (19775-1 5.3.5, 5.3.6).
+
+    The XSD writes this rule as a pattern on the digits, which misses three cases: a list
+    lets '1.5' read as '1.' and '.5' when that lands on a tuple boundary, MFColor and
+    MFColorRGBA allow a minus sign, and an exponent turns '0.5e1' into 5. Past about the
+    twelfth colour of a list, libxml2's pattern engine also gives up on a bad value
+    instead of rejecting it. This check reads the numbers. It covers node fields, the
+    field declarations of Script, shader and prototype interfaces, and ProtoInstance
+    fieldValues.
+    """
+    nodes = get_x3duom().get_concrete_nodes()
+    protos = _proto_interfaces(scene)
+    diagnostics: list[Diagnostic] = []
+
+    def check(el, owner: str, name: str, value: str, ftype: str) -> None:
+        problem = _colour_problem(value, ftype)
+        if problem:
+            diagnostics.append(Diagnostic(
+                level="error", check="colour-out-of-range",
+                message=f"{owner} {name}: {problem}.",
+                node_tag=_local_tag(el), def_name=el.get("DEF", "")))
+
+    for el in scene.iter():
+        tag = _local_tag(el)
+        if tag in ("field", "fieldValue"):
+            value, fname = el.get("value"), el.get("name", "")
+            ftype = el.get("type", "")
+            parent = el.getparent()
+            if tag == "fieldValue" and parent is not None:
+                ftype = protos.get(parent.get("name"), {}).get(fname, {}).get("type", "")
+            if value is not None and ftype in _COLOUR_WIDTH:
+                owner = _local_tag(parent) if parent is not None else tag
+                check(el, f"{owner} {tag}", f"'{fname}'", value, ftype)
+            continue
+        if tag not in nodes or el.get("USE"):
+            continue
+        fields = _node_field_map(tag, nodes)
+        for name, value in el.attrib.items():
+            ftype = fields.get(name, {}).get("type", "")
+            if ftype in _COLOUR_WIDTH:
+                check(el, f"{tag}{_label(el)}", name, value, ftype)
+    return diagnostics
+
+
+# The standard HAnim names are the enumerations of these XSD simple types; each enumeration's
+# appinfo lists its HAnim 1.x aliases (l_wrist for l_radiocarpal, l_ankle for l_talocrural, ...).
+_HANIM_NAME_TYPES = {"HAnimJoint": ("hanimJointNameValues", "joint"),
+                     "HAnimSegment": ("hanimSegmentNameValues", "segment")}
+_HANIM_NAMES: dict[str, dict] = {}
+
+
+def _hanim_names(schema_version: str) -> dict:
+    """{node: (standard names, {alias: standard name})} from the bundled XSD of `schema_version`."""
+    if schema_version not in _HANIM_NAMES:
+        from validation.validate import XSD_PATHS
+        xs = "{http://www.w3.org/2001/XMLSchema}"
+        root = etree.parse(str(XSD_PATHS[schema_version])).getroot()
+        out = {}
+        for node, (type_name, _) in _HANIM_NAME_TYPES.items():
+            st = root.find(f"{xs}simpleType[@name='{type_name}']")
+            names, aliases = set(), {}
+            for enum in (st.iter(f"{xs}enumeration") if st is not None else ()):
+                names.add(enum.get("value"))
+                for a in enum.iter(f"{xs}attribute"):
+                    if a.get("name") == "alias" and a.get("fixed"):
+                        aliases.setdefault(a.get("fixed"), enum.get("value"))
+            out[node] = (frozenset(names), aliases)
+        _HANIM_NAMES[schema_version] = out
+    return _HANIM_NAMES[schema_version]
+
+
+def _check_hanim_names(scene: etree._Element) -> list[Diagnostic]:
+    """HAnim 2 joints and segments should carry the standard names (19774-1 HAnim 2.0).
+
+    Motions and tools find joints by name: an HAnimMotion's joints list, a BVH or
+    mocap retarget, a skin weight table. The XSD types the name as NMTOKEN because the
+    list is open, and keeps the standard names, each with the HAnim 1.x name it
+    replaces, as enumerations; this check reads those. One warning per node names the
+    fix when the name is a 1.x name (l_wrist for l_radiocarpal), a standard name with
+    a prefix (hanim_l_hip), or one in other case or spacing (HumanoidRoot). Other names
+    outside the list are summed up once per humanoid: a warning for joints, which
+    motions bind to, and an info for segments, where extra names are common. The Web3D
+    X3D Schematron warns on the same names. In X3D 4 a humanoid without a version is
+    HAnim 2.0 (the X3DUOM default); in X3D 3 only an explicit 2.0 or 2.1 is checked.
+    """
+    from validation.validate import resolve_xsd_version
+    root = scene.getparent() if scene.getparent() is not None else scene
+    x3d_version = (root.get("version") or "").strip()
+    standard = _hanim_names(resolve_xsd_version(x3d_version or None)[0])
+    folded = {tag: {n.replace("_", "").lower(): n for n in names} for tag, (names, _) in standard.items()}
+    diagnostics: list[Diagnostic] = []
+    seen: set = set()
+    for humanoid in scene.iter():
+        if _local_tag(humanoid) != "HAnimHumanoid" or humanoid.get("USE"):
+            continue
+        version = humanoid.get("version") or ("1.0" if x3d_version.startswith("3") else "2.0")
+        if version not in ("2.0", "2.1"):
+            continue
+        others: dict[str, list[str]] = {tag: [] for tag in standard}
+        for el in humanoid.iter():
+            tag = _local_tag(el)
+            name = el.get("name")
+            if tag not in standard or el.get("USE") or not name or el in seen:
+                continue
+            seen.add(el)
+            names, aliases = standard[tag]
+            if name in names:
+                continue
+            kind = _HANIM_NAME_TYPES[tag][1]
+            stem = next((name[i + 1:] for i, c in enumerate(name)
+                         if c == "_" and (name[i + 1:] in names or name[i + 1:] in aliases)), None)
+            if name in aliases:
+                fix, why = aliases[name], f"is the HAnim 1.x name; HAnim {version} calls this {kind} '{aliases[name]}'"
+            elif stem is not None:
+                fix = aliases.get(stem, stem)
+                why = f"carries a prefix, and HAnim {version} names this {kind} '{fix}' (a prefix belongs on the DEF)"
+            elif name.replace("_", "").lower() in folded[tag]:
+                fix = folded[tag][name.replace("_", "").lower()]
+                why = f"differs from the HAnim {version} {kind} name '{fix}' in case or underscores"
+            else:
+                others[tag].append(name)
+                continue
+            diagnostics.append(Diagnostic(
+                level="warning", check=f"hanim-{kind}-name",
+                message=f"{tag}{_label(el)} name='{name}' {why}. Rename it to '{fix}' so motions and "
+                        f"tools that look {kind}s up by name find it.",
+                node_tag=tag, def_name=el.get("DEF", "")))
+        for tag, extra in others.items():
+            if not extra:
+                continue
+            kind = _HANIM_NAME_TYPES[tag][1]
+            shown = ", ".join(extra[:6]) + (f" and {len(extra) - 6} more" if len(extra) > 6 else "")
+            diagnostics.append(Diagnostic(
+                level="warning" if tag == "HAnimJoint" else "info", check=f"hanim-{kind}-name",
+                message=f"HAnimHumanoid{_label(humanoid)} has {len(extra)} {kind} name"
+                        f"{'s' if len(extra) != 1 else ''} outside the {len(standard[tag][0])} HAnim "
+                        f"{version} names: {shown}. Tools that bind {kind}s by their standard name "
+                        f"skip these; use a standard name wherever one fits.",
+                node_tag="HAnimHumanoid", def_name=humanoid.get("DEF", "")))
+    return diagnostics
+
+
 _ALL_CHECKS = [
     _check_duplicate_defs,
     _check_def_use_consistency,
@@ -1001,6 +1516,15 @@ _ALL_CHECKS = [
     _check_dead_boolean_routes,
     _check_rigid_body_physics,
     _check_missing_viewpoint,
+    _check_undeclared_protos,
+    _check_field_values,
+    _check_index_bounds,
+    _check_interpolator_key_order,
+    _check_attribute_index_bounds,
+    _check_array_counts,
+    _check_route_order,
+    _check_colour_range,
+    _check_hanim_names,
 ]
 
 

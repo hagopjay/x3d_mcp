@@ -151,3 +151,23 @@ def test_mcp_exact_fix_hints_tool():
 def test_existing_tool_output_is_unchanged():
     bad = BASE.replace("<Box/></Shape>", "</Shape><Box/>")
     assert json.loads(_call("validate_x3d", content=bad)) == validate_xml(bad)
+
+
+def test_route_before_def_hint_moves_the_route_and_repair_passes():
+    doc = BASE.replace(ROUTE1 + "\n", "").replace("<Scene>\n", "<Scene>\n  " + ROUTE1 + "\n")
+    g = gate(doc)
+    assert not g["valid"] and any("route-before-def" in e for e in g["errors"])
+    hint = next(h for h in g["hints"] if h["check"] == "route-before-def")
+    assert hint["suggested_fix"]["op"] == "move" and hint["suggested_fix"]["to_path"] == "/X3D/Scene"
+    assert repair_with_hints(doc)["valid"]
+
+
+def test_colour_hint_for_a_value_the_xsd_lets_through():
+    doc = BASE.replace('<Box/></Shape></Transform>',
+                       '<Box/></Shape></Transform><Background skyColor="0 0 0 -0.2 0.5 0.5" skyAngle="1"/>')
+    assert validate_xml(doc)["valid"]             # the MFColor pattern allows the minus sign
+    g = gate(doc)
+    assert not g["valid"] and any("colour-out-of-range" in e for e in g["errors"])
+    hint = next(h for h in g["hints"] if h["check"] == "colour-out-of-range")
+    assert hint["suggested_fix"]["value"] == "0 0 0 0 0.5 0.5"
+    assert repair_with_hints(doc)["valid"]

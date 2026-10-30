@@ -662,3 +662,258 @@ def test_physics_non_finite_field(attr, value):
 def test_physics_non_finite_in_collection_attribute():
     assert "physics-non-finite" in _checks(validate_semantic(
         _rbc("<RigidBody DEF='B1'/>", attrs="gravity='0 nan 0'")))
+
+
+# ---- Spec value checks found by the data-spine mutation sweep (spine-mut v1) ----
+
+def test_undeclared_proto_instance_flagged():
+    assert "proto-undeclared" in validate_semantic(_wrap('<ProtoInstance name="Nowhere"/>'))
+
+
+def test_declared_and_extern_protos_not_flagged():
+    xml = _wrap(_PROTO + '<ExternProtoDeclare name="Far" url=\'"far.x3d#Far"\'/>'
+                '<ProtoInstance name="MyBox"/><ProtoInstance name="Far"/>')
+    assert "proto-undeclared" not in validate_semantic(xml)
+
+
+def test_zero_axis_rotation_flagged_only_with_an_angle():
+    assert "rotation-zero-axis" in validate_semantic(_wrap('<Transform rotation="0 0 0 1.57"><Group/></Transform>'))
+    assert "rotation-zero-axis" not in validate_semantic(_wrap('<Transform rotation="0 0 0 0"><Group/></Transform>'))
+    assert "rotation-zero-axis" not in validate_semantic(_wrap('<Transform rotation="0 1 0 1.57"><Group/></Transform>'))
+
+
+def test_cycle_interval_zero_is_a_warning():
+    report = validate_semantic(_wrap('<TimeSensor cycleInterval="0"/>'))
+    assert "cycle-interval-zero" in report and "## Errors" not in report
+
+
+@pytest.mark.parametrize("geom", ['<Box size="-1 2 2"/>', '<Sphere radius="0"/>',
+                                  '<Cylinder height="-2"/>', '<Cone bottomRadius="-1"/>'])
+def test_non_positive_sizes_flagged(geom):
+    assert "value-out-of-range" in validate_semantic(_wrap(f'<Shape>{geom}</Shape>'))
+
+
+def test_positive_sizes_ok():
+    assert "value-out-of-range" not in validate_semantic(_wrap('<Shape><Box size="1 2 3"/></Shape><Shape><Sphere radius="0.5"/></Shape>'))
+
+
+@pytest.mark.parametrize("node", ['<Fog fogType="CLOUDY"/>', '<NavigationInfo transitionType=\'"WARP"\'/>',
+                                  '<Shape><Text string=\'"a"\'><FontStyle justify=\'"CENTRE"\'/></Text></Shape>',
+                                  '<TextureProperties boundaryModeS="WRAP"/>'])
+def test_bad_enum_flagged(node):
+    assert "enum-invalid" in validate_semantic(_wrap(node))
+
+
+def test_good_enums_ok():
+    xml = _wrap('<Fog fogType="EXPONENTIAL"/><NavigationInfo transitionType=\'"ANIMATE" "LINEAR"\'/>'
+                '<Shape><Text string=\'"a"\'><FontStyle justify=\'"MIDDLE" "MIDDLE"\' style="BOLD"/></Text></Shape>')
+    assert "enum-invalid" not in validate_semantic(xml)
+
+
+def test_coord_index_past_end_flagged():
+    xml = _wrap('<Shape><IndexedFaceSet coordIndex="0 1 3 -1"><Coordinate point="0 0 0 1 0 0 0 1 0"/>'
+                '</IndexedFaceSet></Shape>')
+    assert "index-out-of-range" in validate_semantic(xml)
+
+
+def test_coord_index_in_range_and_used_coordinate_ok():
+    xml = _wrap('<Shape><IndexedFaceSet coordIndex="0 1 2 -1"><Coordinate DEF="C" point="0 0 0 1 0 0 0 1 0"/>'
+                '</IndexedFaceSet></Shape><Shape><IndexedLineSet coordIndex="2 0 -1"><Coordinate USE="C"/>'
+                '</IndexedLineSet></Shape>')
+    assert "index-out-of-range" not in validate_semantic(xml)
+
+
+def test_triangle_set_index_cannot_use_minus_one():
+    xml = _wrap('<Shape><IndexedTriangleSet index="0 1 -1"><Coordinate point="0 0 0 1 0 0 0 1 0"/>'
+                '</IndexedTriangleSet></Shape>')
+    assert "index-out-of-range" in validate_semantic(xml)
+
+
+def test_interpolator_keys_out_of_order_flagged():
+    # the pattern found in 13 archive H-Anim files: "0 0.76 0.8 0.82 0.87 0.86 1"
+    xml = _wrap('<OrientationInterpolator key="0 0.87 0.86 1" keyValue="0 1 0 0 0 1 0 1 0 1 0 2 0 1 0 3"/>')
+    assert "interpolator-key-order" in validate_semantic(xml)
+
+
+def test_interpolator_repeated_keys_ok():
+    xml = _wrap('<ScalarInterpolator key="0 0.5 0.5 1" keyValue="0 1 2 3"/>')
+    assert "interpolator-key-order" not in validate_semantic(xml)
+
+
+# ---- spine-mut v2 blind spots: attribute indices and tied array counts ----
+
+@pytest.mark.parametrize("ifs", [
+    '<IndexedFaceSet coordIndex="0 1 2 -1" texCoordIndex="0 1 7 -1"><Coordinate point="0 0 0 1 0 0 0 1 0"/>'
+    '<TextureCoordinate point="0 0 1 0 0 1"/></IndexedFaceSet>',
+    '<IndexedFaceSet colorPerVertex="false" coordIndex="0 1 2 -1" colorIndex="4"><Coordinate point="0 0 0 1 0 0 0 1 0"/>'
+    '<Color color="1 0 0"/></IndexedFaceSet>',
+    '<IndexedFaceSet coordIndex="0 1 2 -1" normalIndex="0 0 9 -1"><Coordinate point="0 0 0 1 0 0 0 1 0"/>'
+    '<Normal vector="0 0 1"/></IndexedFaceSet>',
+])
+def test_attribute_index_past_end_flagged(ifs):
+    assert "index-out-of-range" in validate_semantic(_wrap(f"<Shape>{ifs}</Shape>"))
+
+
+def test_attribute_indices_in_range_ok():
+    xml = _wrap('<Shape><IndexedFaceSet coordIndex="0 1 2 -1" texCoordIndex="0 1 2 -1" colorIndex="0 0 1 -1" '
+                'normalIndex="0 0 0 -1"><Coordinate point="0 0 0 1 0 0 0 1 0"/><TextureCoordinate point="0 0 1 0 0 1"/>'
+                '<ColorRGBA color="1 0 0 1 0 1 0 1"/><Normal vector="0 0 1"/></IndexedFaceSet></Shape>'
+                '<Shape><IndexedLineSet coordIndex="0 1 -1" colorIndex="0 0 -1"><Coordinate point="0 0 0 1 0 0"/>'
+                '<Color DEF="K" color="1 1 1"/></IndexedLineSet></Shape>')
+    assert "index-out-of-range" not in validate_semantic(xml)
+
+
+@pytest.mark.parametrize("node", [
+    '<Shape><ElevationGrid xDimension="3" zDimension="3" height="0 0 0 0 1 0 0 0"/></Shape>',
+    '<Shape><IndexedTriangleSet index="0 1 2 0"><Coordinate point="0 0 0 1 0 0 0 1 0"/></IndexedTriangleSet></Shape>',
+    '<Background skyAngle="0.8 1.4" skyColor="0 0 1 0.5 0.5 1"/>',
+    '<Background groundAngle="1.5" groundColor="0.2 0.2 0.2"/>',
+    '<Background skyAngle="1.2" skyColor="0 0 1"/>',
+])
+def test_tied_array_counts_flagged(node):
+    assert "array-count" in validate_semantic(_wrap(node))
+
+
+def test_tied_array_counts_ok():
+    xml = _wrap('<Shape><ElevationGrid xDimension="2" zDimension="2" height="0 1 1 0"/></Shape>'
+                '<Shape><IndexedTriangleSet index="0 1 2"><Coordinate point="0 0 0 1 0 0 0 1 0"/></IndexedTriangleSet></Shape>'
+                '<Background skyAngle="0.8 1.4" skyColor="0 0 1 0.5 0.5 1 1 1 1" groundAngle="1.5" '
+                'groundColor="0.1 0.1 0.1 0.2 0.2 0.2"/><Background/>')
+    assert "array-count" not in validate_semantic(xml)
+
+
+def test_lod_range_decreasing_flagged():
+    assert "lod-range-order" in validate_semantic(_wrap(
+        '<LOD range="50 10"><Shape><Box/></Shape><Shape><Sphere/></Shape><Group/></LOD>'))
+
+
+def test_lod_range_increasing_ok():
+    assert "lod-range-order" not in validate_semantic(_wrap(
+        '<LOD range="10 50"><Shape><Box/></Shape><Shape><Sphere/></Shape><Group/></LOD>'))
+
+
+def test_extra_sky_colours_only_warn():
+    report = validate_semantic(_wrap('<Background skyColor="0 0 1 0.5 0.5 1 1 1 1"/>'))
+    assert "array-count-extra" in report and "[array-count]" not in report
+
+
+def test_per_face_minus_one_tolerated():
+    xml = _wrap('<Shape><IndexedFaceSet normalPerVertex="false" coordIndex="0 1 2 -1" normalIndex="0 -1">'
+                '<Coordinate point="0 0 0 1 0 0 0 1 0"/><Normal vector="0 0 1"/></IndexedFaceSet></Shape>')
+    assert "index-out-of-range" not in validate_semantic(xml)
+
+
+# ---- ROUTE order and scope, colour range, HAnim names ----
+
+_CLOCK = "<TimeSensor DEF='T' loop='true'/>"
+_SPIN = "<ScalarInterpolator DEF='I' key='0 1' keyValue='0 1'/>"
+_ROUTE = "<ROUTE fromNode='T' fromField='fraction_changed' toNode='I' toField='set_fraction'/>"
+
+
+def test_route_after_its_nodes_passes():
+    report = validate_semantic(_wrap(_CLOCK + _SPIN + _ROUTE))
+    assert "route-before-def" not in report and "route-out-of-scope" not in report
+
+
+def test_route_before_its_nodes_flagged():
+    report = validate_semantic(_wrap(_ROUTE + _CLOCK + _SPIN))
+    assert "route-before-def" in report and "fromNode='T' comes before DEF='T'" in report
+
+
+def test_route_before_one_node_flags_only_that_node():
+    report = validate_semantic(_wrap(_CLOCK + _ROUTE + _SPIN))
+    assert "toNode='I' comes before" in report and "fromNode='T' comes before" not in report
+
+
+def test_route_inside_a_proto_body_uses_its_own_order():
+    body = f"<ProtoDeclare name='P'><ProtoBody>{_CLOCK}{_SPIN}{_ROUTE}</ProtoBody></ProtoDeclare>"
+    assert "route-before-def" not in validate_semantic(_wrap(body))
+    body = f"<ProtoDeclare name='P'><ProtoBody>{_ROUTE}{_CLOCK}{_SPIN}</ProtoBody></ProtoDeclare>"
+    report = validate_semantic(_wrap(body))
+    assert "route-before-def" in report and "ProtoDeclare 'P'" in report
+
+
+def test_route_cannot_reach_into_a_proto_body():
+    body = f"<ProtoDeclare name='P'><ProtoBody>{_CLOCK}</ProtoBody></ProtoDeclare>{_SPIN}{_ROUTE}"
+    report = validate_semantic(_wrap(body))
+    assert "route-out-of-scope" in report and "route-missing-from-node" not in report
+
+
+def test_route_to_an_imported_name_is_not_missing():
+    body = ("<Inline DEF='In' url='\"a.x3d\"'/><IMPORT inlineDEF='In' importedDEF='T' AS='T2'/>" + _SPIN +
+            "<ROUTE fromNode='T2' fromField='fraction_changed' toNode='I' toField='set_fraction'/>")
+    report = validate_semantic(_wrap(body))
+    assert "route-missing-from-node" not in report and "route-before-def" not in report
+
+
+def test_route_before_its_import_flagged():
+    body = (_SPIN + "<ROUTE fromNode='T2' fromField='fraction_changed' toNode='I' toField='set_fraction'/>"
+            "<Inline DEF='In' url='\"a.x3d\"'/><IMPORT inlineDEF='In' importedDEF='T' AS='T2'/>")
+    assert "route-before-def" in validate_semantic(_wrap(body))
+
+
+@pytest.mark.parametrize("body", [
+    "<Shape><Appearance><Material diffuseColor='0.2 0.4 1'/></Appearance><Box/></Shape>",
+    "<Background skyColor='0 0 0 0.1 0.2 1' skyAngle='1'/>",
+    "<Shape><PointSet><ColorRGBA color='1 0 0 0.5 0 1 0 1'/><Coordinate point='0 0 0 1 0 0'/></PointSet></Shape>",
+])
+def test_colours_in_range_pass(body):
+    assert "colour-out-of-range" not in validate_semantic(_wrap(body))
+
+
+@pytest.mark.parametrize("body,expect", [
+    # '1.5' reads as '1.' and '.5' at a tuple boundary, so the XSD accepts it
+    ("<Shape><PointSet><Color color='0.5 0.5 1.5 0.5 0.5 0.5 0.5 0.5 0.5'/>"
+     "<Coordinate point='0 0 0 1 0 0 0 1 0'/></PointSet></Shape>", "colour 1 of 3 is '0.5 0.5 1.5'"),
+    # MFColor allows a sign, so a negative component passes the XSD
+    ("<Background skyColor='0 0 0 -0.2 0.5 0.5' skyAngle='1'/>", "colour 2 of 2"),
+    # an exponent: 0.5e1 is 5
+    ("<Shape><Appearance><Material diffuseColor='0.5e1 0 0'/></Appearance><Box/></Shape>", "'5 0 0'"),
+    ("<Script DEF='S'><field name='c' type='SFColor' accessType='initializeOnly' value='2 0 0'/></Script>",
+     "Script field 'c'"),
+    ("<ProtoDeclare name='P'><ProtoInterface><field name='c' type='SFColor' accessType='inputOutput' "
+     "value='1 0 0'/></ProtoInterface><ProtoBody><Group/></ProtoBody></ProtoDeclare>"
+     "<ProtoInstance name='P'><fieldValue name='c' value='3 0 0'/></ProtoInstance>", "fieldValue 'c'"),
+])
+def test_colours_out_of_range_flagged(body, expect):
+    report = validate_semantic(_wrap(body))
+    assert "colour-out-of-range" in report and expect in report
+
+
+def _humanoid(joints: str, version: str = "") -> str:
+    v = f" version='{version}'" if version else ""
+    return (f"<HAnimHumanoid name='h'{v}><HAnimJoint DEF='hanim_humanoid_root' name='humanoid_root' "
+            f"containerField='skeleton'>{joints}</HAnimJoint></HAnimHumanoid>")
+
+
+def test_hanim2_standard_names_pass():
+    body = _humanoid("<HAnimJoint DEF='a' name='l_radiocarpal'/><HAnimSegment DEF='s' name='l_carpal'/>")
+    report = validate_semantic(_wrap(body))
+    assert "hanim-joint-name" not in report and "hanim-segment-name" not in report
+
+
+def test_hanim1_alias_in_hanim2_humanoid_warned_with_the_new_name():
+    report = validate_semantic(_wrap(_humanoid("<HAnimJoint DEF='a' name='l_wrist'/>")))
+    assert "hanim-joint-name" in report and "'l_radiocarpal'" in report and "## Warnings" in report
+
+
+def test_hanim_prefix_and_case_variants_name_the_fix():
+    body = _humanoid("<HAnimJoint DEF='a' name='hanim_l_shoulder'/><HAnimJoint DEF='b' name='HumanoidRoot'/>")
+    report = validate_semantic(_wrap(body))
+    assert "Rename it to 'l_shoulder'" in report and "Rename it to 'humanoid_root'" in report
+
+
+def test_hanim_other_names_are_summed_up_once_per_humanoid():
+    body = _humanoid("<HAnimJoint DEF='a' name='tail_1'/><HAnimJoint DEF='b' name='tail_2'/>"
+                     "<HAnimSegment DEF='s' name='left_cheek'/>")
+    report = validate_semantic(_wrap(body))
+    assert report.count("hanim-joint-name") == 1 and "2 joint names outside the" in report
+    assert "tail_1, tail_2" in report
+    assert "1 segment name outside the" in report and "## Info" in report
+
+
+def test_hanim_names_skipped_for_hanim1_in_x3d3():
+    doc = _wrap(_humanoid("<HAnimJoint DEF='a' name='l_wrist'/>")).replace('version="4.1"', 'version="3.3"')
+    assert "hanim-joint-name" not in validate_semantic(doc)
+    doc = _wrap(_humanoid("<HAnimJoint DEF='a' name='l_wrist'/>", "2.0")).replace('version="4.1"', 'version="3.3"')
+    assert "hanim-joint-name" in validate_semantic(doc)

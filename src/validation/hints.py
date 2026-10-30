@@ -251,6 +251,8 @@ _RE_RANGE = re.compile(
     r"(?:less|greater) than (?:or equal to )?the (?:minimum|maximum) value allowed \('(.*)'\)\.")
 _RE_NOT_ALLOWED = re.compile(r"Element '([^']+)', attribute '([^']+)': The attribute '[^']+' is not allowed\.")
 _RE_REQUIRED = re.compile(r"Element '([^']+)': The attribute '([^']+)' is required but missing\.")
+# written by validate.py when libxml2's pattern engine gives up and the value is read number by number
+_RE_VALUE = re.compile(r"Element '([^']+)', attribute '([^']+)': \[value\] (.*)")
 
 
 def _fmt(x: float) -> str:
@@ -530,6 +532,18 @@ def _attribute_hint(doc, el, attr: str, msg: str, m: _Model, base: dict) -> dict
                                     if cand is not None and cand != value else None),
                      confidence="choice")
 
+    if _RE_VALUE.search(msg):
+        if ftype in _COLOUR_TYPES:
+            for cand, why in _pattern_candidates(value or "", ftype, m, default):
+                if cand != value:
+                    return _hint(**base, rule="colour-out-of-range", type=ftype,
+                                 message=f"{tag} {attr} has components outside 0..1: {why}.",
+                                 suggested_fix={"op": "set_attribute", "path": path, "attribute": attr,
+                                                "value": cand},
+                                 confidence="choice")
+        return _hint(**base, rule="bad-value", type=ftype,
+                     message=f"{tag} {attr} is not a valid {ftype or 'value'}: {_RE_VALUE.search(msg).group(3)}")
+
     if _RE_NOT_ALLOWED.search(msg):
         names = m.attribute_fields(tag)
         guess = _close(attr, [n for n in names if n not in el.attrib], 0.75)
@@ -695,7 +709,7 @@ def _one_xsd_hint(doc, msg, line, path, m, base):
     if (mm := _RE_REQUIRED.search(msg)):
         el = _find(doc, path, line, _strip_ns(mm.group(1)))
         return _required_hint(doc, el, mm.group(2), m, base) if el is not None else None
-    for rx in (_RE_ENUM, _RE_PATTERN, _RE_RANGE, _RE_ATOMIC, _RE_NOT_ALLOWED):
+    for rx in (_RE_ENUM, _RE_PATTERN, _RE_RANGE, _RE_ATOMIC, _RE_NOT_ALLOWED, _RE_VALUE):
         if (mm := rx.search(msg)):
             el = _find(doc, path, line, _strip_ns(mm.group(1)))
             if el is None:
@@ -711,8 +725,9 @@ def _one_xsd_hint(doc, msg, line, path, m, base):
 def semantic_hints(xml_string: str, version: str | None = None) -> list[dict]:
     """Hints for the error-level semantic diagnostics of a schema-valid document.
 
-    Covers containerField, ROUTE endpoint, USE-before-DEF and profile/component
-    errors. Each hint carries `check`, the semantic check name it answers.
+    Covers containerField, ROUTE endpoint, ROUTE order, USE-before-DEF, colour range
+    and profile/component errors. Each hint carries `check`, the semantic check name
+    it answers.
     """
     from validation.semantic import _PARSER, _find_scene
     from validation.validate import resolve_xsd_version
@@ -724,7 +739,9 @@ def semantic_hints(xml_string: str, version: str | None = None) -> list[dict]:
     out: list[dict] = []
     out.extend(_containerfield_hints(root, scene, m))
     out.extend(_route_hints(root, scene, m))
+    out.extend(_route_order_hints(scene))
     out.extend(_use_def_hints(scene))
+    out.extend(_colour_hints(scene, m))
     out.extend(_profile_hints(root))
     return out
 
@@ -773,6 +790,8 @@ def _route_hints(root, scene, m: _Model) -> list[dict]:
     from validation.semantic import _resolve_route_field
     out = []
     defs = [e.get("DEF") for e in scene.iter() if e.get("DEF")]
+    defs += [e.get("AS") or e.get("importedDEF") for e in scene.iter()
+             if _local(e) == "IMPORT" and (e.get("AS") or e.get("importedDEF"))]
     for route in scene.iter("ROUTE"):
         path = _path(route)
         base = {"source": "semantic", "node": "ROUTE", "path": path, "line": route.sourceline,
@@ -824,6 +843,60 @@ def _route_hints(root, scene, m: _Model) -> list[dict]:
                                      suggested_fix=({"op": "set_attribute", "path": path, "attribute": "toField",
                                                      "value": pick} if pick else None),
                                      confidence="choice"))
+    return out
+
+
+def _route_order_hints(scene) -> list[dict]:
+    """route-before-def: move the ROUTE to the end of its name scope, after every node it can name."""
+    from validation.semantic import _check_route_order, _name_scope
+    early = {d.def_name for d in _check_route_order(scene) if d.check == "route-before-def"}
+    out, done = [], set()
+    for route in scene.iter():
+        if _local(route) != "ROUTE" or route in done:
+            continue
+        names = [n for n in (route.get("fromNode"), route.get("toNode")) if n in early]
+        if not names:
+            continue
+        scope = _name_scope(route)
+        holder = scope if scope is not None else scene
+        done.add(route)
+        out.append(_hint(source="semantic", check="route-before-def", rule="route-before-def", node="ROUTE",
+                         path=_path(route), line=route.sourceline, field="fromNode",
+                         message=f"ROUTE comes before DEF='{names[0]}'. Move it to the end of "
+                                 f"{_local(holder)}, after the nodes it names.",
+                         suggested_fix={"op": "move", "path": _path(route), "to_path": _path(holder)},
+                         confidence="exact"))
+    return out
+
+
+def _colour_hints(scene, m: _Model) -> list[dict]:
+    """colour-out-of-range: the same 0..255 or clamp candidates the XSD colour hint offers."""
+    from validation.semantic import _COLOUR_WIDTH, _colour_problem, _proto_interfaces
+    protos = _proto_interfaces(scene)
+    out = []
+    for el in scene.iter():
+        tag = _local(el)
+        if tag in ("field", "fieldValue"):
+            ftype = el.get("type", "")
+            if tag == "fieldValue" and el.getparent() is not None:
+                ftype = protos.get(el.getparent().get("name"), {}).get(el.get("name", ""), {}).get("type", "")
+            pairs = [("value", ftype)] if el.get("value") is not None else []
+        elif tag in m.nodes and not el.get("USE"):
+            pairs = [(a, (m.field(tag, a) or {}).get("type", "")) for a in el.attrib]
+        else:
+            continue
+        for attr, ftype in pairs:
+            if ftype not in _COLOUR_WIDTH or not _colour_problem(el.get(attr), ftype):
+                continue
+            value = el.get(attr)
+            cand, why = next(((c, w) for c, w in _pattern_candidates(value, ftype, m, None) if c != value),
+                             (None, None))
+            out.append(_hint(source="semantic", check="colour-out-of-range", rule="colour-out-of-range",
+                             node=tag, path=_path(el), line=el.sourceline, field=attr, type=ftype,
+                             message=f"{tag} {attr} has components outside 0..1" + (f": {why}." if why else "."),
+                             suggested_fix=({"op": "set_attribute", "path": _path(el), "attribute": attr,
+                                             "value": cand} if cand else None),
+                             confidence="choice"))
     return out
 
 
