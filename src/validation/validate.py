@@ -221,12 +221,26 @@ def validate_xml(xml_string: str, version: str | None = None) -> dict:
     4.1 draft), or from `version` when given, which overrides the document.
 
     Returns {"valid": bool, "errors": list[str], "schema_version": str} plus
-    "notes" when a substitution or a version hint applies. A document with one
+    "notes" when a substitution or a version hint applies. validate_xml_with_hints
+    returns the same plus exact-fix "hints". A document with one
     start tag over libxml2's 10,000,000-byte limit cannot be parsed by default:
     the result then has "checked": false, "verdict": "not-checkable-at-this-size"
     and an "oversize" report (see validation.oversize); X3D_MCP_XML_HUGE=on allows
     a bounded retry with huge_tree.
     """
+    return _validate_xml(xml_string, version, False)
+
+
+def validate_xml_with_hints(xml_string: str, version: str | None = None) -> dict:
+    """validate_xml, plus "hints" when the document is invalid.
+
+    One structured exact-fix hint per XSD error the hint layer understands
+    (validation.hints); each names its error by `error_index` in "errors".
+    """
+    return _validate_xml(xml_string, version, True)
+
+
+def _validate_xml(xml_string: str, version: str | None, want_hints: bool) -> dict:
     errors = []
     huge_used = False
 
@@ -260,18 +274,38 @@ def validate_xml(xml_string: str, version: str | None = None) -> dict:
     except etree.XMLSchemaValidateError as e:
         # libxml2's regexp engine gives up on one attribute of about 1.3 million numbers
         return _not_checkable(xml_string, version, f"used, but the XSD engine failed: {e}")
+    hints: list[dict] = []
     if not valid:
-        for entry in schema.error_log:
+        entries = list(schema.error_log)
+        for entry in entries:
             errors.append(f"Line {entry.line}: {entry.message}")
         notes.extend(_version_hints(doc, schema_version))
         notes.extend(_content_model_hints(doc, errors))
+        if want_hints:
+            hints = _exact_fix_hints(doc, entries, schema_version)
     if huge_used:
         notes.append("Parsed with huge_tree (X3D_MCP_XML_HUGE=on): libxml2's 10 MB start-tag limit was lifted for this document.")
 
     result = {"valid": valid, "errors": errors, "schema_version": schema_version}
     if notes:
         result["notes"] = notes
+    if hints:
+        result["hints"] = hints
     return result
+
+
+# Errors past this many get no hint: a document with thousands of errors needs a
+# different fix first, and the hints would swamp the report.
+MAX_HINTED_ERRORS = 50
+
+
+def _exact_fix_hints(doc: etree._Element, entries: list, schema_version: str) -> list[dict]:
+    """Structured exact-fix hints for XSD errors (see validation.hints); never raises."""
+    try:
+        from validation.hints import xsd_hints
+        return xsd_hints(doc, entries[:MAX_HINTED_ERRORS], schema_version)
+    except Exception:          # hints are advisory; validation results must not depend on them
+        return []
 
 
 def validate_scene(scene_manager) -> dict:

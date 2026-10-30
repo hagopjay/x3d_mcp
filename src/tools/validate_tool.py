@@ -13,6 +13,7 @@ from validation.semantic import validate_semantic as _validate_semantic
 from mcp.server.fastmcp import Context
 from validation.autofix import autofix_containerfields
 from validation.repair import repair_x3d as _repair_x3d
+from validation.hints import gate as _hint_gate, repair_with_hints as _repair_with_hints
 from tools.granular import _scene_for
 from transfer.errors import BlobError
 from transfer.outputs import (
@@ -272,3 +273,44 @@ def register(mcp: FastMCP):
                        "unfixable": remaining.get("unfixable"),
                        "schema_error_count": len(errors),
                        **cap_items([clip(e) for e in errors], "schema_errors")})
+
+    @mcp.tool()
+    @holds_input
+    async def exact_fix_hints(content: str = "", path: str = "", blob_id: str = "",
+                              apply: bool = False, ctx: Context = None) -> str:
+        """Validate X3D XML and return one structured, mechanically applicable fix per error.
+
+        Where validate_x3d says "Element 'Box': This element is not expected", this says
+        where a Box may go and the edit that puts it there. Each hint is
+        {rule, source, error_index, node, parent, field, line, path, message,
+        allowed_parents / allowed_children / allowed_values, suggested_fix, confidence},
+        drawn from X3DUOM field ranges (acceptableNodeTypes), the XSD-verified containment
+        table, and the XSD message (enumeration sets, facet bounds). `suggested_fix` is
+        an edit: op (set_attribute, remove_attribute, rename_attribute, rename_element,
+        move, wrap, remove_element, insert_element, add_components, swap_def_use) plus
+        arguments, with element paths as XPath; `message` says it in words.
+
+        The check is the XSD for the document's version, then (once that passes) the
+        error-level semantic checks: containerField, ROUTE endpoints, USE before DEF,
+        profile components. Returns JSON {valid, stage, errors, hints}.
+
+        Args:
+            content: The X3D XML content string (inline).
+            path: Path to an X3D file instead of inline content.
+                  Provide exactly one of `content`, `path` or `blob_id`.
+            blob_id: Id of a stored blob holding the document.
+            apply: When true, also apply the suggested fixes one at a time, re-checking after
+                  each, and return {fixed, valid_after, applied, remaining_errors} as well.
+                  These edits can move, wrap, rename or (rarely) remove a node: read `applied`.
+        """
+        try:
+            text, _label = await resolve_input(content, path, blob_id, ctx)
+        except ValueError as exc:
+            return json.dumps({"valid": False, "errors": [str(exc)]}, indent=2)
+        result = await run_heavy(_hint_gate, text, size=len(text))
+        if apply and not result["valid"]:
+            more = await run_heavy(_repair_with_hints, text, size=len(text))
+            result.update(fixed=more["fixed"], valid_after=more["valid"], applied=more["applied"],
+                          remaining_errors=more["remaining_errors"])
+        return json.dumps(result, indent=2)
+
