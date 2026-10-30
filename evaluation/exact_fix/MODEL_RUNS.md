@@ -9,8 +9,8 @@ Arms: **E** = the validator's errors only, **H** = the same errors each followed
 |---|---:|---:|---:|---|---:|---:|---|---:|
 | gemini-3.8-flash | 60 | 59 | 57 | 0 / 2, p 0.5 | 60 | 60 | 0 / 0 | 1.11 |
 | gemini-3.1-flash-lite | 60 | 60 | 59 | 0 / 1, p 1.0 | 60 | 60 | 0 / 0 | 0.84 |
-| gemini-2.5-flash-lite | 60 | 53 | 55 | 3 / 1, p 0.63 | 57 | 58 | 1 / 0 | 1.30 |
-| **gemini-2.5-flash-lite** | **540** | **489 (90.6%)** | **507 (93.9%)** | **31 / 13, p 0.0096** | 524 | 530 | 11 / 5, p 0.21 | 6.90 |
+| gemini-2.5-flash-lite | 60 | 53 | 55 | 3 / 1, p 0.63 | 57 | 58 | 1 / 0 | 0.88 |
+| **gemini-2.5-flash-lite** | **540** | **489 (90.6%)** | **507 (93.9%)** | **31 / 13, p 0.0096** | 524 | 530 | 11 / 5, p 0.21 | 7.33 |
 
 All C. One of the two 3.8-flash H losses is a connection reset in round 1, not a model answer (C); `gemini_api.py` now retries
 transient errors, and the later runs had no call errors. Dollar figures are the ledger's upper-bound estimate (every
