@@ -190,7 +190,8 @@ x3d_mcp/
     transfer/              # Blob store and routes (blobs.py, routes.py); SPZ/PLY readers, chunker, inspector (spz.py, ply.py, chunk.py, inspect_splats.py)
     validation/
       validate.py          # XSD + JSON validation pipeline
-      semantic.py          # Layer 4 semantic checks (DEF/USE, ROUTE validity, containerField, naming, ...)
+      semantic.py          # Layer 4 semantic checks (DEF/USE, ROUTE validity and order, colour range, H-Anim names, containerField, naming, ...)
+      listvalues.py        # Linear-time reading of numeric field values, for when libxml2's pattern engine gives up
       oversize.py          # What validate_xml does when libxml2's 10 MB start-tag limit stops a scene
       splat_arrays.py      # Vectorised GaussianSplats array checks for that case
       autofix.py           # containerField autofixer
@@ -246,7 +247,7 @@ x3d_mcp/
 |------|-------------|
 | `validate_x3d` | Validate an X3D document (XML or JSON) against the XSD schema. Accepts inline `content` or a `path` (stdio transport only). Returns pass/fail with detailed error messages. |
 | `validate_current_scene` | Validate the current granular scene -- both the XSD schema check and the semantic checks. |
-| `validate_semantic` | Run semantic checks beyond XSD: profile and component conformance (with the component statements to add), Shape completeness, empty groups, duplicate DEFs, USE/DEF consistency and ordering, containerField correctness, ROUTE validity (including Script/ProtoInstance interfaces and set_X/X_changed aliases), interpolator key lengths, naming conventions, missing Viewpoints. Returns a markdown report. |
+| `validate_semantic` | Run semantic checks beyond XSD: profile and component conformance (with the component statements to add), Shape completeness, empty groups, duplicate DEFs, USE/DEF consistency and ordering, containerField correctness, ROUTE validity (including Script/ProtoInstance interfaces, IMPORT names and set_X/X_changed aliases), ROUTE order (a ROUTE must follow the nodes it names, in the same scope), colour components outside 0..1 (including the cases the XSD patterns let through), H-Anim 2.0 joint and segment names (1.x aliases, prefixes, case variants), interpolator key lengths, naming conventions, missing Viewpoints. Returns a markdown report. |
 | `autofix_x3d` | Rewrite wrong or defaulted containerField values to the canonical field and return the corrected document. |
 | `repair_x3d` | Apply every fix the validators name and return the repaired document: containerField corrections, a missing profile or version, the version raised to the lowest one that has every node used, the `<component>` statements the profile check asks for, DOCTYPE and schema location updated, the `https` XMLSchema-instance namespace corrected. Returns the list of changes with reasons, what is left for a human (`unfixable`), and the re-validation of the result. |
 

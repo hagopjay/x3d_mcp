@@ -13,7 +13,9 @@ from pathlib import Path
 from lxml import etree
 from jsonschema import Draft202012Validator
 
-from validation import oversize
+from types import SimpleNamespace
+
+from validation import listvalues, oversize
 
 
 SCHEMAS_DIR = Path(__file__).resolve().parent / "schemas"
@@ -269,14 +271,21 @@ def _validate_xml(xml_string: str, version: str | None, want_hints: bool) -> dic
 
     # Step 4: Validate against XSD
     schema = _get_schema(schema_version)
+    value_entries: list = []
     try:
         valid = schema.validate(doc)
     except etree.XMLSchemaValidateError as e:
-        # libxml2's regexp engine gives up on one attribute of about 1.3 million numbers
-        return _not_checkable(xml_string, version, f"used, but the XSD engine failed: {e}")
+        if huge_used:
+            # libxml2's regexp engine gives up on one attribute of about 1.3 million numbers
+            return _not_checkable(xml_string, version, f"used, but the XSD engine failed: {e}")
+        retried = _after_engine_failure(doc, schema, schema_version, e)
+        if retried is None:
+            return _engine_gave_up(e, schema_version, notes)
+        valid, value_entries, engine_notes = retried
+        notes.extend(engine_notes)
     hints: list[dict] = []
     if not valid:
-        entries = list(schema.error_log)
+        entries = value_entries + list(schema.error_log)
         for entry in entries:
             errors.append(f"Line {entry.line}: {entry.message}")
         notes.extend(_version_hints(doc, schema_version))
@@ -292,6 +301,87 @@ def _validate_xml(xml_string: str, version: str | None, want_hints: bool) -> dic
     if hints:
         result["hints"] = hints
     return result
+
+
+# libxml2 matches SF/MF values with backtracking regexps. On a list value that does not
+# match, the backtracking grows with the length of the list before the bad entry, and past
+# about a dozen tuples the engine stops with SCHEMAV_INTERNAL ("Internal error in XML Schema
+# validation") instead of a pattern error; validation of the whole document ends there.
+# libxml2 2.14.6 does this for an out-of-range colour from the 13th entry of an MFColor on,
+# and for a bad number in MFVec3f, MFVec2f, MFFloat or MFRotation lists, after about 1.7 s.
+_ENGINE_RETRIES = 20
+
+
+def _engine_targets(doc: etree._Element, log) -> list[etree._Element]:
+    """The elements named by the SCHEMAV_INTERNAL entries of an error log (by path, else by line)."""
+    out: list[etree._Element] = []
+    for entry in log:
+        hits = []
+        if getattr(entry, "path", None):
+            try:
+                hits = [h for h in doc.getroottree().xpath(entry.path)
+                        if isinstance(h, etree._Element) and h.sourceline == entry.line]
+            except etree.XPathError:
+                hits = []
+        hits = hits or [el for el in doc.iter() if isinstance(el.tag, str) and el.sourceline == entry.line]
+        out.extend(h for h in hits if h not in out)
+    return out
+
+
+def _after_engine_failure(doc: etree._Element, schema: etree.XMLSchema, schema_version: str, exc) -> tuple | None:
+    """Finish the XSD check of a normal-size document after libxml2's pattern engine gave up.
+
+    Reads the numeric attributes of the element the internal error names number by number
+    (validation.listvalues), reports each bad one as a "[value]" error, replaces it with a
+    minimal valid value, and runs the XSD again so the rest of the document is checked.
+    The document is restored before returning. Returns (valid, value_entries, notes), or
+    None when no bad value can be found that way (the engine gave up on something else).
+    """
+    lookup = _field_type_lookup(schema_version)
+    entries, notes, swapped = [], [], []
+    try:
+        for _ in range(_ENGINE_RETRIES):
+            found = False
+            for el in _engine_targets(doc, exc.error_log):
+                tag = etree.QName(el).localname
+                for attr, value in list(el.attrib.items()):
+                    ftype = lookup(tag, attr)
+                    why = listvalues.problem(value, ftype) if ftype else None
+                    if not why:
+                        continue
+                    found = True
+                    entries.append(SimpleNamespace(
+                        line=el.sourceline, path=doc.getroottree().getpath(el),
+                        message=f"Element '{tag}', attribute '{attr}': [value] {why}."))
+                    notes.append(f"libxml2's XSD pattern engine gave up on {tag} {attr} (line {el.sourceline}) "
+                                 "with an internal error, which it does on a long list with a bad entry; this is "
+                                 "not a size limit. The value was read number by number instead, and the XSD "
+                                 "ran again with it replaced, so the rest of the document was checked.")
+                    swapped.append((el, attr, value))
+                    el.set(attr, listvalues.placeholder(ftype))
+            if not found:
+                return None
+            try:
+                valid = schema.validate(doc)
+                return (valid and not entries), entries, notes
+            except etree.XMLSchemaValidateError as e:
+                exc = e
+        return None
+    finally:
+        for el, attr, value in reversed(swapped):
+            el.set(attr, value)
+
+
+def _engine_gave_up(exc, schema_version: str, notes: list[str]) -> dict:
+    """The result when libxml2's XSD engine stopped on a normal-size document and no bad value was found."""
+    first = next(iter(exc.error_log), None)
+    where = (f" on {first.path.rsplit('/', 1)[-1]} at line {first.line}"
+             if first is not None and getattr(first, "path", None) else "")
+    message = (f"Not checked: libxml2's XSD engine stopped with an internal error{where} before it finished, "
+               "so the XSD check is incomplete. This is not a size limit and not a well-formedness error; it "
+               "usually means a long list value has a bad entry that the engine could not reject in time.")
+    return {"valid": False, "checked": False, "verdict": "xsd-engine-failure", "errors": [message],
+            "schema_version": schema_version, **({"notes": notes} if notes else {})}
 
 
 # Errors past this many get no hint: a document with thousands of errors needs a

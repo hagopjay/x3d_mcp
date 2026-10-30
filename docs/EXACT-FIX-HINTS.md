@@ -32,7 +32,7 @@ The hints come from data the server already ships, plus one new table:
 |---|---|
 | Element placement | `wrong-parent` (fix by moving into a sibling with a free slot, wrapping in Shape and/or Appearance, or moving up to the nearest ancestor that takes the node; deleting the element is the last resort), `wrong-containerfield`, `sfnode-occupied`, `unknown-node` (close name, plus a small synonym table: Cube→Box, Ball→Sphere, ...), `misplaced-route`, `misplaced-statement`, `missing-child` |
 | Attributes | `bad-enum`, `colour-out-of-range` (0..255 values are divided by 255, others are clamped to 0..1), `bad-value` (SFBool case, commas, tuple size), `out-of-range`, `unknown-attribute` (rename to a close field, or remove it and say which related node has that field, e.g. PhysicalMaterial for `roughness`), `missing-attribute` (version: the lowest bundled version that has every node; profile: the smallest covering profile; ROUTE fields: inferred from the endpoint's field types) |
-| Semantic, once the XSD passes | containerField checks, ROUTE endpoints and fields, `use-before-def` (swap the DEF and the first USE), `profile-component` (the component statements to add) |
+| Semantic, once the XSD passes | containerField checks, ROUTE endpoints and fields, `use-before-def` (swap the DEF and the first USE), `route-before-def` (move the ROUTE to the end of its Scene or ProtoBody), `colour-out-of-range` (also on colours the XSD lets through: values the pattern re-splits such as `1.5`, negatives, exponents, and values past the point where libxml2 gives up), `profile-component` (the component statements to add) |
 
 ## How to call it
 

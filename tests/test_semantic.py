@@ -801,3 +801,119 @@ def test_per_face_minus_one_tolerated():
     xml = _wrap('<Shape><IndexedFaceSet normalPerVertex="false" coordIndex="0 1 2 -1" normalIndex="0 -1">'
                 '<Coordinate point="0 0 0 1 0 0 0 1 0"/><Normal vector="0 0 1"/></IndexedFaceSet></Shape>')
     assert "index-out-of-range" not in validate_semantic(xml)
+
+
+# ---- ROUTE order and scope, colour range, HAnim names ----
+
+_CLOCK = "<TimeSensor DEF='T' loop='true'/>"
+_SPIN = "<ScalarInterpolator DEF='I' key='0 1' keyValue='0 1'/>"
+_ROUTE = "<ROUTE fromNode='T' fromField='fraction_changed' toNode='I' toField='set_fraction'/>"
+
+
+def test_route_after_its_nodes_passes():
+    report = validate_semantic(_wrap(_CLOCK + _SPIN + _ROUTE))
+    assert "route-before-def" not in report and "route-out-of-scope" not in report
+
+
+def test_route_before_its_nodes_flagged():
+    report = validate_semantic(_wrap(_ROUTE + _CLOCK + _SPIN))
+    assert "route-before-def" in report and "fromNode='T' comes before DEF='T'" in report
+
+
+def test_route_before_one_node_flags_only_that_node():
+    report = validate_semantic(_wrap(_CLOCK + _ROUTE + _SPIN))
+    assert "toNode='I' comes before" in report and "fromNode='T' comes before" not in report
+
+
+def test_route_inside_a_proto_body_uses_its_own_order():
+    body = f"<ProtoDeclare name='P'><ProtoBody>{_CLOCK}{_SPIN}{_ROUTE}</ProtoBody></ProtoDeclare>"
+    assert "route-before-def" not in validate_semantic(_wrap(body))
+    body = f"<ProtoDeclare name='P'><ProtoBody>{_ROUTE}{_CLOCK}{_SPIN}</ProtoBody></ProtoDeclare>"
+    report = validate_semantic(_wrap(body))
+    assert "route-before-def" in report and "ProtoDeclare 'P'" in report
+
+
+def test_route_cannot_reach_into_a_proto_body():
+    body = f"<ProtoDeclare name='P'><ProtoBody>{_CLOCK}</ProtoBody></ProtoDeclare>{_SPIN}{_ROUTE}"
+    report = validate_semantic(_wrap(body))
+    assert "route-out-of-scope" in report and "route-missing-from-node" not in report
+
+
+def test_route_to_an_imported_name_is_not_missing():
+    body = ("<Inline DEF='In' url='\"a.x3d\"'/><IMPORT inlineDEF='In' importedDEF='T' AS='T2'/>" + _SPIN +
+            "<ROUTE fromNode='T2' fromField='fraction_changed' toNode='I' toField='set_fraction'/>")
+    report = validate_semantic(_wrap(body))
+    assert "route-missing-from-node" not in report and "route-before-def" not in report
+
+
+def test_route_before_its_import_flagged():
+    body = (_SPIN + "<ROUTE fromNode='T2' fromField='fraction_changed' toNode='I' toField='set_fraction'/>"
+            "<Inline DEF='In' url='\"a.x3d\"'/><IMPORT inlineDEF='In' importedDEF='T' AS='T2'/>")
+    assert "route-before-def" in validate_semantic(_wrap(body))
+
+
+@pytest.mark.parametrize("body", [
+    "<Shape><Appearance><Material diffuseColor='0.2 0.4 1'/></Appearance><Box/></Shape>",
+    "<Background skyColor='0 0 0 0.1 0.2 1' skyAngle='1'/>",
+    "<Shape><PointSet><ColorRGBA color='1 0 0 0.5 0 1 0 1'/><Coordinate point='0 0 0 1 0 0'/></PointSet></Shape>",
+])
+def test_colours_in_range_pass(body):
+    assert "colour-out-of-range" not in validate_semantic(_wrap(body))
+
+
+@pytest.mark.parametrize("body,expect", [
+    # '1.5' reads as '1.' and '.5' at a tuple boundary, so the XSD accepts it
+    ("<Shape><PointSet><Color color='0.5 0.5 1.5 0.5 0.5 0.5 0.5 0.5 0.5'/>"
+     "<Coordinate point='0 0 0 1 0 0 0 1 0'/></PointSet></Shape>", "colour 1 of 3 is '0.5 0.5 1.5'"),
+    # MFColor allows a sign, so a negative component passes the XSD
+    ("<Background skyColor='0 0 0 -0.2 0.5 0.5' skyAngle='1'/>", "colour 2 of 2"),
+    # an exponent: 0.5e1 is 5
+    ("<Shape><Appearance><Material diffuseColor='0.5e1 0 0'/></Appearance><Box/></Shape>", "'5 0 0'"),
+    ("<Script DEF='S'><field name='c' type='SFColor' accessType='initializeOnly' value='2 0 0'/></Script>",
+     "Script field 'c'"),
+    ("<ProtoDeclare name='P'><ProtoInterface><field name='c' type='SFColor' accessType='inputOutput' "
+     "value='1 0 0'/></ProtoInterface><ProtoBody><Group/></ProtoBody></ProtoDeclare>"
+     "<ProtoInstance name='P'><fieldValue name='c' value='3 0 0'/></ProtoInstance>", "fieldValue 'c'"),
+])
+def test_colours_out_of_range_flagged(body, expect):
+    report = validate_semantic(_wrap(body))
+    assert "colour-out-of-range" in report and expect in report
+
+
+def _humanoid(joints: str, version: str = "") -> str:
+    v = f" version='{version}'" if version else ""
+    return (f"<HAnimHumanoid name='h'{v}><HAnimJoint DEF='hanim_humanoid_root' name='humanoid_root' "
+            f"containerField='skeleton'>{joints}</HAnimJoint></HAnimHumanoid>")
+
+
+def test_hanim2_standard_names_pass():
+    body = _humanoid("<HAnimJoint DEF='a' name='l_radiocarpal'/><HAnimSegment DEF='s' name='l_carpal'/>")
+    report = validate_semantic(_wrap(body))
+    assert "hanim-joint-name" not in report and "hanim-segment-name" not in report
+
+
+def test_hanim1_alias_in_hanim2_humanoid_warned_with_the_new_name():
+    report = validate_semantic(_wrap(_humanoid("<HAnimJoint DEF='a' name='l_wrist'/>")))
+    assert "hanim-joint-name" in report and "'l_radiocarpal'" in report and "## Warnings" in report
+
+
+def test_hanim_prefix_and_case_variants_name_the_fix():
+    body = _humanoid("<HAnimJoint DEF='a' name='hanim_l_shoulder'/><HAnimJoint DEF='b' name='HumanoidRoot'/>")
+    report = validate_semantic(_wrap(body))
+    assert "Rename it to 'l_shoulder'" in report and "Rename it to 'humanoid_root'" in report
+
+
+def test_hanim_other_names_are_summed_up_once_per_humanoid():
+    body = _humanoid("<HAnimJoint DEF='a' name='tail_1'/><HAnimJoint DEF='b' name='tail_2'/>"
+                     "<HAnimSegment DEF='s' name='left_cheek'/>")
+    report = validate_semantic(_wrap(body))
+    assert report.count("hanim-joint-name") == 1 and "2 joint names outside the" in report
+    assert "tail_1, tail_2" in report
+    assert "1 segment name outside the" in report and "## Info" in report
+
+
+def test_hanim_names_skipped_for_hanim1_in_x3d3():
+    doc = _wrap(_humanoid("<HAnimJoint DEF='a' name='l_wrist'/>")).replace('version="4.1"', 'version="3.3"')
+    assert "hanim-joint-name" not in validate_semantic(doc)
+    doc = _wrap(_humanoid("<HAnimJoint DEF='a' name='l_wrist'/>", "2.0")).replace('version="4.1"', 'version="3.3"')
+    assert "hanim-joint-name" in validate_semantic(doc)

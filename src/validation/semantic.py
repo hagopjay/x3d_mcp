@@ -319,16 +319,21 @@ def _check_route_validity(scene: etree._Element) -> list[Diagnostic]:
     proto_ifaces = _proto_interfaces(scene)
 
     def_map: dict[str, tuple[etree._Element, str]] = {}
+    imported: set[str] = set()      # IMPORT ... AS names: the node's type is known only once its Inline loads
     for el in scene.iter():
         def_name = el.get("DEF")
         if def_name:
             def_map[def_name] = (el, _local_tag(el))
+        if _local_tag(el) == "IMPORT" and (el.get("AS") or el.get("importedDEF")):
+            imported.add(el.get("AS") or el.get("importedDEF"))
 
     for route in scene.iter("ROUTE"):
         from_node = route.get("fromNode", "")
         from_field = route.get("fromField", "")
         to_node = route.get("toNode", "")
         to_field = route.get("toField", "")
+        if {from_node, to_node} & (imported - def_map.keys()):
+            continue
 
         if from_node not in def_map:
             available = ", ".join(sorted(def_map.keys())) or "(none)"
@@ -1268,6 +1273,234 @@ def _check_interpolator_key_order(scene: etree._Element) -> list[Diagnostic]:
     return diagnostics
 
 
+def _name_scope(el: etree._Element) -> etree._Element | None:
+    """The DEF name scope `el` belongs to: its nearest ProtoBody, or None for the scene itself."""
+    for anc in el.iterancestors():
+        if _local_tag(anc) == "ProtoBody":
+            return anc
+    return None
+
+
+def _check_route_order(scene: etree._Element) -> list[Diagnostic]:
+    """A ROUTE must follow the nodes it names, in the same name scope.
+
+    The nodes a ROUTE names must be defined before the ROUTE, and each ProtoBody is a
+    name scope of its own: a ROUTE outside a prototype cannot reach a DEF inside it,
+    nor the other way round. The Web3D X3D Schematron reports "ROUTE precedes target"
+    as an error, and X_ITE warns and drops such a ROUTE. _check_route_validity looks
+    names up anywhere in the file, so it passes both mistakes. An IMPORT ... AS
+    defines its name where the IMPORT is.
+    """
+    first: dict[tuple, etree._Element] = {}     # (scope, name) -> first DEF or IMPORT
+    scopes: dict[str, list] = {}                # name -> scopes that define it
+    position: dict[etree._Element, int] = {}
+    for i, el in enumerate(scene.iter()):
+        position[el] = i
+        tag = _local_tag(el)
+        name = el.get("DEF") or ((el.get("AS") or el.get("importedDEF")) if tag == "IMPORT" else None)
+        if name:
+            scope = _name_scope(el)
+            if (scope, name) not in first:
+                first[(scope, name)] = el
+                scopes.setdefault(name, []).append(scope)
+
+    def scope_label(scope) -> str:
+        if scope is None:
+            return "the Scene"
+        decl = scope.getparent()
+        return f"ProtoDeclare '{decl.get('name', '')}'" if decl is not None else "a ProtoBody"
+
+    diagnostics: list[Diagnostic] = []
+    for route in scene.iter():
+        if _local_tag(route) != "ROUTE":
+            continue
+        scope = _name_scope(route)
+        for attr in ("fromNode", "toNode"):
+            name = route.get(attr, "")
+            target = first.get((scope, name))
+            if target is None:
+                elsewhere = scopes.get(name)
+                if elsewhere:      # missing everywhere is _check_route_validity's to report
+                    diagnostics.append(Diagnostic(
+                        level="error", check="route-out-of-scope",
+                        message=f"ROUTE {attr}='{name}' is in {scope_label(scope)}, but DEF='{name}' is only "
+                                f"defined in {scope_label(elsewhere[0])}. Each ProtoBody is its own name "
+                                f"scope, so this ROUTE cannot reach that node.",
+                        node_tag="ROUTE", def_name=name))
+                continue
+            if position[target] > position[route]:
+                tag = _local_tag(target)
+                where = f" at line {target.sourceline}" if target.sourceline else ""
+                diagnostics.append(Diagnostic(
+                    level="error", check="route-before-def",
+                    message=f"ROUTE {attr}='{name}' comes before DEF='{name}' ({tag}{where}). A ROUTE "
+                            f"must follow the nodes it names; X_ITE drops an early one. Move the ROUTE "
+                            f"after the {tag}, for example to the end of {scope_label(scope)}.",
+                    node_tag="ROUTE", def_name=name))
+    return diagnostics
+
+
+_COLOUR_WIDTH = {"SFColor": 3, "MFColor": 3, "SFColorRGBA": 4, "MFColorRGBA": 4}
+
+
+def _colour_problem(value: str, ftype: str) -> str | None:
+    """Where a colour value leaves 0..1, in words, or None when every component is in range."""
+    v = _floats(value)
+    bad = [i for i, x in enumerate(v) if not 0.0 <= x <= 1.0]   # NaN fails too
+    if not bad:
+        return None
+    width = _COLOUR_WIDTH[ftype]
+    k = bad[0] // width
+    entry = " ".join(f"{x:g}" for x in v[k * width:(k + 1) * width])
+    which = f"colour {k + 1} of {len(v) // width}" if ftype.startswith("MF") else "the colour"
+    return (f"{which} is '{entry}', but each component must be between 0 and 1 ({len(bad)} "
+            f"component{'s' if len(bad) != 1 else ''} out of range). Clamp to 0..1, or divide by "
+            f"255 if the values were written as 0..255")
+
+
+def _check_colour_range(scene: etree._Element) -> list[Diagnostic]:
+    """Colour components must lie in 0..1 (19775-1 5.3.5, 5.3.6).
+
+    The XSD writes this rule as a pattern on the digits, which misses three cases: a list
+    lets '1.5' read as '1.' and '.5' when that lands on a tuple boundary, MFColor and
+    MFColorRGBA allow a minus sign, and an exponent turns '0.5e1' into 5. Past about the
+    twelfth colour of a list, libxml2's pattern engine also gives up on a bad value
+    instead of rejecting it. This check reads the numbers. It covers node fields, the
+    field declarations of Script, shader and prototype interfaces, and ProtoInstance
+    fieldValues.
+    """
+    nodes = get_x3duom().get_concrete_nodes()
+    protos = _proto_interfaces(scene)
+    diagnostics: list[Diagnostic] = []
+
+    def check(el, owner: str, name: str, value: str, ftype: str) -> None:
+        problem = _colour_problem(value, ftype)
+        if problem:
+            diagnostics.append(Diagnostic(
+                level="error", check="colour-out-of-range",
+                message=f"{owner} {name}: {problem}.",
+                node_tag=_local_tag(el), def_name=el.get("DEF", "")))
+
+    for el in scene.iter():
+        tag = _local_tag(el)
+        if tag in ("field", "fieldValue"):
+            value, fname = el.get("value"), el.get("name", "")
+            ftype = el.get("type", "")
+            parent = el.getparent()
+            if tag == "fieldValue" and parent is not None:
+                ftype = protos.get(parent.get("name"), {}).get(fname, {}).get("type", "")
+            if value is not None and ftype in _COLOUR_WIDTH:
+                owner = _local_tag(parent) if parent is not None else tag
+                check(el, f"{owner} {tag}", f"'{fname}'", value, ftype)
+            continue
+        if tag not in nodes or el.get("USE"):
+            continue
+        fields = _node_field_map(tag, nodes)
+        for name, value in el.attrib.items():
+            ftype = fields.get(name, {}).get("type", "")
+            if ftype in _COLOUR_WIDTH:
+                check(el, f"{tag}{_label(el)}", name, value, ftype)
+    return diagnostics
+
+
+# The standard HAnim names are the enumerations of these XSD simple types; each enumeration's
+# appinfo lists its HAnim 1.x aliases (l_wrist for l_radiocarpal, l_ankle for l_talocrural, ...).
+_HANIM_NAME_TYPES = {"HAnimJoint": ("hanimJointNameValues", "joint"),
+                     "HAnimSegment": ("hanimSegmentNameValues", "segment")}
+_HANIM_NAMES: dict[str, dict] = {}
+
+
+def _hanim_names(schema_version: str) -> dict:
+    """{node: (standard names, {alias: standard name})} from the bundled XSD of `schema_version`."""
+    if schema_version not in _HANIM_NAMES:
+        from validation.validate import XSD_PATHS
+        xs = "{http://www.w3.org/2001/XMLSchema}"
+        root = etree.parse(str(XSD_PATHS[schema_version])).getroot()
+        out = {}
+        for node, (type_name, _) in _HANIM_NAME_TYPES.items():
+            st = root.find(f"{xs}simpleType[@name='{type_name}']")
+            names, aliases = set(), {}
+            for enum in (st.iter(f"{xs}enumeration") if st is not None else ()):
+                names.add(enum.get("value"))
+                for a in enum.iter(f"{xs}attribute"):
+                    if a.get("name") == "alias" and a.get("fixed"):
+                        aliases.setdefault(a.get("fixed"), enum.get("value"))
+            out[node] = (frozenset(names), aliases)
+        _HANIM_NAMES[schema_version] = out
+    return _HANIM_NAMES[schema_version]
+
+
+def _check_hanim_names(scene: etree._Element) -> list[Diagnostic]:
+    """HAnim 2 joints and segments should carry the standard names (19774-1 HAnim 2.0).
+
+    Motions and tools find joints by name: an HAnimMotion's joints list, a BVH or
+    mocap retarget, a skin weight table. The XSD types the name as NMTOKEN because the
+    list is open, and keeps the standard names, each with the HAnim 1.x name it
+    replaces, as enumerations; this check reads those. One warning per node names the
+    fix when the name is a 1.x name (l_wrist for l_radiocarpal), a standard name with
+    a prefix (hanim_l_hip), or one in other case or spacing (HumanoidRoot). Other names
+    outside the list are summed up once per humanoid: a warning for joints, which
+    motions bind to, and an info for segments, where extra names are common. The Web3D
+    X3D Schematron warns on the same names. In X3D 4 a humanoid without a version is
+    HAnim 2.0 (the X3DUOM default); in X3D 3 only an explicit 2.0 or 2.1 is checked.
+    """
+    from validation.validate import resolve_xsd_version
+    root = scene.getparent() if scene.getparent() is not None else scene
+    x3d_version = (root.get("version") or "").strip()
+    standard = _hanim_names(resolve_xsd_version(x3d_version or None)[0])
+    folded = {tag: {n.replace("_", "").lower(): n for n in names} for tag, (names, _) in standard.items()}
+    diagnostics: list[Diagnostic] = []
+    seen: set = set()
+    for humanoid in scene.iter():
+        if _local_tag(humanoid) != "HAnimHumanoid" or humanoid.get("USE"):
+            continue
+        version = humanoid.get("version") or ("1.0" if x3d_version.startswith("3") else "2.0")
+        if version not in ("2.0", "2.1"):
+            continue
+        others: dict[str, list[str]] = {tag: [] for tag in standard}
+        for el in humanoid.iter():
+            tag = _local_tag(el)
+            name = el.get("name")
+            if tag not in standard or el.get("USE") or not name or el in seen:
+                continue
+            seen.add(el)
+            names, aliases = standard[tag]
+            if name in names:
+                continue
+            kind = _HANIM_NAME_TYPES[tag][1]
+            stem = next((name[i + 1:] for i, c in enumerate(name)
+                         if c == "_" and (name[i + 1:] in names or name[i + 1:] in aliases)), None)
+            if name in aliases:
+                fix, why = aliases[name], f"is the HAnim 1.x name; HAnim {version} calls this {kind} '{aliases[name]}'"
+            elif stem is not None:
+                fix = aliases.get(stem, stem)
+                why = f"carries a prefix, and HAnim {version} names this {kind} '{fix}' (a prefix belongs on the DEF)"
+            elif name.replace("_", "").lower() in folded[tag]:
+                fix = folded[tag][name.replace("_", "").lower()]
+                why = f"differs from the HAnim {version} {kind} name '{fix}' in case or underscores"
+            else:
+                others[tag].append(name)
+                continue
+            diagnostics.append(Diagnostic(
+                level="warning", check=f"hanim-{kind}-name",
+                message=f"{tag}{_label(el)} name='{name}' {why}. Rename it to '{fix}' so motions and "
+                        f"tools that look {kind}s up by name find it.",
+                node_tag=tag, def_name=el.get("DEF", "")))
+        for tag, extra in others.items():
+            if not extra:
+                continue
+            kind = _HANIM_NAME_TYPES[tag][1]
+            shown = ", ".join(extra[:6]) + (f" and {len(extra) - 6} more" if len(extra) > 6 else "")
+            diagnostics.append(Diagnostic(
+                level="warning" if tag == "HAnimJoint" else "info", check=f"hanim-{kind}-name",
+                message=f"HAnimHumanoid{_label(humanoid)} has {len(extra)} {kind} name"
+                        f"{'s' if len(extra) != 1 else ''} outside the {len(standard[tag][0])} HAnim "
+                        f"{version} names: {shown}. Tools that bind {kind}s by their standard name "
+                        f"skip these; use a standard name wherever one fits.",
+                node_tag="HAnimHumanoid", def_name=humanoid.get("DEF", "")))
+    return diagnostics
+
+
 _ALL_CHECKS = [
     _check_duplicate_defs,
     _check_def_use_consistency,
@@ -1289,6 +1522,9 @@ _ALL_CHECKS = [
     _check_interpolator_key_order,
     _check_attribute_index_bounds,
     _check_array_counts,
+    _check_route_order,
+    _check_colour_range,
+    _check_hanim_names,
 ]
 
 
