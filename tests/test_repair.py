@@ -102,9 +102,13 @@ def test_doctype_follows_version():
 
 
 def test_x3dpy_https_xsi_namespace_corrected():
+    # x3d.py up to 4.0.65.7 wrote the XSI namespace as https://; 4.0.65.8 writes http://.
+    # Force the https form so the repair is tested whatever x3d.py version is installed.
     from x3d.x3d import X3D, Scene, Shape, Box
     src = X3D(profile="Interchange", version="4.0",
               Scene=Scene(children=[Shape(geometry=Box())])).XML()
+    src = src.replace("http://www.w3.org/2001/XMLSchema-instance",
+                      "https://www.w3.org/2001/XMLSchema-instance")
     assert "https://www.w3.org/2001/XMLSchema-instance" in src
     res = repair_x3d(src)
     root = etree.fromstring(res["fixed"].encode())
