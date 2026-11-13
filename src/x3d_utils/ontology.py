@@ -1,7 +1,11 @@
 """Loader for the X3D Ontology for Semantic Web (Turtle encoding).
 
-Parses the bundled X3dOntology4.0.ttl into an rdflib Graph and provides
-SPARQL query access. The ontology complements the X3DUOM: the X3DUOM
+Parses a bundled X3D Ontology into an rdflib Graph and provides SPARQL query
+access. Two releases are bundled: X3dOntology4.0.ttl (the default of every
+existing tool and query, unchanged) and X3dOntology4.1.ttl (the Consortium
+semantics release, SVN r40416, which has the X3D 4.1 nodes and is the
+namespace X3dToTurtle.xslt writes). `ontology_version_for` picks one by a
+document's X3D version. The ontology complements the X3DUOM: the X3DUOM
 records each node's own metadata (fields, types, containerField), while
 the ontology's property lattice (hasChild/hasParent with domains and
 ranges) supports relationship queries such as "which node types may
@@ -21,8 +25,38 @@ from x3d_utils.ontology_guard import check_node_type
 
 SCHEMAS_DIR = Path(__file__).resolve().parent.parent / "validation" / "schemas"
 ONTOLOGY_PATH = SCHEMAS_DIR / "X3dOntology4.0.ttl"
+ONTOLOGY_41_PATH = SCHEMAS_DIR / "X3dOntology4.1.ttl"
 
 X3D_NS = "https://www.web3d.org/specifications/X3dOntology4.0#"
+X3D_41_NS = "https://www.web3d.org/specifications/X3dOntology4.1#"
+
+# Bundled releases: version -> (file, namespace). "4.0" stays the default everywhere.
+ONTOLOGIES = {
+    "4.0": (ONTOLOGY_PATH, X3D_NS),
+    "4.1": (ONTOLOGY_41_PATH, X3D_41_NS),
+}
+DEFAULT_VERSION = "4.0"
+
+
+def ontology_version_for(x3d_version: str | None) -> str:
+    """The bundled ontology for a document's X3D version: 4.1 for 4.1 and later (and for a document
+    with no version, which the validators also read as 4.1); 4.0 for 4.0 and the 3.x releases."""
+    v = (x3d_version or "").strip()
+    if not v:
+        return "4.1"
+    try:
+        major, _, minor = v.partition(".")
+        return "4.1" if (int(major), int(minor or 0)) >= (4, 1) else "4.0"
+    except ValueError:
+        return "4.1"
+
+
+def check_ontology_version(version: str) -> str:
+    """'4.0' or '4.1'; anything else raises ValueError naming the choices."""
+    v = (version or DEFAULT_VERSION).strip()
+    if v not in ONTOLOGIES:
+        raise ValueError(f"ontology_version must be one of {sorted(ONTOLOGIES)}, not {version!r}")
+    return v
 
 # Optional extension ontologies (kept in a *separate* graph, see below).
 # EXTENSIONS_ENV is an os.pathsep-separated list of .ttl files and/or
@@ -39,14 +73,19 @@ X3D_ALIAS_NAMESPACES = (
     "https://www.web3d.org/specifications/X3dOntology4.1#",
 )
 
-PREFIXES = f"""\
-PREFIX x3d: <{X3D_NS}>
+def prefixes_for(namespace: str) -> str:
+    """The SPARQL prefixes every ontology query gets, with x3d: bound to `namespace`."""
+    return f"""\
+PREFIX x3d: <{namespace}>
 PREFIX sc: <{SPATIAL_NS}>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX dcterms: <http://purl.org/dc/terms/>
 """
+
+
+PREFIXES = prefixes_for(X3D_NS)
 
 
 def _extension_files(spec: str) -> list[Path]:
@@ -63,19 +102,20 @@ def _extension_files(spec: str) -> list[Path]:
     return files
 
 
-def _alias_x3d_namespaces(graph: rdflib.Graph) -> rdflib.Graph:
-    """Return a copy of `graph` with alias X3D namespaces rewritten to X3D_NS."""
+def _alias_x3d_namespaces(graph: rdflib.Graph, target: str = X3D_NS,
+                          aliases: tuple = X3D_ALIAS_NAMESPACES) -> rdflib.Graph:
+    """Return a copy of `graph` with alias X3D namespaces rewritten to `target` (X3D_NS by default)."""
     def fix(term):
         if isinstance(term, rdflib.URIRef):
             text = str(term)
-            for alias in X3D_ALIAS_NAMESPACES:
+            for alias in aliases:
                 if text.startswith(alias):
-                    return rdflib.URIRef(X3D_NS + text[len(alias):])
+                    return rdflib.URIRef(target + text[len(alias):])
         return term
 
     out = rdflib.Graph()
     for prefix, ns in graph.namespaces():
-        if str(ns) not in X3D_ALIAS_NAMESPACES:
+        if str(ns) not in aliases:
             out.bind(prefix, ns)
     for s_, p_, o_ in graph:
         out.add((fix(s_), fix(p_), fix(o_)))
@@ -91,10 +131,13 @@ class X3DOntology:
     caller asks for `include_extensions=True`.
     """
 
-    def __init__(self, path: Path = ONTOLOGY_PATH, extensions: str | None = None):
+    def __init__(self, path: Path = ONTOLOGY_PATH, extensions: str | None = None, namespace: str = X3D_NS):
         self._graph = rdflib.Graph()
         self._graph.parse(str(path), format="turtle")
-        self._ns = rdflib.Namespace(X3D_NS)
+        self.path = Path(path)
+        self.namespace = namespace
+        self._prefixes = prefixes_for(namespace)
+        self._ns = rdflib.Namespace(namespace)
         self._extension_files: list[Path] = []
         self._extensions = rdflib.Graph()
         spec = os.environ.get(EXTENSIONS_ENV, "") if extensions is None else extensions
@@ -106,7 +149,8 @@ class X3DOntology:
         self._extension_files = _extension_files(spec)
         for f in self._extension_files:
             raw.parse(str(f), format="turtle")
-        self._extensions = _alias_x3d_namespaces(raw)
+        aliases = tuple(ns for _, ns in ONTOLOGIES.values() if ns != self.namespace)
+        self._extensions = _alias_x3d_namespaces(raw, self.namespace, aliases)
 
     @property
     def extensions(self) -> rdflib.Graph:
@@ -115,13 +159,13 @@ class X3DOntology:
     def extension_status(self) -> dict:
         """What was loaded, and which X3D classes it references that the bundled
         ontology does not define (e.g. nodes that exist only in X3D 4.1)."""
-        ns = rdflib.Namespace(X3D_NS)
+        ns_text = self.namespace
         referenced = {
             t for triple in self._extensions for t in triple
-            if isinstance(t, rdflib.URIRef) and str(t).startswith(X3D_NS)
+            if isinstance(t, rdflib.URIRef) and str(t).startswith(ns_text)
         }
         unresolved = sorted(
-            str(t)[len(X3D_NS):] for t in referenced
+            str(t)[len(ns_text):] for t in referenced
             if (t, None, None) not in self._graph and (None, None, t) not in self._graph
         )
         return {
@@ -150,7 +194,7 @@ class X3DOntology:
         graph = self._graph
         if include_extensions and len(self._extensions):
             graph = rdflib.graph.ReadOnlyGraphAggregate([self._graph, self._extensions])
-        result = graph.query(PREFIXES + sparql)
+        result = graph.query(self._prefixes + sparql)
         if result.type == "ASK":
             return [{"ask": bool(result.askAnswer)}]
         rows = []
@@ -218,21 +262,40 @@ ORDER BY ?parent
         """Render an rdflib term compactly (strip the x3d namespace)."""
         if isinstance(value, rdflib.URIRef):
             text = str(value)
-            if text.startswith(X3D_NS):
-                return text[len(X3D_NS):]
+            if text.startswith(self.namespace):
+                return text[len(self.namespace):]
             return text
         if value is None:
             return ""
         return str(value)
 
 
-# Module-level singleton
+# Module-level singletons, one per bundled release
 _instance = None
+_instances: dict = {}
 
 
-def get_ontology() -> X3DOntology:
-    """Return the cached X3DOntology singleton."""
+def get_ontology(version: str = DEFAULT_VERSION) -> X3DOntology:
+    """Return the cached X3DOntology for a bundled release ('4.0', the default, or '4.1')."""
     global _instance
-    if _instance is None:
-        _instance = X3DOntology()
-    return _instance
+    version = check_ontology_version(version)
+    if version == DEFAULT_VERSION:
+        if _instance is None:
+            _instance = X3DOntology()
+        return _instance
+    if version not in _instances:
+        path, ns = ONTOLOGIES[version]
+        _instances[version] = X3DOntology(path, namespace=ns)
+    return _instances[version]
+
+
+_SHA: dict = {}
+
+
+def ontology_sha256(version: str = DEFAULT_VERSION) -> str:
+    """sha256 of the bundled ontology file for a release."""
+    version = check_ontology_version(version)
+    if version not in _SHA:
+        import hashlib
+        _SHA[version] = hashlib.sha256(ONTOLOGIES[version][0].read_bytes()).hexdigest()
+    return _SHA[version]
