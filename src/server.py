@@ -42,7 +42,7 @@ _real_stdout = sys.stdout
 sys.stdout = sys.stderr
 from tools import (
     workflow, granular, convert, query, validate_tool, render, scene_ops, animate,
-    claims as claim_tools, prompts, semantics,
+    claims as claim_tools, prompts, semantics, semantic_web,
 )
 from tools import transfer as blob_tools
 from tools import splats as splat_tools
@@ -70,7 +70,18 @@ still be visually wrong (off-camera, unlit, mis-scaled).
 Rule: a scene is not finished until validate_semantic is clean AND you have rendered it.
 
 For any multi-step task, START from a prompt (build_scene, animate_scene, audit_scene, \
-convert_to_x3dom). They encode the known-good tool order so you don't have to rediscover it.
+semantic_audit, convert_to_x3dom). They encode the known-good tool order so you don't have to rediscover it.
+
+MEANING, NOT ONLY SYNTAX (the semantic_audit prompt runs this): `scene_to_rdf` turns a scene into RDF \
+(X3D Ontology 4.1 terms, the Consortium X3dToTurtle conventions) and returns a `graph_id`; \
+`sparql_scene(graph_id=..., sparql=...)` answers questions about it (which Shapes lack an Appearance, \
+what a ROUTE chain drives, every geometry via `a/rdfs:subClassOf*`); `shacl_validate(graph_id=...)` \
+checks it against shapes and names each offending node, its DEF, the check and a fix; then \
+`validate_x3d` + `validate_semantic` for schema and order (RDF keeps no document order); record what \
+you verified with `claim_append`, passing the `instrument` object these tools return. `rdf_infer` shows \
+what reasoning adds (subclass-only by default); `ontology_vs_gate(child)` compares the ontology's map of \
+where a node may go with the X3DUOM gate (`where_can_place`) and the XSD. The ontology proposes, the \
+shapes dispose, the validators gate: an ontology answer is never a validity verdict.
 
 NON-OBVIOUS RULES THAT CAUSE SILENT FAILURES (validate_semantic enforces all of these):
 - containerField: every child node belongs to a specific *field* of its parent. A node's DEFAULT \
@@ -133,6 +144,7 @@ scene_ops.register(mcp)
 animate.register(mcp)
 prompts.register(mcp)
 semantics.register(mcp)
+semantic_web.register(mcp)
 claim_tools.register(mcp)
 
 if _SPLATS:

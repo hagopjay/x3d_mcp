@@ -100,6 +100,53 @@ def register(mcp: FastMCP):
         )
 
     @mcp.prompt()
+    def semantic_audit(content: str = "", focus: str = "") -> str:
+        """Audit what an X3D scene means: its RDF graph, SPARQL questions, SHACL shapes, the validators, receipts.
+
+        Use this to check a scene you did not write, or to verify your own before calling it done.
+        """
+        target = "the X3D scene" if not content else f"the X3D scene at {content!r}"
+        extra = f"\nPay particular attention to: {focus}\n" if focus else ""
+        return (
+            f"Audit the meaning of {target}, layer by layer, and keep receipts.{extra}\n"
+            "1. **Graph it:** `scene_to_rdf(content|path|blob_id, return_mode='summary')`. Keep the "
+            "`graph_id`, the triple count, the `warnings` and the `instrument`. Every later call takes "
+            "`graph_id=` instead of the document.\n\n"
+            "2. **Ask it:** `sparql_scene(graph_id=..., sparql=...)`. Start with an inventory, then follow "
+            "what you find. Useful queries (x3do: is pre-declared):\n"
+            "   - census: `SELECT ?t (COUNT(?n) AS ?k) WHERE { ?n a ?t . FILTER(STRSTARTS(STR(?t), STR(x3do:))) } "
+            "GROUP BY ?t`\n"
+            "   - all geometry, through the class hierarchy: `SELECT ?n ?t WHERE { ?n a ?t . "
+            "?t rdfs:subClassOf* x3do:X3DGeometryNode }`\n"
+            "   - Shapes without an Appearance: `SELECT ?s WHERE { ?s a x3do:Shape . "
+            "FILTER NOT EXISTS { ?s x3do:hasAppearance ?a } FILTER NOT EXISTS { ?s owl:sameAs ?d } }`\n"
+            "   - DEF/USE reuse: `SELECT ?use ?def WHERE { ?use owl:sameAs ?def }`\n"
+            "   - what a ROUTE drives: `SELECT ?from ?ff ?to ?tf WHERE { ?r a x3do:ROUTE ; x3do:fromNode ?from ; "
+            "x3do:fromField ?ff ; x3do:toNode ?to ; x3do:toField ?tf }`\n\n"
+            "3. **Hold it to the shapes:** `shacl_validate(graph_id=...)` with the bundled x3d-core shapes "
+            "(colour ranges, Shape geometry, USE type, ROUTE endpoints, field domains, child nodes, Viewpoint). "
+            "For each result note focus, def, check_id and fix_hint. Add your own rule with "
+            "`extra_shapes_ttl` when the task needs one. Keep inference='none': reasoning over this ontology "
+            "adds types that are not in the scene.\n\n"
+            "4. **Gate it:** `validate_x3d(content)` (XSD) and `validate_semantic(content)` (containerField, "
+            "USE-before-DEF, ROUTE types and order, profile). RDF keeps no document order, so these catch what "
+            "the graph cannot. A scene passes only when both are clean.\n\n"
+            "5. **Explain placement questions** with `ontology_vs_gate('<NodeType>')`: the ontology's map "
+            "proposes parents, `where_can_place` and the XSD decide. `rdf_infer(graph_id=...)` (default "
+            "profile 'subclass') shows class membership; its 'rdfs' and 'owl-rl' profiles are for studying "
+            "the ontology, not for validating a scene.\n\n"
+            "6. **Receipts:** for each finding you verified, `claim_append(claim, grade, subject, instrument, "
+            "evidence)`: grade Confirmed only when a tool verdict shows it, Likely when it follows from one, "
+            "Suspected otherwise; instrument = the JSON `instrument` the tool returned; evidence = graph_sha256 "
+            "plus the check_id or query. Finish with `claims_verify`.\n\n"
+            "7. **Fix and repeat:** `autofix_x3d` / `repair_x3d` / `modify_x3d_node`, then steps 1, 3 and 4 "
+            "again until shacl_validate has no Violation and both validators are clean. Render with "
+            "`render_image` before calling it done: valid is not the same as visible.\n\n"
+            "Report which layer caught each problem (SPARQL, SHACL, XSD, validate_semantic, render). "
+            "Names like Shape_2_4_2 are positions and change when nodes are inserted; DEF names are stable."
+        )
+
+    @mcp.prompt()
     def animate_scene(target_description: str = "a rotating object") -> str:
         """Step-by-step guide to add animation to an X3D scene."""
         return (
