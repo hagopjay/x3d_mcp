@@ -1,0 +1,131 @@
+@prefix :        <https://example.org/lab/LabScene41.ttl#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema:  <http://schema.org/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix x3d:     <https://www.web3d.org/specifications/x3d-4.1.xsd#> .
+@prefix x3do:    <https://www.web3d.org/specifications/X3dOntology4.1#> .
+
+:X3D a owl:NamedIndividual, x3do:X3D ;
+  x3do:hasHead :head ;
+  x3do:hasScene :Scene ;
+  x3do:profile 'Immersive' ;
+  x3do:version '4.1' ;
+  x3do:noNamespaceSchemaLocation 'https://www.web3d.org/specifications/x3d-4.1.xsd' .
+:head a owl:NamedIndividual, x3do:head ;
+  x3do:hasParent :X3D ;
+  x3do:hasMeta :meta_1_1, :meta_1_2, :meta_1_3 .
+:meta_1_1 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:name 'title' ;
+  x3do:content 'LabScene41.x3d' .
+:meta_1_2 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:name 'identifier' ;
+  x3do:content 'https://example.org/lab/LabScene41.x3d' .
+:meta_1_3 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:name 'creator' ;
+  x3do:content 'scout' .
+:meta dcterms:title "LabScene41.x3d" .
+:meta dcterms:identifier "https://example.org/lab/LabScene41.x3d" .
+:meta dcterms:creator "scout" .
+:Scene a owl:NamedIndividual, x3do:Scene ;
+  x3do:hasParent :X3D ;
+  x3do:hasChildren :WorldInfo_2_1, :Front, :Pedestal, :Orb, :Transform_2_5, :Clock, :Spin ;
+  x3do:hasROUTE :ROUTE_2_8, :ROUTE_2_9 .
+:WorldInfo_2_1 a owl:NamedIndividual, x3do:WorldInfo ;
+  x3do:hasParent :Scene ;
+  x3do:title 'Semantic lab scene' .
+:Front a owl:NamedIndividual, x3do:Viewpoint ;
+  x3do:hasParent :Scene ;
+  x3do:DEF 'Front' ;
+  x3do:description 'Front view' ;
+  x3do:position ( 0 1 8 ) .
+:Pedestal a owl:NamedIndividual, x3do:Transform ;
+  x3do:hasParent :Scene ;
+  x3do:hasChildren :PedestalShape ;
+  x3do:DEF 'Pedestal' ;
+  x3do:translation ( 0 -1 0 ) .
+:PedestalShape a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :Pedestal ;
+  x3do:hasAppearance :Appearance_2_3_1_1 ;
+  x3do:hasGeometry :Box_2_3_1_2 ;
+  x3do:DEF 'PedestalShape' .
+:Appearance_2_3_1_1 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :PedestalShape ;
+  x3do:hasMaterial :Brass .
+:Brass a owl:NamedIndividual, x3do:PhysicalMaterial ;
+  x3do:hasParent :Appearance_2_3_1_1 ;
+  x3do:DEF 'Brass' ;
+  x3do:baseColor ( 0.8 1.4 0.2 ) ;
+  x3do:metallic 0.9 ;
+  x3do:roughness 0.3 .
+:Box_2_3_1_2 a owl:NamedIndividual, x3do:Box ;
+  x3do:hasParent :PedestalShape ;
+  x3do:size ( 2 0.5 2 ) .
+:Orb a owl:NamedIndividual, x3do:Transform ;
+  x3do:hasParent :Scene ;
+  x3do:hasMetadata :MetadataString_2_4_1 ;
+  x3do:hasChildren :Shape_2_4_2 ;
+  x3do:DEF 'Orb' ;
+  x3do:translation ( 0 1 0 ) .
+:MetadataString_2_4_1 a owl:NamedIndividual, x3do:MetadataString ;
+  x3do:hasParent :Orb ;
+  x3do:name 'role' ;
+  x3do:value '"hero"' .
+:Shape_2_4_2 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :Orb ;
+  x3do:hasAppearance :Appearance_2_4_2_1 ;
+  x3do:hasGeometry :Sphere_2_4_2_2 .
+:Appearance_2_4_2_1 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_4_2 ;
+  x3do:hasMaterial :Blue .
+:Blue a owl:NamedIndividual, x3do:Material ;
+  x3do:hasParent :Appearance_2_4_2_1 ;
+  x3do:DEF 'Blue' ;
+  x3do:diffuseColor ( 1 1 ) ;
+  x3do:transparency 1.2 .
+:Sphere_2_4_2_2 a owl:NamedIndividual, x3do:Sphere ;
+  x3do:hasParent :Shape_2_4_2 ;
+  x3do:radius 0.75 .
+:Transform_2_5 a owl:NamedIndividual, x3do:Transform ;
+  x3do:hasParent :Scene ;
+  x3do:hasChildren :Shape_2_5_1 ;
+  x3do:translation ( 2 0 0 ) .
+:Shape_2_5_1 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :Transform_2_5 ;
+  x3do:hasAppearance :Appearance_2_5_1_1 ;
+  x3do:hasGeometry :Cone_2_5_1_2 .
+:Appearance_2_5_1_1 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_5_1 ;
+  x3do:hasMaterial :Blue-USE-1 .
+:Blue-USE-1 a owl:NamedIndividual, x3do:Material ;
+  x3do:hasParent :Appearance_2_5_1_1 ;
+  owl:sameAs :Blue . # DEF matching this USE
+:Cone_2_5_1_2 a owl:NamedIndividual, x3do:Cone ;
+  x3do:hasParent :Shape_2_5_1 .
+:Clock a owl:NamedIndividual, x3do:TimeSensor ;
+  x3do:hasParent :Scene ;
+  x3do:DEF 'Clock' ;
+  x3do:cycleInterval '4' ;
+  x3do:loop true .
+:Spin a owl:NamedIndividual, x3do:OrientationInterpolator ;
+  x3do:hasParent :Scene ;
+  x3do:DEF 'Spin' ;
+  x3do:key ( 0 0.5 1 ) ;
+  x3do:keyValue ( 0 1 0 0 0 1 0 3.14 0 1 0 6.28 ) .
+:ROUTE_2_8 a owl:NamedIndividual, x3do:ROUTE ;
+  x3do:hasParent :Scene ;
+  x3do:fromNode 'Clock' ;
+  x3do:fromField 'fraction_changed' ;
+  x3do:toNode 'Spin' ;
+  x3do:toField 'set_fraction' .
+:ROUTE_2_9 a owl:NamedIndividual, x3do:ROUTE ;
+  x3do:hasParent :Scene ;
+  x3do:fromNode 'Spin' ;
+  x3do:fromField 'value_changed' ;
+  x3do:toNode 'Orb' ;
+  x3do:toField 'set_rotation' .

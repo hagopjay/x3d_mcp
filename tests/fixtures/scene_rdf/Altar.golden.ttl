@@ -1,0 +1,372 @@
+@prefix :        <https://www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/SanCarlosCathedral/Altar.ttl#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema:  <http://schema.org/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix x3d:     <https://www.web3d.org/specifications/x3d-4.1.xsd#> .
+@prefix x3do:    <https://www.web3d.org/specifications/X3dOntology4.1#> .
+
+:X3D a owl:NamedIndividual, x3do:X3D ;
+  x3do:hasHead :head ;
+  x3do:hasScene :Scene ;
+  x3do:profile 'Interchange' ;
+  x3do:version '3.3' ;
+  x3do:noNamespaceSchemaLocation 'https://www.web3d.org/specifications/x3d-3.3.xsd' .
+:head a owl:NamedIndividual, x3do:head ;
+  x3do:hasParent :X3D ;
+  x3do:hasMeta :meta_1_1, :meta_1_2, :meta_1_3, :meta_1_4, :meta_1_5, :meta_1_6, :meta_1_7, :meta_1_8, :meta_1_9, :meta_1_10, :meta_1_11, :meta_1_12, :meta_1_13, :meta_1_14 .
+:meta_1_1 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'Altar.x3d' ;
+  x3do:name 'title' .
+:meta_1_2 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'Altar for San Carlos Cathedral' ;
+  x3do:name 'description' .
+:meta_1_3 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'Michele Foti' ;
+  x3do:name 'creator' .
+:meta_1_4 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content '8 March 2012' ;
+  x3do:name 'created' .
+:meta_1_5 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content '14 November 2019' ;
+  x3do:name 'modified' .
+:meta_1_6 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'TODO.html' ;
+  x3do:name 'reference' .
+:meta_1_7 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'http://www.sancarloscathedral.net' ;
+  x3do:name 'reference' .
+:meta_1_8 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'RoyalPresidioChapelHistoricalReferences.pdf' ;
+  x3do:name 'reference' .
+:meta_1_9 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'CulturalHeritageProjectSanCarlosCathedral.pdf' ;
+  x3do:name 'reference' .
+:meta_1_10 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'originals/' ;
+  x3do:name 'reference' .
+:meta_1_11 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'originals/ModelSanCarlosChurchFeb-3-2012.x3d' ;
+  x3do:name 'reference' .
+:meta_1_12 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'https://www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/SanCarlosCathedral/Altar.x3d' ;
+  x3do:name 'identifier' .
+:meta_1_13 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'X3D-Edit 3.3, https://www.web3d.org/x3d/tools/X3D-Edit' ;
+  x3do:name 'generator' .
+:meta_1_14 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content '../license.html' ;
+  x3do:name 'license' .
+:meta dcterms:title "Altar.x3d" .
+:meta dcterms:description "Altar for San Carlos Cathedral" .
+:meta dcterms:creator "Michele Foti" .
+:meta dcterms:created "8 March 2012" .
+:meta dcterms:modified "14 November 2019" .
+:meta dcterms:reference "TODO.html" .
+:meta dcterms:reference "http://www.sancarloscathedral.net" .
+:meta dcterms:reference "RoyalPresidioChapelHistoricalReferences.pdf" .
+:meta dcterms:reference "CulturalHeritageProjectSanCarlosCathedral.pdf" .
+:meta dcterms:reference "originals/" .
+:meta dcterms:reference "originals/ModelSanCarlosChurchFeb-3-2012.x3d" .
+:meta dcterms:identifier "https://www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/SanCarlosCathedral/Altar.x3d" .
+:meta dcterms:generator "X3D-Edit 3.3, https://www.web3d.org/x3d/tools/X3D-Edit" .
+:meta dcterms:license "../license.html" .
+:Scene a owl:NamedIndividual, x3do:Scene ;
+  x3do:hasParent :X3D ;
+  x3do:hasChildren :WorldInfo_2_1, :Background_2_2, :Colonna1, :Colonna2, :Colonna3, :Colonna4, :bbase, :bbase2, :bbase3, :bbase4, :arcoAltare, :arcoAltare2, :arcoAltare3, :arcoAltare4, :piano1d, :piano1 .
+:WorldInfo_2_1 a owl:NamedIndividual, x3do:WorldInfo ;
+  x3do:hasParent :Scene ;
+  x3do:title 'Altar.x3d' .
+:Background_2_2 a owl:NamedIndividual, x3do:Background ;
+  x3do:hasParent :Scene ;
+  x3do:skyColor ( 0.7216 0.8 0.9922 ) .
+:Colonna1 a owl:NamedIndividual, x3do:Transform ;
+  x3do:hasParent :Scene ;
+  x3do:hasChildren :Shape_2_3_1 ;
+  x3do:DEF 'Colonna1' ;
+  x3do:translation ( 0.7 0 -0.7 ) .
+:Shape_2_3_1 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :Colonna1 ;
+  x3do:hasGeometry :Box_2_3_1_1 ;
+  x3do:hasAppearance :WoodAppearance .
+:Box_2_3_1_1 a owl:NamedIndividual, x3do:Box ;
+  x3do:hasParent :Shape_2_3_1 ;
+  x3do:size ( 0.4 1.2 0.4 ) .
+:WoodAppearance a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_3_1 ;
+  x3do:hasTexture :Wood ;
+  x3do:DEF 'WoodAppearance' .
+:Wood a owl:NamedIndividual, x3do:ImageTexture ;
+  x3do:hasParent :WoodAppearance ;
+  x3do:DEF 'Wood' ;
+  x3do:url '"images/Wood.jpg" "https://www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/SanCarlosCathedral/images/Wood.jpg"' .
+:Colonna2 a owl:NamedIndividual, x3do:Transform ;
+  x3do:hasParent :Scene ;
+  x3do:hasChildren :Shape_2_4_1 ;
+  x3do:DEF 'Colonna2' ;
+  x3do:translation ( -0.7 0 -0.7 ) .
+:Shape_2_4_1 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :Colonna2 ;
+  x3do:hasGeometry :Box_2_4_1_1 ;
+  x3do:hasAppearance :WoodAppearance-USE-1 .
+:Box_2_4_1_1 a owl:NamedIndividual, x3do:Box ;
+  x3do:hasParent :Shape_2_4_1 ;
+  x3do:size ( 0.4 1.2 0.4 ) .
+:WoodAppearance-USE-1 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_4_1 ;
+  owl:sameAs :WoodAppearance . # DEF matching this USE
+:Colonna3 a owl:NamedIndividual, x3do:Transform ;
+  x3do:hasParent :Scene ;
+  x3do:hasChildren :Shape_2_5_1 ;
+  x3do:DEF 'Colonna3' ;
+  x3do:translation ( 0.7 0 0.7 ) .
+:Shape_2_5_1 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :Colonna3 ;
+  x3do:hasGeometry :Box_2_5_1_1 ;
+  x3do:hasAppearance :WoodAppearance-USE-2 .
+:Box_2_5_1_1 a owl:NamedIndividual, x3do:Box ;
+  x3do:hasParent :Shape_2_5_1 ;
+  x3do:size ( 0.4 1.2 0.4 ) .
+:WoodAppearance-USE-2 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_5_1 ;
+  owl:sameAs :WoodAppearance . # DEF matching this USE
+:Colonna4 a owl:NamedIndividual, x3do:Transform ;
+  x3do:hasParent :Scene ;
+  x3do:hasChildren :Shape_2_6_1 ;
+  x3do:DEF 'Colonna4' ;
+  x3do:translation ( -0.7 0 0.7 ) .
+:Shape_2_6_1 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :Colonna4 ;
+  x3do:hasGeometry :Box_2_6_1_1 ;
+  x3do:hasAppearance :WoodAppearance-USE-3 .
+:Box_2_6_1_1 a owl:NamedIndividual, x3do:Box ;
+  x3do:hasParent :Shape_2_6_1 ;
+  x3do:size ( 0.4 1.2 0.4 ) .
+:WoodAppearance-USE-3 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_6_1 ;
+  owl:sameAs :WoodAppearance . # DEF matching this USE
+:bbase a owl:NamedIndividual, x3do:Transform ;
+  x3do:hasParent :Scene ;
+  x3do:hasChildren :Shape_2_7_1 ;
+  x3do:DEF 'bbase' ;
+  x3do:translation ( -1 -0.7 1 ) .
+:Shape_2_7_1 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :bbase ;
+  x3do:hasGeometry :IndexedFaceSet_2_7_1_1 ;
+  x3do:hasAppearance :WoodAppearance-USE-4 .
+:IndexedFaceSet_2_7_1_1 a owl:NamedIndividual, x3do:IndexedFaceSet ;
+  x3do:hasParent :Shape_2_7_1 ;
+  x3do:hasCoord :CoordinatePoints ;
+  x3do:convex false ;
+  x3do:coordIndex ( 3 7 4 0 -1 0 1 5 4 -1 4 5 6 7 -1 3 7 6 2 -1 1 5 6 2 -1 ) ;
+  x3do:solid false .
+:CoordinatePoints a owl:NamedIndividual, x3do:Coordinate ;
+  x3do:hasParent :IndexedFaceSet_2_7_1_1 ;
+  x3do:DEF 'CoordinatePoints' ;
+  x3do:point ( 0 0 0 0.5 0 0 0.5 0 -0.5 0 0 -0.5 0.09 0.2 -0.09 0.5 0.2 -0.09 0.5 0.2 -0.5 0.09 0.2 -0.5 ) .
+:WoodAppearance-USE-4 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_7_1 ;
+  owl:sameAs :WoodAppearance . # DEF matching this USE
+:bbase2 a owl:NamedIndividual, x3do:Transform ;
+  x3do:hasParent :Scene ;
+  x3do:hasChildren :Shape_2_8_1 ;
+  x3do:DEF 'bbase2' ;
+  x3do:rotation ( 0 1 0 1.57 ) ;
+  x3do:translation ( 0.9995 -0.7 1 ) .
+:Shape_2_8_1 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :bbase2 ;
+  x3do:hasGeometry :IndexedFaceSet_2_8_1_1 ;
+  x3do:hasAppearance :WoodAppearance-USE-5 .
+:IndexedFaceSet_2_8_1_1 a owl:NamedIndividual, x3do:IndexedFaceSet ;
+  x3do:hasParent :Shape_2_8_1 ;
+  x3do:hasCoord :CoordinatePoints-USE-1 ;
+  x3do:convex false ;
+  x3do:coordIndex ( 3 7 4 0 -1 0 1 5 4 -1 4 5 6 7 -1 3 7 6 2 -1 1 5 6 2 -1 ) ;
+  x3do:solid false .
+:CoordinatePoints-USE-1 a owl:NamedIndividual, x3do:Coordinate ;
+  x3do:hasParent :IndexedFaceSet_2_8_1_1 ;
+  owl:sameAs :CoordinatePoints . # DEF matching this USE
+:WoodAppearance-USE-5 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_8_1 ;
+  owl:sameAs :WoodAppearance . # DEF matching this USE
+:bbase3 a owl:NamedIndividual, x3do:Transform ;
+  x3do:hasParent :Scene ;
+  x3do:hasChildren :Shape_2_9_1 ;
+  x3do:DEF 'bbase3' ;
+  x3do:rotation ( 0 1 0 3.14 ) ;
+  x3do:translation ( 0.9995 -0.7 -1 ) .
+:Shape_2_9_1 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :bbase3 ;
+  x3do:hasGeometry :IndexedFaceSet_2_9_1_1 ;
+  x3do:hasAppearance :WoodAppearance-USE-6 .
+:IndexedFaceSet_2_9_1_1 a owl:NamedIndividual, x3do:IndexedFaceSet ;
+  x3do:hasParent :Shape_2_9_1 ;
+  x3do:hasCoord :CoordinatePoints-USE-2 ;
+  x3do:convex false ;
+  x3do:coordIndex ( 3 7 4 0 -1 0 1 5 4 -1 4 5 6 7 -1 3 7 6 2 -1 1 5 6 2 -1 ) ;
+  x3do:solid false .
+:CoordinatePoints-USE-2 a owl:NamedIndividual, x3do:Coordinate ;
+  x3do:hasParent :IndexedFaceSet_2_9_1_1 ;
+  owl:sameAs :CoordinatePoints . # DEF matching this USE
+:WoodAppearance-USE-6 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_9_1 ;
+  owl:sameAs :WoodAppearance . # DEF matching this USE
+:bbase4 a owl:NamedIndividual, x3do:Transform ;
+  x3do:hasParent :Scene ;
+  x3do:hasChildren :Shape_2_10_1 ;
+  x3do:DEF 'bbase4' ;
+  x3do:rotation ( 0 1 0 -1.57 ) ;
+  x3do:translation ( -1 -0.7 -1 ) .
+:Shape_2_10_1 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :bbase4 ;
+  x3do:hasGeometry :IndexedFaceSet_2_10_1_1 ;
+  x3do:hasAppearance :WoodAppearance-USE-7 .
+:IndexedFaceSet_2_10_1_1 a owl:NamedIndividual, x3do:IndexedFaceSet ;
+  x3do:hasParent :Shape_2_10_1 ;
+  x3do:hasCoord :CoordinatePoints-USE-3 ;
+  x3do:convex false ;
+  x3do:coordIndex ( 3 7 4 0 -1 0 1 5 4 -1 4 5 6 7 -1 3 7 6 2 -1 1 5 6 2 -1 ) ;
+  x3do:solid false .
+:CoordinatePoints-USE-3 a owl:NamedIndividual, x3do:Coordinate ;
+  x3do:hasParent :IndexedFaceSet_2_10_1_1 ;
+  owl:sameAs :CoordinatePoints . # DEF matching this USE
+:WoodAppearance-USE-7 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_10_1 ;
+  owl:sameAs :WoodAppearance . # DEF matching this USE
+:arcoAltare a owl:NamedIndividual, x3do:Transform ;
+  x3do:hasParent :Scene ;
+  x3do:hasChildren :Shape_2_11_1 ;
+  x3do:DEF 'arcoAltare' ;
+  x3do:scale ( 0.7 0.6 0.7 ) ;
+  x3do:translation ( 0 -0.15 0.66 ) .
+:Shape_2_11_1 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :arcoAltare ;
+  x3do:hasGeometry :IndexedFaceSet_2_11_1_1 ;
+  x3do:hasAppearance :WoodAppearance-USE-8 .
+:IndexedFaceSet_2_11_1_1 a owl:NamedIndividual, x3do:IndexedFaceSet ;
+  x3do:hasParent :Shape_2_11_1 ;
+  x3do:hasCoord :CoordinatePointArrayLarge ;
+  x3do:convex false ;
+  x3do:coordIndex ( 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 84 85 86 87 88 89 -1 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 90 91 92 93 94 95 -1 0 42 43 1 -1 1 43 44 2 -1 2 44 45 3 -1 3 45 46 4 -1 4 46 47 5 -1 5 47 48 6 -1 6 48 49 7 -1 7 49 50 8 -1 8 50 51 9 -1 9 51 52 10 -1 10 52 53 11 -1 11 53 54 12 -1 12 54 55 13 -1 13 55 56 14 -1 14 56 57 15 -1 15 57 58 16 -1 16 58 59 17 -1 17 59 60 18 -1 18 60 61 19 -1 19 61 62 20 -1 20 62 63 21 -1 21 63 64 22 -1 22 64 65 23 -1 23 65 66 24 -1 24 66 67 25 -1 25 67 68 26 -1 26 68 69 27 -1 27 69 70 28 -1 28 70 71 29 -1 29 71 72 30 -1 30 72 73 31 -1 31 73 74 32 -1 32 74 75 33 -1 33 75 76 34 -1 34 76 77 35 -1 35 77 78 36 -1 36 78 79 37 -1 37 79 80 38 -1 38 80 81 39 -1 39 81 82 40 -1 40 82 83 41 -1 84 41 83 90 -1 89 0 42 95 -1 ) ;
+  x3do:solid false .
+:CoordinatePointArrayLarge a owl:NamedIndividual, x3do:Coordinate ;
+  x3do:hasParent :IndexedFaceSet_2_11_1_1 ;
+  x3do:DEF 'CoordinatePointArrayLarge' ;
+  x3do:point ( 0.62265 0.0 0 0.6218712004456791 0.0311325 0 0.6195289277144369 0.062265 0 0.6156053358230011 0.0933975 0 0.6100699153375784 0.12453 0 0.6028782701290121 0.1556625 0 0.5939702437622613 0.186795 0 0.5832672005554145 0.2179275 0 0.5706681512928509 0.24906 0 0.5560442297549271 0.2801925 0 0.5392307176663808 0.311325 0 0.520015272077417 0.3424575 0 0.49812000000000006 0.37359 0 0.47317303441103875 0.4047225 0 0.4446610411032206 0.435855 0 0.4118442634585919 0.4669875 0 0.37359000000000003 0.49812 0 0.3280012404606879 0.5292525 0 0.2714068427195601 0.560385 0 0.19442240018513812 0.5915175 0 0.0 0.62265 0 -0.0 0.62265 0 -0.19442240018513812 0.5915175 0 -0.2714068427195601 0.560385 0 -0.3280012404606879 0.5292525 0 -0.37359000000000003 0.49812 0 -0.4118442634585919 0.4669875 0 -0.4446610411032206 0.435855 0 -0.47317303441103875 0.4047225 0 -0.49812000000000006 0.37359 0 -0.520015272077417 0.3424575 0 -0.5392307176663808 0.311325 0 -0.5560442297549271 0.2801925 0 -0.5706681512928509 0.24906 0 -0.5832672005554145 0.2179275 0 -0.5939702437622613 0.186795 0 -0.6028782701290121 0.1556625 0 -0.6100699153375784 0.12453 0 -0.6156053358230011 0.0933975 0 -0.6195289277144369 0.062265 0 -0.6218712004456791 0.0311325 0 -0.62265 0.0 0 0.62265 0.0 0.30 0.6218712004456791 0.0311325 0.30 0.6195289277144369 0.062265 0.30 0.6156053358230011 0.0933975 0.30 0.6100699153375784 0.12453 0.30 0.6028782701290121 0.1556625 0.30 0.5939702437622613 0.186795 0.30 0.5832672005554145 0.2179275 0.30 0.5706681512928509 0.24906 0.30 0.5560442297549271 0.2801925 0.30 0.5392307176663808 0.311325 0.30 0.520015272077417 0.3424575 0.30 0.49812000000000006 0.37359 0.30 0.47317303441103875 0.4047225 0.30 0.4446610411032206 0.435855 0.30 0.4118442634585919 0.4669875 0.30 0.37359000000000003 0.49812 0.30 0.3280012404606879 0.5292525 0.30 0.2714068427195601 0.560385 0.30 0.19442240018513812 0.5915175 0.30 0.0 0.62265 0.30 -0.0 0.62265 0.30 -0.19442240018513812 0.5915175 0.30 -0.2714068427195601 0.560385 0.30 -0.3280012404606879 0.5292525 0.30 -0.37359000000000003 0.49812 0.30 -0.4118442634585919 0.4669875 0.30 -0.4446610411032206 0.435855 0.30 -0.47317303441103875 0.4047225 0.30 -0.49812000000000006 0.37359 0.30 -0.520015272077417 0.3424575 0.30 -0.5392307176663808 0.311325 0.30 -0.5560442297549271 0.2801925 0.30 -0.5706681512928509 0.24906 0.30 -0.5832672005554145 0.2179275 0.30 -0.5939702437622613 0.186795 0.30 -0.6028782701290121 0.1556625 0.30 -0.6100699153375784 0.12453 0.30 -0.6156053358230011 0.0933975 0.30 -0.6195289277144369 0.062265 0.30 -0.6218712004456791 0.0311325 0.30 -0.62265 0.0 0.30 -0.62265 -0.95 0 -1 -0.95 0 -1 1.1001 0 1 1.1001 0 1 -0.95 0 0.62265 -0.95 0 -0.62265 -0.95 0.30 -1 -0.95 0.30 -1 1.2001 0.30 1 1.2001 0.30 1 -0.95 0.30 0.62265 -0.95 0.30 ) .
+:WoodAppearance-USE-8 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_11_1 ;
+  owl:sameAs :WoodAppearance . # DEF matching this USE
+:arcoAltare2 a owl:NamedIndividual, x3do:Transform ;
+  x3do:hasParent :Scene ;
+  x3do:hasChildren :Shape_2_12_1 ;
+  x3do:DEF 'arcoAltare2' ;
+  x3do:scale ( 0.7 0.6 0.7 ) ;
+  x3do:translation ( 0 -0.15 -0.86 ) .
+:Shape_2_12_1 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :arcoAltare2 ;
+  x3do:hasGeometry :IndexedFaceSet_2_12_1_1 ;
+  x3do:hasAppearance :WoodAppearance-USE-9 .
+:IndexedFaceSet_2_12_1_1 a owl:NamedIndividual, x3do:IndexedFaceSet ;
+  x3do:hasParent :Shape_2_12_1 ;
+  x3do:hasCoord :CoordinatePointArrayLarge-USE-1 ;
+  x3do:convex false ;
+  x3do:coordIndex ( 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 84 85 86 87 88 89 -1 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 90 91 92 93 94 95 -1 0 42 43 1 -1 1 43 44 2 -1 2 44 45 3 -1 3 45 46 4 -1 4 46 47 5 -1 5 47 48 6 -1 6 48 49 7 -1 7 49 50 8 -1 8 50 51 9 -1 9 51 52 10 -1 10 52 53 11 -1 11 53 54 12 -1 12 54 55 13 -1 13 55 56 14 -1 14 56 57 15 -1 15 57 58 16 -1 16 58 59 17 -1 17 59 60 18 -1 18 60 61 19 -1 19 61 62 20 -1 20 62 63 21 -1 21 63 64 22 -1 22 64 65 23 -1 23 65 66 24 -1 24 66 67 25 -1 25 67 68 26 -1 26 68 69 27 -1 27 69 70 28 -1 28 70 71 29 -1 29 71 72 30 -1 30 72 73 31 -1 31 73 74 32 -1 32 74 75 33 -1 33 75 76 34 -1 34 76 77 35 -1 35 77 78 36 -1 36 78 79 37 -1 37 79 80 38 -1 38 80 81 39 -1 39 81 82 40 -1 40 82 83 41 -1 84 41 83 90 -1 89 0 42 95 -1 ) ;
+  x3do:solid false .
+:CoordinatePointArrayLarge-USE-1 a owl:NamedIndividual, x3do:Coordinate ;
+  x3do:hasParent :IndexedFaceSet_2_12_1_1 ;
+  owl:sameAs :CoordinatePointArrayLarge . # DEF matching this USE
+:WoodAppearance-USE-9 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_12_1 ;
+  owl:sameAs :WoodAppearance . # DEF matching this USE
+:arcoAltare3 a owl:NamedIndividual, x3do:Transform ;
+  x3do:hasParent :Scene ;
+  x3do:hasChildren :Shape_2_13_1 ;
+  x3do:DEF 'arcoAltare3' ;
+  x3do:rotation ( 0 1 0 1.57 ) ;
+  x3do:scale ( 0.7 0.6 0.7 ) ;
+  x3do:translation ( 0.66 -0.15 0 ) .
+:Shape_2_13_1 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :arcoAltare3 ;
+  x3do:hasGeometry :IndexedFaceSet_2_13_1_1 ;
+  x3do:hasAppearance :WoodAppearance-USE-10 .
+:IndexedFaceSet_2_13_1_1 a owl:NamedIndividual, x3do:IndexedFaceSet ;
+  x3do:hasParent :Shape_2_13_1 ;
+  x3do:hasCoord :CoordinatePointArrayLarge-USE-2 ;
+  x3do:convex false ;
+  x3do:coordIndex ( 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 84 85 86 87 88 89 -1 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 90 91 92 93 94 95 -1 0 42 43 1 -1 1 43 44 2 -1 2 44 45 3 -1 3 45 46 4 -1 4 46 47 5 -1 5 47 48 6 -1 6 48 49 7 -1 7 49 50 8 -1 8 50 51 9 -1 9 51 52 10 -1 10 52 53 11 -1 11 53 54 12 -1 12 54 55 13 -1 13 55 56 14 -1 14 56 57 15 -1 15 57 58 16 -1 16 58 59 17 -1 17 59 60 18 -1 18 60 61 19 -1 19 61 62 20 -1 20 62 63 21 -1 21 63 64 22 -1 22 64 65 23 -1 23 65 66 24 -1 24 66 67 25 -1 25 67 68 26 -1 26 68 69 27 -1 27 69 70 28 -1 28 70 71 29 -1 29 71 72 30 -1 30 72 73 31 -1 31 73 74 32 -1 32 74 75 33 -1 33 75 76 34 -1 34 76 77 35 -1 35 77 78 36 -1 36 78 79 37 -1 37 79 80 38 -1 38 80 81 39 -1 39 81 82 40 -1 40 82 83 41 -1 84 41 83 90 -1 89 0 42 95 -1 ) ;
+  x3do:solid false .
+:CoordinatePointArrayLarge-USE-2 a owl:NamedIndividual, x3do:Coordinate ;
+  x3do:hasParent :IndexedFaceSet_2_13_1_1 ;
+  owl:sameAs :CoordinatePointArrayLarge . # DEF matching this USE
+:WoodAppearance-USE-10 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_13_1 ;
+  owl:sameAs :WoodAppearance . # DEF matching this USE
+:arcoAltare4 a owl:NamedIndividual, x3do:Transform ;
+  x3do:hasParent :Scene ;
+  x3do:hasChildren :Shape_2_14_1 ;
+  x3do:DEF 'arcoAltare4' ;
+  x3do:rotation ( 0 1 0 1.57 ) ;
+  x3do:scale ( 0.7 0.6 0.7 ) ;
+  x3do:translation ( -0.86 -0.15 0 ) .
+:Shape_2_14_1 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :arcoAltare4 ;
+  x3do:hasGeometry :IndexedFaceSet_2_14_1_1 ;
+  x3do:hasAppearance :WoodAppearance-USE-11 .
+:IndexedFaceSet_2_14_1_1 a owl:NamedIndividual, x3do:IndexedFaceSet ;
+  x3do:hasParent :Shape_2_14_1 ;
+  x3do:hasCoord :CoordinatePointArrayLarge-USE-3 ;
+  x3do:convex false ;
+  x3do:coordIndex ( 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 84 85 86 87 88 89 -1 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 90 91 92 93 94 95 -1 0 42 43 1 -1 1 43 44 2 -1 2 44 45 3 -1 3 45 46 4 -1 4 46 47 5 -1 5 47 48 6 -1 6 48 49 7 -1 7 49 50 8 -1 8 50 51 9 -1 9 51 52 10 -1 10 52 53 11 -1 11 53 54 12 -1 12 54 55 13 -1 13 55 56 14 -1 14 56 57 15 -1 15 57 58 16 -1 16 58 59 17 -1 17 59 60 18 -1 18 60 61 19 -1 19 61 62 20 -1 20 62 63 21 -1 21 63 64 22 -1 22 64 65 23 -1 23 65 66 24 -1 24 66 67 25 -1 25 67 68 26 -1 26 68 69 27 -1 27 69 70 28 -1 28 70 71 29 -1 29 71 72 30 -1 30 72 73 31 -1 31 73 74 32 -1 32 74 75 33 -1 33 75 76 34 -1 34 76 77 35 -1 35 77 78 36 -1 36 78 79 37 -1 37 79 80 38 -1 38 80 81 39 -1 39 81 82 40 -1 40 82 83 41 -1 84 41 83 90 -1 89 0 42 95 -1 ) ;
+  x3do:solid false .
+:CoordinatePointArrayLarge-USE-3 a owl:NamedIndividual, x3do:Coordinate ;
+  x3do:hasParent :IndexedFaceSet_2_14_1_1 ;
+  owl:sameAs :CoordinatePointArrayLarge . # DEF matching this USE
+:WoodAppearance-USE-11 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_14_1 ;
+  owl:sameAs :WoodAppearance . # DEF matching this USE
+:piano1d a owl:NamedIndividual, x3do:Transform ;
+  x3do:hasParent :Scene ;
+  x3do:hasChildren :Shape_2_15_1 ;
+  x3do:DEF 'piano1d' ;
+  x3do:translation ( 0 0.58 0 ) .
+:Shape_2_15_1 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :piano1d ;
+  x3do:hasGeometry :Box_2_15_1_1 ;
+  x3do:hasAppearance :WoodAppearance-USE-12 .
+:Box_2_15_1_1 a owl:NamedIndividual, x3do:Box ;
+  x3do:hasParent :Shape_2_15_1 ;
+  x3do:size ( 2.1 0.06 2.1 ) .
+:WoodAppearance-USE-12 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_15_1 ;
+  owl:sameAs :WoodAppearance . # DEF matching this USE
+:piano1 a owl:NamedIndividual, x3do:Transform ;
+  x3do:hasParent :Scene ;
+  x3do:hasChildren :Shape_2_16_1 ;
+  x3do:DEF 'piano1' ;
+  x3do:translation ( 0 0.5 0 ) .
+:Shape_2_16_1 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :piano1 ;
+  x3do:hasGeometry :Box_2_16_1_1 ;
+  x3do:hasAppearance :WoodAppearance-USE-13 .
+:Box_2_16_1_1 a owl:NamedIndividual, x3do:Box ;
+  x3do:hasParent :Shape_2_16_1 ;
+  x3do:size ( 1.9 0.02 1.9 ) .
+:WoodAppearance-USE-13 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_16_1 ;
+  owl:sameAs :WoodAppearance . # DEF matching this USE

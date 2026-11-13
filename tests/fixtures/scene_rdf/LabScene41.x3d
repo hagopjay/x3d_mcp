@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE X3D PUBLIC "ISO//Web3D//DTD X3D 4.1//EN" "https://www.web3d.org/specifications/x3d-4.1.dtd">
+<X3D profile='Immersive' version='4.1'>
+  <head>
+    <meta name='title' content='LabScene41.x3d'/>
+    <meta name='identifier' content='https://example.org/lab/LabScene41.x3d'/>
+    <meta name='creator' content='scout'/>
+  </head>
+  <Scene>
+    <WorldInfo title='Semantic lab scene'/>
+    <Viewpoint DEF='Front' description='Front view' position='0 1 8'/>
+    <Transform DEF='Pedestal' translation='0 -1 0'>
+      <Shape DEF='PedestalShape'>
+        <Appearance>
+          <PhysicalMaterial DEF='Brass' baseColor='0.8 0.6 0.2' metallic='0.9' roughness='0.3'/>
+        </Appearance>
+        <Box size='2 0.5 2'/>
+      </Shape>
+    </Transform>
+    <Transform DEF='Orb' translation='0 1 0'>
+      <MetadataString name='role' value='"hero"' containerField='metadata'/>
+      <Shape>
+        <Appearance>
+          <Material DEF='Blue' diffuseColor='0.1 0.5 1' transparency='0.2'/>
+        </Appearance>
+        <Sphere radius='0.75'/>
+      </Shape>
+    </Transform>
+    <Transform translation='2 0 0'>
+      <Shape>
+        <Appearance>
+          <Material USE='Blue'/>
+        </Appearance>
+        <Cone/>
+      </Shape>
+    </Transform>
+    <TimeSensor DEF='Clock' cycleInterval='4' loop='true'/>
+    <OrientationInterpolator DEF='Spin' key='0 0.5 1' keyValue='0 1 0 0 0 1 0 3.14 0 1 0 6.28'/>
+    <ROUTE fromNode='Clock' fromField='fraction_changed' toNode='Spin' toField='set_fraction'/>
+    <ROUTE fromNode='Spin' fromField='value_changed' toNode='Orb' toField='set_rotation'/>
+  </Scene>
+</X3D>

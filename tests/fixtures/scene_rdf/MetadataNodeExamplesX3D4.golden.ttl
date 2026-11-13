@@ -1,0 +1,221 @@
+@prefix :        <https://www.web3d.org/x3d/content/examples/X3dForWebAuthors/Chapter15Metadata/MetadataNodeExamplesX3D4.ttl#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema:  <http://schema.org/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix x3d:     <https://www.web3d.org/specifications/x3d-4.1.xsd#> .
+@prefix x3do:    <https://www.web3d.org/specifications/X3dOntology4.1#> .
+
+:X3D a owl:NamedIndividual, x3do:X3D ;
+  x3do:hasHead :head ;
+  x3do:hasScene :Scene ;
+  x3do:profile 'Immersive' ;
+  x3do:version '4.0' ;
+  x3do:noNamespaceSchemaLocation 'https://www.web3d.org/specifications/x3d-4.0.xsd' .
+:head a owl:NamedIndividual, x3do:head ;
+  x3do:hasParent :X3D ;
+  x3do:hasMeta :meta_1_1, :meta_1_2, :meta_1_3, :meta_1_4, :meta_1_5, :meta_1_6, :meta_1_7, :meta_1_8, :meta_1_9, :meta_1_10, :meta_1_11, :meta_1_12, :meta_1_13, :meta_1_14, :meta_1_15, :meta_1_16, :meta_1_17, :meta_1_18, :meta_1_19, :meta_1_20, :meta_1_21 .
+:meta_1_1 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'MetadataNodeExamplesX3D4.x3d' ;
+  x3do:name 'title' .
+:meta_1_2 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'Simple examples of meta statements, comments, WorldInfo node and typed metadata nodes.' ;
+  x3do:name 'description' .
+:meta_1_3 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'Don Brutzman' ;
+  x3do:name 'creator' .
+:meta_1_4 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content '30 September 2011' ;
+  x3do:name 'created' .
+:meta_1_5 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content '15 July 2026' ;
+  x3do:name 'modified' .
+:meta_1_6 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'Original name MetadataNodeExamples.x3d, split and renamed since handling of metadata containerField defaults changed in X3D4.' ;
+  x3do:name 'reference' .
+:meta_1_7 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'MetadataNodeExamplesX3D3.x3d' ;
+  x3do:name 'reference' .
+:meta_1_8 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'X3D 4.0 Architecture, ISO/IEC 19775-1:2023, 4 Concepts, 4.3.2 Root nodes' ;
+  x3do:name 'specificationSection' .
+:meta_1_9 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'https://www.web3d.org/specifications/X3Dv4/ISO-IEC19775-1v4-IS/Part01/concepts.html#Rootnodes' ;
+  x3do:name 'specificationUrl' .
+:meta_1_10 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'Information in head and meta elements is retained after a scene is parsed and loaded, and can be referenced via the Scene Access Interface (SAI) or Document Object Model (DOM)' ;
+  x3do:name 'info' .
+:meta_1_11 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'Authoring note: MetadataBoolean requires X3D version 4.0, as used in this example scene' ;
+  x3do:name 'info' .
+:meta_1_12 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'The following referenced chapter is published online but was not included in the printed book.' ;
+  x3do:name 'reference' .
+:meta_1_13 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'Chapter15MetadataInformation.html' ;
+  x3do:name 'reference' .
+:meta_1_14 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'https://x3dgraphics.com/chapters/Chapter15MetadataInformation.html' ;
+  x3do:name 'reference' .
+:meta_1_15 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'https://X3dGraphics.com' ;
+  x3do:name 'reference' .
+:meta_1_16 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'https://www.web3d.org/x3d/content/examples/X3dResources.html' ;
+  x3do:name 'reference' .
+:meta_1_17 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'Copyright 2006, Daly Realism and Don Brutzman' ;
+  x3do:name 'rights' .
+:meta_1_18 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'X3D book, X3D graphics, X3D-Edit, http://www.x3dGraphics.com' ;
+  x3do:name 'subject' .
+:meta_1_19 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'https://www.web3d.org/x3d/content/examples/X3dForWebAuthors/Chapter15Metadata/MetadataNodeExamplesX3D4.x3d' ;
+  x3do:name 'identifier' .
+:meta_1_20 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'X3D-Edit 4.0, https://www.web3d.org/x3d/tools/X3D-Edit' ;
+  x3do:name 'generator' .
+:meta_1_21 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content '../license.html' ;
+  x3do:name 'license' .
+:meta dcterms:title "MetadataNodeExamplesX3D4.x3d" .
+:meta dcterms:description "Simple examples of meta statements, comments, WorldInfo node and typed metadata nodes." .
+:meta dcterms:creator "Don Brutzman" .
+:meta dcterms:created "30 September 2011" .
+:meta dcterms:modified "15 July 2026" .
+:meta dcterms:reference "Original name MetadataNodeExamples.x3d, split and renamed since handling of metadata containerField defaults changed in X3D4." .
+:meta dcterms:reference "MetadataNodeExamplesX3D3.x3d" .
+:meta dcterms:info "Information in head and meta elements is retained after a scene is parsed and loaded, and can be referenced via the Scene Access Interface (SAI) or Document Object Model (DOM)" .
+:meta dcterms:info "Authoring note: MetadataBoolean requires X3D version 4.0, as used in this example scene" .
+:meta dcterms:reference "The following referenced chapter is published online but was not included in the printed book." .
+:meta dcterms:reference "Chapter15MetadataInformation.html" .
+:meta dcterms:reference "https://x3dgraphics.com/chapters/Chapter15MetadataInformation.html" .
+:meta dcterms:reference "https://X3dGraphics.com" .
+:meta dcterms:reference "https://www.web3d.org/x3d/content/examples/X3dResources.html" .
+:meta dcterms:rights "Copyright 2006, Daly Realism and Don Brutzman" .
+:meta dcterms:subject "X3D book, X3D graphics, X3D-Edit, http://www.x3dGraphics.com" .
+:meta dcterms:identifier "https://www.web3d.org/x3d/content/examples/X3dForWebAuthors/Chapter15Metadata/MetadataNodeExamplesX3D4.x3d" .
+:meta dcterms:generator "X3D-Edit 4.0, https://www.web3d.org/x3d/tools/X3D-Edit" .
+:meta dcterms:license "../license.html" .
+:Scene a owl:NamedIndividual, x3do:Scene ;
+  x3do:hasParent :X3D ;
+  x3do:hasValue :MetadataString_2_1 ;
+  x3do:hasChildren :MyWorldInfo, :Background_2_3, :Viewpoint_2_4, :Anchor_2_5 .
+:MetadataString_2_1 a owl:NamedIndividual, x3do:MetadataString ;
+  x3do:hasParent :Scene ;
+  x3do:name 'TestRootMetadataNode' ;
+  x3do:value '"Check whether scene root Metadata* node is satisfactory." "Note that all SFString values must be quoted."' .
+:MyWorldInfo a owl:NamedIndividual, x3do:WorldInfo ;
+  x3do:hasParent :Scene ;
+  x3do:hasMetadata :MyMetadataSetNode ;
+  x3do:DEF 'MyWorldInfo' ;
+  x3do:info '"Metadata strings" "can go here" "as string array values"' ;
+  x3do:title 'MetadataNodeExamplesX3D4.x3d Example Scene' .
+:MyMetadataSetNode a owl:NamedIndividual, x3do:MetadataSet ;
+  x3do:hasParent :MyWorldInfo ;
+  x3do:hasMetadata :NestedMetadataSetNode ;
+  x3do:hasValue :MyMetadataBooleanNode, :MyMetadataDoubleNode, :MyMetadataFloatNode, :MyMetadataIntegerNode, :MyMetadataStringNode ;
+  x3do:DEF 'MyMetadataSetNode' ;
+  x3do:name 'Metadata_name' ;
+  x3do:reference 'SomeReferenceStandard 1.2.3c' .
+:NestedMetadataSetNode a owl:NamedIndividual, x3do:MetadataSet ;
+  x3do:hasParent :MyMetadataSetNode ;
+  x3do:hasValue :MyMetadataStringNode-USE-1, :MyMetadataIntegerNode-USE-1, :MyMetadataFloatNode-USE-1, :MetadataFloat_2_2_1_1_4 ;
+  x3do:DEF 'NestedMetadataSetNode' ;
+  x3do:name 'TestNestedMetadataSetNodes' .
+:MyMetadataStringNode-USE-1 a owl:NamedIndividual, x3do:MetadataString ;
+  x3do:hasParent :NestedMetadataSetNode ;
+  owl:sameAs :MyMetadataStringNode . # DEF matching this USE
+:MyMetadataIntegerNode-USE-1 a owl:NamedIndividual, x3do:MetadataInteger ;
+  x3do:hasParent :NestedMetadataSetNode ;
+  owl:sameAs :MyMetadataIntegerNode . # DEF matching this USE
+:MyMetadataFloatNode-USE-1 a owl:NamedIndividual, x3do:MetadataFloat ;
+  x3do:hasParent :NestedMetadataSetNode ;
+  owl:sameAs :MyMetadataFloatNode . # DEF matching this USE
+:MetadataFloat_2_2_1_1_4 a owl:NamedIndividual, x3do:MetadataFloat ;
+  x3do:hasParent :NestedMetadataSetNode ;
+  x3do:name 'coefficients' ;
+  x3do:value ( 3.141592653 2.7128 1 0 ) .
+:MyMetadataBooleanNode a owl:NamedIndividual, x3do:MetadataBoolean ;
+  x3do:hasParent :MyMetadataSetNode ;
+  x3do:DEF 'MyMetadataBooleanNode' ;
+  x3do:name 'Coin Flip' ;
+  x3do:reference 'MetadataBoolean supported in X3D v3.3 and later' ;
+  x3do:value ( true false true false ) .
+:MyMetadataDoubleNode a owl:NamedIndividual, x3do:MetadataDouble ;
+  x3do:hasParent :MyMetadataSetNode ;
+  x3do:DEF 'MyMetadataDoubleNode' ;
+  x3do:name 'Metadata_name' ;
+  x3do:reference 'SomeReferenceStandard 1.2.3c' ;
+  x3do:value ( 3.141592658 2.71812181 ) .
+:MyMetadataFloatNode a owl:NamedIndividual, x3do:MetadataFloat ;
+  x3do:hasParent :MyMetadataSetNode ;
+  x3do:DEF 'MyMetadataFloatNode' ;
+  x3do:name 'Metadata_name' ;
+  x3do:reference 'SomeReferenceStandard 1.2.3c' ;
+  x3do:value ( 9.8 6.023e+23 ) .
+:MyMetadataIntegerNode a owl:NamedIndividual, x3do:MetadataInteger ;
+  x3do:hasParent :MyMetadataSetNode ;
+  x3do:DEF 'MyMetadataIntegerNode' ;
+  x3do:name 'Metadata_name' ;
+  x3do:reference 'SomeReferenceStandard 1.2.3c' ;
+  x3do:value ( 6 28 496 ) .
+:MyMetadataStringNode a owl:NamedIndividual, x3do:MetadataString ;
+  x3do:hasParent :MyMetadataSetNode ;
+  x3do:DEF 'MyMetadataStringNode' ;
+  x3do:name 'Metadata_name' ;
+  x3do:reference 'SomeReferenceStandard 1.2.3c' ;
+  x3do:value '"Part 27" "P27" "p27"' .
+:Background_2_3 a owl:NamedIndividual, x3do:Background ;
+  x3do:hasParent :Scene ;
+  x3do:skyColor ( 0 0.439216 0.760784 ) .
+:Viewpoint_2_4 a owl:NamedIndividual, x3do:Viewpoint ;
+  x3do:hasParent :Scene ;
+  x3do:description 'View scene source to see metadata examples' ;
+  x3do:position ( 0 0 9 ) .
+:Anchor_2_5 a owl:NamedIndividual, x3do:Anchor ;
+  x3do:hasParent :Scene ;
+  x3do:hasChildren :Shape_2_5_1 ;
+  x3do:description 'Load scene index page' ;
+  x3do:parameter '"target=_blank"' ;
+  x3do:url '"MetadataNodeExamplesIndex.html" "https://www.web3d.org/x3d/content/examples/X3dForWebAuthors/Chapter15Metadata/MetadataNodeExamplesIndex.html"' .
+:Shape_2_5_1 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :Anchor_2_5 ;
+  x3do:hasGeometry :Text_2_5_1_1 ;
+  x3do:hasAppearance :Appearance_2_5_1_2 .
+:Text_2_5_1_1 a owl:NamedIndividual, x3do:Text ;
+  x3do:hasParent :Shape_2_5_1 ;
+  x3do:hasFontStyle :FontStyle_2_5_1_1_1 ;
+  x3do:string '"View scene source" "to see" "metadata examples"' .
+:FontStyle_2_5_1_1_1 a owl:NamedIndividual, x3do:FontStyle ;
+  x3do:hasParent :Text_2_5_1_1 ;
+  x3do:justify '"MIDDLE" "MIDDLE"' .
+:Appearance_2_5_1_2 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_5_1 ;
+  x3do:hasMaterial :Material_2_5_1_2_1 .
+:Material_2_5_1_2_1 a owl:NamedIndividual, x3do:Material ;
+  x3do:hasParent :Appearance_2_5_1_2 ;
+  x3do:diffuseColor ( 1 0.992157 0.039216 ) .
