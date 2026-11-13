@@ -36,6 +36,10 @@ unless the server persists them: set `X3D_MCP_BLOB_DIR` to a private directory.
 
 ## Not built
 
-- A `load_graph` tool (none exists here; if added it needs an allowlist, a triple cap and a per-session graph).
-- Precomputed Q04, a bundled 4.1 ontology, and per-release tables.
-- Replacing `node_parents` (it is still the looser lattice answer).
+- A `load_graph` tool for arbitrary RDF (none exists here; if added it needs an allowlist, a triple cap and a
+  per-session graph). Scenes have one: `scene_to_rdf` keeps a capped graph per session
+  ([semantic-web-tools.md](semantic-web-tools.md)).
+- Precomputed Q04 and per-release tables. The 4.1 ontology is now bundled (`X3dOntology4.1.ttl`), selected by
+  document version for the scene tools; the tools above still default to 4.0.
+- Replacing `node_parents` (it is still the looser lattice answer; `ontology_vs_gate` sets it beside
+  `where_can_place` and the XSD).

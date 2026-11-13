@@ -179,13 +179,16 @@ x3d_mcp/
       scene_ops.py         # Scene CRUD: modify, remove, move nodes
       animate.py           # Animation chain generation (TimeSensor + Interpolator + ROUTE)
       semantics.py         # SPARQL query tools over the bundled X3D Ontology
+      semantic_web.py      # scene_to_rdf, sparql_scene, shacl_validate, rdf_infer, ontology_vs_gate
       splats.py            # splat_inspect, splat_chunk (optional numpy)
       prompts.py           # MCP prompts for guided workflows
     x3d_utils/
       scene.py             # Scene graph state management
       x3duom.py            # X3DUOM parser, node/field metadata
       tooltips.py          # X3D-Edit tooltip overlay for enriched descriptions
-      ontology.py          # rdflib loader for the X3D Ontology
+      ontology.py          # rdflib loader for the X3D Ontology (4.0 default, 4.1 by document version)
+      scene_rdf.py         # X3D -> Turtle by the X3dToTurtle.xslt conventions (xpath_mini.py evaluates its rules)
+      semantic_web.py      # Scene graphs, guarded SPARQL, SHACL, inference, map vs gate, instrument
       source.py            # Inline-content / file-path input resolver
     transfer/              # Blob store and routes (blobs.py, routes.py); SPZ/PLY readers, chunker, inspector (spz.py, ply.py, chunk.py, inspect_splats.py)
     validation/
@@ -195,7 +198,8 @@ x3d_mcp/
       oversize.py          # What validate_xml does when libxml2's 10 MB start-tag limit stops a scene
       splat_arrays.py      # Vectorised GaussianSplats array checks for that case
       autofix.py           # containerField autofixer
-      schemas/             # Bundled x3d-4.1.xsd, x3d-4.1.dtd, X3DUOM 4.1, X3dOntology4.0.ttl
+      schemas/             # Bundled x3d-4.1.xsd, x3d-4.1.dtd, X3DUOM 4.1, X3dOntology4.0.ttl and 4.1.ttl,
+                           # X3dToTurtle-tables.json, shapes/x3d-core.shacl.ttl
   dataset/
     schema.py              # Canonical training example schema, normalization
     normalize.py           # JSONL schema normalization CLI
@@ -292,6 +296,20 @@ Extensions that ground their concepts in X3D Ontology **4.1** are rewritten to t
 SELECT ?concept ?node WHERE { ?concept sc:x3dNode ?node }
 ```
 
+### Semantic Web Tools
+
+A scene as RDF, checked with SPARQL and SHACL next to the XML validators. The ontology proposes, the shapes dispose, the validators gate. See [docs/semantic-web-tools.md](docs/semantic-web-tools.md).
+
+| Tool | Description |
+|------|-------------|
+| `scene_to_rdf` | X3D to Turtle by the conventions of the Consortium's `X3dToTurtle.xslt` (DEF-named individuals, `has<containerField>` links with DTD defaults, rdf:Lists for vectors and colours), in Python. The graph is kept for the session under a `graph_id`. |
+| `sparql_scene` | SELECT/ASK over a scene graph joined with the X3D Ontology 4.1 (or 4.0). Same guard as `query_ontology` (no UPDATE, SERVICE or FROM), deadline, row cap, stable pages. |
+| `shacl_validate` | The bundled `x3d-core` SHACL shapes: colour and scalar ranges, SFColor arity, Shape geometry, USE type and target, Viewpoint, ROUTE endpoints, field domains, children types, unique DEF. Each result has a `check_id` and a `fix_hint`; `extra_shapes_ttl` adds your own. |
+| `rdf_infer` | What reasoning adds, per node: subclass types by default; the RDFS / OWL-RL closure with a per-node type count and an explanation of it. |
+| `ontology_vs_gate` | Where a node may go, three ways: the ontology's `node_parents`, the X3DUOM's `where_can_place`, the XSD; with the counting rules. |
+
+Every answer carries `instrument` (commit, ontology / shapes / X3DUOM sha256, rdflib and pyshacl versions) for `claim_append`.
+
 ### Render Tools
 
 | Tool | Description |
@@ -351,6 +369,7 @@ Guided multi-step workflows. Prompts steer the LLM through the right tool sequen
 |--------|----------|-------------|
 | `build_scene` | `description` | Step-by-step guide to build an X3D scene from scratch. Covers both workflow and granular paths, validation, and X3DOM rendering. |
 | `audit_scene` | `content` | Audit existing X3D content for schema and authoring issues. Walks through `validate_x3d`, `validate_semantic`, `describe_node`, and the scene CRUD tools. |
+| `semantic_audit` | `content`, `focus` | Audit what a scene means: `scene_to_rdf`, `sparql_scene`, `shacl_validate`, then `validate_x3d` / `validate_semantic`, with each verified finding recorded by `claim_append`. |
 | `animate_scene` | `target_description` | Add animation. Walks through `x3d_animation_info`, `describe_node`, `animate_x3d_node`, validation, and rendering. |
 | `convert_to_x3dom` | -- | Convert X3D content to a browser-viewable X3DOM HTML page via `validate_x3d` and `x3dom_page`. |
 
@@ -437,7 +456,8 @@ Full node reference: [docs/x3d-node-reference.md](docs/x3d-node-reference.md)
 | `lxml` | >=6.0 | XSD validation, Schematron validation, XSLT transforms |
 | `xmlschema` | >=4.3 | Pure-Python XSD validation (fallback) |
 | `jsonschema` | >=4.26 | JSON Schema validation for X3D JSON encoding |
-| `rdflib` | >=7.0 | SPARQL queries over the bundled X3D Ontology |
+| `rdflib` | >=7.0 | SPARQL queries over the bundled X3D Ontology and scene graphs |
+| `pyshacl` | >=0.30,<1 | `shacl_validate`; its `owlrl` dependency runs the `rdfs` / `owl-rl` profiles of `rdf_infer` |
 | `numpy`, `zstandard` | >=1.26, >=0.23 (optional `[splat]` extra) | Reading SPZ and PLY splat files (`splat_inspect`, `splat_chunk`); `zstandard` is for SPZ version 4 |
 | `playwright` | >=1.40 (optional `[render]` extra) | Headless Chromium for `render_image` / `render_current_scene` |
 | X\_ITE | 16.4.3, pinned, loaded from jsDelivr at render time | WebGL engine behind `render_image`; set `X3D_MCP_XITE_JS` to a locally served `x_ite.min.js` for offline use (see Rendering offline) |
@@ -479,6 +499,7 @@ The test container mounts `src/` and `tests/` from the host. Logs are written to
 | [docs/x3d-validation-strategy.md](docs/x3d-validation-strategy.md) | Validation approach: X3DUOM parsing, XSD, Schematron, containerField rules |
 | [docs/ecosystem-research.md](docs/ecosystem-research.md) | Survey of existing tools, Python vs TypeScript analysis, community resources |
 | [docs/transfer-layer.md](docs/transfer-layer.md) | Large scenes: the blob store, `/blob` upload routes, `blob_id` / `return_mode` on the tools, operator settings |
+| [docs/semantic-web-tools.md](docs/semantic-web-tools.md) | Scenes as RDF: `scene_to_rdf` conventions and fidelity, `sparql_scene`, the `x3d-core` SHACL shapes, `rdf_infer`, `ontology_vs_gate`, `instrument`, limits |
 | [docs/splats.md](docs/splats.md) | Gaussian splats: `splat_inspect`, `splat_chunk`, the chunked envelope, the oversize verdict of `validate_x3d`, limits, what was and was not verified |
 
 ## External References
