@@ -9,6 +9,7 @@ need; the runner puts a deadline on the query that no thread can ignore.
 import multiprocessing
 import os
 import re
+import sys
 import threading
 
 from rdflib.plugins.sparql import algebra, parser
@@ -112,6 +113,27 @@ def _child(conn, fn, args):
         conn.close()
 
 
+_START_LOCK = threading.Lock()
+
+
+def _start_without_stdin(proc) -> None:
+    """Start a forked process with sys.stdin set to None for the moment of the fork.
+
+    A forked multiprocessing child closes sys.stdin first thing (multiprocessing.util._close_stdin). Under the
+    MCP stdio transport another thread is blocked reading sys.stdin.buffer and holds its lock, and the fork
+    copies that lock as held, so the child's close waits forever and every call runs into the deadline.
+    With sys.stdin None the child skips the close. The transport reads through its own reference to the
+    buffer, so it is not affected.
+    """
+    with _START_LOCK:
+        saved = sys.stdin
+        sys.stdin = None
+        try:
+            proc.start()
+        finally:
+            sys.stdin = saved
+
+
 def run_bounded(fn, *args, timeout: float | None = None):
     """Run fn(*args) with a deadline that stops it. The result must be picklable.
 
@@ -125,7 +147,7 @@ def run_bounded(fn, *args, timeout: float | None = None):
         ctx = multiprocessing.get_context("fork")
         recv, send = ctx.Pipe(duplex=False)
         proc = ctx.Process(target=_child, args=(send, fn, args), daemon=True)
-        proc.start()
+        _start_without_stdin(proc)
         send.close()
         try:
             if not recv.poll(limit):
