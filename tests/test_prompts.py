@@ -30,7 +30,7 @@ def _prompt_body(mcp: FastMCP, name: str, **kwargs) -> str:
 def test_all_prompts_registered():
     mcp = _build_mcp()
     names = set(mcp._prompt_manager._prompts.keys())
-    assert names == {"build_scene", "audit_scene", "animate_scene", "convert_to_x3dom"}
+    assert names == {"build_scene", "audit_scene", "semantic_audit", "animate_scene", "convert_to_x3dom"}
 
 
 def test_build_scene_registered():
@@ -48,6 +48,17 @@ def test_audit_scene_registered():
     assert "validate_x3d" in body
     assert "validate_semantic" in body
     assert "describe_node" in body
+
+
+def test_semantic_audit_registered():
+    mcp = _build_mcp()
+    body = _prompt_body(mcp, "semantic_audit", focus="materials")
+    assert "materials" in body
+    # The loop it steers: graph, ask, shapes, gate, receipts, in that order.
+    order = ["scene_to_rdf", "sparql_scene", "shacl_validate", "validate_x3d", "validate_semantic", "claim_append"]
+    positions = [body.index(name) for name in order]
+    assert positions == sorted(positions)
+    assert "ontology_vs_gate" in body and "graph_id" in body
 
 
 def test_animate_scene_registered():

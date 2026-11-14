@@ -1,0 +1,159 @@
+@prefix :        <https://www.web3d.org/x3d/content/examples/X3dForWebAuthors/Chapter07EventAnimationInterpolation/HelloX3dAuthorsAnimationChain.ttl#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema:  <http://schema.org/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix x3d:     <https://www.web3d.org/specifications/x3d-4.1.xsd#> .
+@prefix x3do:    <https://www.web3d.org/specifications/X3dOntology4.1#> .
+
+:X3D a owl:NamedIndividual, x3do:X3D ;
+  x3do:hasHead :head ;
+  x3do:hasScene :Scene ;
+  x3do:profile 'Immersive' ;
+  x3do:version '3.3' ;
+  x3do:noNamespaceSchemaLocation 'https://www.web3d.org/specifications/x3d-3.3.xsd' .
+:head a owl:NamedIndividual, x3do:head ;
+  x3do:hasParent :X3D ;
+  x3do:hasMeta :meta_1_1, :meta_1_2, :meta_1_3, :meta_1_4, :meta_1_5, :meta_1_6, :meta_1_7, :meta_1_8, :meta_1_9, :meta_1_10 .
+:meta_1_1 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'HelloX3dAuthorsAnimationChain.x3d' ;
+  x3do:name 'title' .
+:meta_1_2 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'Don Brutzman' ;
+  x3do:name 'creator' .
+:meta_1_3 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content '5 October 2000' ;
+  x3do:name 'created' .
+:meta_1_4 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content '7 September 2024' ;
+  x3do:name 'modified' .
+:meta_1_5 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'Fully developed animation-chain example showing spinning globe and text: Hello!' ;
+  x3do:name 'description' .
+:meta_1_6 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'Chapter07-EventAnimationInterpolation.10StepAnimationDesignProcess.pdf' ;
+  x3do:name 'reference' .
+:meta_1_7 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'Chapter07-EventAnimationInterpolation-EventTracing.pdf' ;
+  x3do:name 'reference' .
+:meta_1_8 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'https://www.web3d.org/x3d/content/examples/X3dForWebAuthors/Chapter07EventAnimationInterpolation/HelloX3dAuthorsAnimationChain.x3d' ;
+  x3do:name 'identifier' .
+:meta_1_9 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'X3D-Edit 4.0, https://www.web3d.org/x3d/tools/X3D-Edit' ;
+  x3do:name 'generator' .
+:meta_1_10 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content '../license.html' ;
+  x3do:name 'license' .
+:meta dcterms:title "HelloX3dAuthorsAnimationChain.x3d" .
+:meta dcterms:creator "Don Brutzman" .
+:meta dcterms:created "5 October 2000" .
+:meta dcterms:modified "7 September 2024" .
+:meta dcterms:description "Fully developed animation-chain example showing spinning globe and text: Hello!" .
+:meta dcterms:reference "Chapter07-EventAnimationInterpolation.10StepAnimationDesignProcess.pdf" .
+:meta dcterms:reference "Chapter07-EventAnimationInterpolation-EventTracing.pdf" .
+:meta dcterms:identifier "https://www.web3d.org/x3d/content/examples/X3dForWebAuthors/Chapter07EventAnimationInterpolation/HelloX3dAuthorsAnimationChain.x3d" .
+:meta dcterms:generator "X3D-Edit 4.0, https://www.web3d.org/x3d/tools/X3D-Edit" .
+:meta dcterms:license "../license.html" .
+:Scene a owl:NamedIndividual, x3do:Scene ;
+  x3do:hasParent :X3D ;
+  x3do:hasChildren :WorldInfo_2_1, :Viewpoint_2_2, :OrbitalTimeInterval, :SpinThoseThings, :EarthCoordinateSystem ;
+  x3do:hasROUTE :ROUTE_2_5 .
+:WorldInfo_2_1 a owl:NamedIndividual, x3do:WorldInfo ;
+  x3do:hasParent :Scene ;
+  x3do:info '"an introductory scene"' ;
+  x3do:title 'Hello X3D Authors Animation Chain' .
+:Viewpoint_2_2 a owl:NamedIndividual, x3do:Viewpoint ;
+  x3do:hasParent :Scene ;
+  x3do:description 'Hello, world' ;
+  x3do:orientation ( 0 1 0 3.14159 ) ;
+  x3do:position ( 0 0 -8 ) .
+:OrbitalTimeInterval a owl:NamedIndividual, x3do:TimeSensor ;
+  x3do:hasParent :Scene ;
+  x3do:DEF 'OrbitalTimeInterval' ;
+  x3do:cycleInterval '12' .
+:SpinThoseThings a owl:NamedIndividual, x3do:OrientationInterpolator ;
+  x3do:hasParent :Scene ;
+  x3do:DEF 'SpinThoseThings' ;
+  x3do:key ( 0.00 0.25 0.50 0.75 1.00 ) ;
+  x3do:keyValue ( 0 1 0 0 0 1 0 1.57079 0 1 0 3.14159 0 1 0 4.7123889 0 1 0 6.2831852 ) .
+:ROUTE_2_5 a owl:NamedIndividual, x3do:ROUTE ;
+  x3do:hasParent :Scene ;
+  x3do:fromField 'fraction_changed' ;
+  x3do:fromNode 'OrbitalTimeInterval' ;
+  x3do:toField 'set_fraction' ;
+  x3do:toNode 'SpinThoseThings' .
+:EarthCoordinateSystem a owl:NamedIndividual, x3do:Transform ;
+  x3do:hasParent :Scene ;
+  x3do:hasROUTE :ROUTE_2_6_1, :ROUTE_2_6_5 ;
+  x3do:hasChildren :MiniWorld, :SimpleGeoStationarySatellite, :ClickTriggerTouchSensor ;
+  x3do:DEF 'EarthCoordinateSystem' .
+:ROUTE_2_6_1 a owl:NamedIndividual, x3do:ROUTE ;
+  x3do:hasParent :EarthCoordinateSystem ;
+  x3do:fromField 'value_changed' ;
+  x3do:fromNode 'SpinThoseThings' ;
+  x3do:toField 'set_rotation' ;
+  x3do:toNode 'EarthCoordinateSystem' .
+:MiniWorld a owl:NamedIndividual, x3do:Group ;
+  x3do:hasParent :EarthCoordinateSystem ;
+  x3do:hasChildren :Shape_2_6_2_1 ;
+  x3do:DEF 'MiniWorld' .
+:Shape_2_6_2_1 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :MiniWorld ;
+  x3do:hasAppearance :Appearance_2_6_2_1_1 ;
+  x3do:hasGeometry :Sphere_2_6_2_1_2 .
+:Appearance_2_6_2_1_1 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_6_2_1 ;
+  x3do:hasTexture :ImageTexture_2_6_2_1_1_1 .
+:ImageTexture_2_6_2_1_1_1 a owl:NamedIndividual, x3do:ImageTexture ;
+  x3do:hasParent :Appearance_2_6_2_1_1 ;
+  x3do:url '"../../earth-topo.png" "../../earth-topo.gif" "../../earth-topo-small.gif" "https://www.web3d.org/x3d/content/examples/X3dForWebAuthors/earth-topo.png" "https://www.web3d.org/x3d/content/examples/X3dForWebAuthors/earth-topo.gif" "https://www.web3d.org/x3d/content/examples/X3dForWebAuthors/earth-topo-small.gif"' .
+:Sphere_2_6_2_1_2 a owl:NamedIndividual, x3do:Sphere ;
+  x3do:hasParent :Shape_2_6_2_1 .
+:SimpleGeoStationarySatellite a owl:NamedIndividual, x3do:Transform ;
+  x3do:hasParent :EarthCoordinateSystem ;
+  x3do:hasChildren :Shape_2_6_3_1 ;
+  x3do:DEF 'SimpleGeoStationarySatellite' ;
+  x3do:rotation ( 1 0 0 .3 ) ;
+  x3do:scale ( 0.1 0.3 0.1 ) ;
+  x3do:translation ( 0 0 5 ) .
+:Shape_2_6_3_1 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :SimpleGeoStationarySatellite ;
+  x3do:hasAppearance :Appearance_2_6_3_1_1 ;
+  x3do:hasGeometry :Text_2_6_3_1_2 .
+:Appearance_2_6_3_1_1 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_6_3_1 ;
+  x3do:hasMaterial :Material_2_6_3_1_1_1 .
+:Material_2_6_3_1_1_1 a owl:NamedIndividual, x3do:Material ;
+  x3do:hasParent :Appearance_2_6_3_1_1 ;
+  x3do:diffuseColor ( 0.9 0.1 0.1 ) ;
+  x3do:emissiveColor ( 0.9 0.2 0.1 ) .
+:Text_2_6_3_1_2 a owl:NamedIndividual, x3do:Text ;
+  x3do:hasParent :Shape_2_6_3_1 ;
+  x3do:hasFontStyle :FontStyle_2_6_3_1_2_1 ;
+  x3do:string '"Hello X3D Authors !!"' .
+:FontStyle_2_6_3_1_2_1 a owl:NamedIndividual, x3do:FontStyle ;
+  x3do:hasParent :Text_2_6_3_1_2 ;
+  x3do:size 3 .
+:ClickTriggerTouchSensor a owl:NamedIndividual, x3do:TouchSensor ;
+  x3do:hasParent :EarthCoordinateSystem ;
+  x3do:DEF 'ClickTriggerTouchSensor' ;
+  x3do:description 'Click to start animation' .
+:ROUTE_2_6_5 a owl:NamedIndividual, x3do:ROUTE ;
+  x3do:hasParent :EarthCoordinateSystem ;
+  x3do:fromField 'touchTime' ;
+  x3do:fromNode 'ClickTriggerTouchSensor' ;
+  x3do:toField 'startTime' ;
+  x3do:toNode 'OrbitalTimeInterval' .

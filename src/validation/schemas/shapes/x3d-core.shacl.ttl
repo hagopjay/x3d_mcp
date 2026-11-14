@@ -1,0 +1,272 @@
+# x3d-core: SHACL shapes for the RDF form of an X3D scene (x3d_utils.scene_rdf / X3dToTurtle.xslt output).
+#
+# The X3D Ontology describes which fields each node type has (a map); these shapes state what a scene
+# must satisfy (a gate), and validate_x3d (XSD) and validate_semantic remain the ground truth for
+# document validity. Shapes read the scene graph plus a slice of the X3D Ontology (rdfs:subClassOf
+# between classes, and the hasChild sub-properties with their rdfs:domain) that shacl_validate adds.
+#
+# Each shape names a check id (xs:checkId, aligned with validate_semantic codes where one exists), a
+# fix hint (xs:fixHint) and an instruction for an agent (sh:agentInstruction, SHACL 1.2 Core editor's
+# draft; SHACL 1.0 engines ignore it).
+# Order-dependent rules (USE before DEF, ROUTE before DEF) cannot be checked here: RDF keeps no
+# document order. validate_semantic checks them.
+
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix x3do: <https://www.web3d.org/specifications/X3dOntology4.1#> .
+@prefix xs:   <urn:x3d-mcp:shapes:x3d-core#> .
+
+xs: a owl:Ontology ;
+  rdfs:label "x3d-core shapes" ;
+  owl:versionInfo "1" ;
+  sh:declare [ sh:prefix "x3do" ; sh:namespace "https://www.web3d.org/specifications/X3dOntology4.1#"^^xsd:anyURI ] ,
+             [ sh:prefix "owl"  ; sh:namespace "http://www.w3.org/2002/07/owl#"^^xsd:anyURI ] ,
+             [ sh:prefix "rdf"  ; sh:namespace "http://www.w3.org/1999/02/22-rdf-syntax-ns#"^^xsd:anyURI ] ,
+             [ sh:prefix "rdfs" ; sh:namespace "http://www.w3.org/2000/01/rdf-schema#"^^xsd:anyURI ] .
+
+xs:checkId a owl:AnnotationProperty ; rdfs:comment "Stable id of the check; matches a validate_semantic code where one exists." .
+xs:fixHint a owl:AnnotationProperty ; rdfs:comment "What to change in the X3D document, and which tool helps." .
+
+# ---------------------------------------------------------------- S1  colour and scalar ranges (SHACL Core)
+# List members are reached with the path ( field [ sh:zeroOrMorePath rdf:rest ] rdf:first ).
+# SHACL value nodes are a set, so these shapes check range only; S1b counts the members.
+
+xs:MaterialRanges a sh:NodeShape ;
+  rdfs:label "S1 material colour and scalar ranges" ;
+  sh:targetClass x3do:Material , x3do:TwoSidedMaterial , x3do:PhysicalMaterial , x3do:UnlitMaterial ;
+  sh:property xs:DiffuseColorRange , xs:EmissiveColorRange , xs:SpecularColorRange , xs:BaseColorRange ,
+              xs:TransparencyRange , xs:AmbientIntensityRange , xs:ShininessRange , xs:MetallicRange , xs:RoughnessRange .
+
+xs:DiffuseColorRange a sh:PropertyShape ;
+  sh:path ( x3do:diffuseColor [ sh:zeroOrMorePath rdf:rest ] rdf:first ) ;
+  sh:minInclusive 0 ; sh:maxInclusive 1 ;
+  sh:message "diffuseColor component outside [0,1]" ;
+  xs:checkId "colour-out-of-range" ;
+  xs:fixHint "Set every diffuseColor component between 0 and 1 (modify_x3d_node); validate_semantic reports the same as colour-out-of-range." ;
+  sh:agentInstruction "SFColor components are linear values between 0 and 1; do not use 0-255." .
+
+xs:EmissiveColorRange a sh:PropertyShape ;
+  sh:path ( x3do:emissiveColor [ sh:zeroOrMorePath rdf:rest ] rdf:first ) ;
+  sh:minInclusive 0 ; sh:maxInclusive 1 ;
+  sh:message "emissiveColor component outside [0,1]" ;
+  xs:checkId "colour-out-of-range" ;
+  xs:fixHint "Set every emissiveColor component between 0 and 1 (modify_x3d_node)." .
+
+xs:SpecularColorRange a sh:PropertyShape ;
+  sh:path ( x3do:specularColor [ sh:zeroOrMorePath rdf:rest ] rdf:first ) ;
+  sh:minInclusive 0 ; sh:maxInclusive 1 ;
+  sh:message "specularColor component outside [0,1]" ;
+  xs:checkId "colour-out-of-range" ;
+  xs:fixHint "Set every specularColor component between 0 and 1 (modify_x3d_node)." .
+
+xs:BaseColorRange a sh:PropertyShape ;
+  sh:path ( x3do:baseColor [ sh:zeroOrMorePath rdf:rest ] rdf:first ) ;
+  sh:minInclusive 0 ; sh:maxInclusive 1 ;
+  sh:message "baseColor component outside [0,1]" ;
+  xs:checkId "colour-out-of-range" ;
+  xs:fixHint "Set every baseColor component between 0 and 1 (modify_x3d_node)." .
+
+xs:TransparencyRange a sh:PropertyShape ;
+  sh:path x3do:transparency ; sh:maxCount 1 ;
+  sh:minInclusive 0 ; sh:maxInclusive 1 ;
+  sh:message "transparency outside [0,1]" ;
+  xs:checkId "value-out-of-range" ;
+  xs:fixHint "Set transparency between 0 (opaque) and 1 (invisible)." .
+
+xs:AmbientIntensityRange a sh:PropertyShape ;
+  sh:path x3do:ambientIntensity ; sh:maxCount 1 ;
+  sh:minInclusive 0 ; sh:maxInclusive 1 ;
+  sh:message "ambientIntensity outside [0,1]" ;
+  xs:checkId "value-out-of-range" ;
+  xs:fixHint "Set ambientIntensity between 0 and 1." .
+
+xs:ShininessRange a sh:PropertyShape ;
+  sh:path x3do:shininess ; sh:maxCount 1 ;
+  sh:minInclusive 0 ; sh:maxInclusive 1 ;
+  sh:message "shininess outside [0,1]" ;
+  xs:checkId "value-out-of-range" ;
+  xs:fixHint "Set shininess between 0 and 1." .
+
+xs:MetallicRange a sh:PropertyShape ;
+  sh:path x3do:metallic ; sh:maxCount 1 ;
+  sh:minInclusive 0 ; sh:maxInclusive 1 ;
+  sh:message "metallic outside [0,1]" ;
+  xs:checkId "value-out-of-range" ;
+  xs:fixHint "Set metallic between 0 and 1." .
+
+xs:RoughnessRange a sh:PropertyShape ;
+  sh:path x3do:roughness ; sh:maxCount 1 ;
+  sh:minInclusive 0 ; sh:maxInclusive 1 ;
+  sh:message "roughness outside [0,1]" ;
+  xs:checkId "value-out-of-range" ;
+  xs:fixHint "Set roughness between 0 and 1." .
+
+# ---------------------------------------------------------------- S1b  an SFColor has exactly three components
+# SPARQL, because SHACL Core counts distinct value nodes: (1 1 1) has one distinct member.
+# The count is of list cells, which are distinct even when the numbers repeat.
+
+xs:ColorArity a sh:NodeShape ;
+  rdfs:label "S1b SFColor arity" ;
+  sh:targetClass x3do:Material , x3do:TwoSidedMaterial , x3do:PhysicalMaterial , x3do:UnlitMaterial ;
+  sh:sparql xs:ColorArityConstraint .
+
+xs:ColorArityConstraint a sh:SPARQLConstraint ;
+  sh:prefixes xs: ;
+  sh:message "{?fieldName} has {?n} components; an SFColor has 3" ;
+  xs:checkId "tuple-count" ;
+  xs:fixHint "Give the colour exactly three numbers, red green blue, each between 0 and 1." ;
+  sh:select """SELECT $this ?field ?fieldName (COUNT(?cell) AS ?n) WHERE {
+      $this ?field ?list .
+      FILTER(?field IN (x3do:diffuseColor, x3do:emissiveColor, x3do:specularColor, x3do:baseColor))
+      ?list rdf:rest* ?cell .
+      FILTER(?cell != rdf:nil)
+      BIND(STRAFTER(STR(?field), "#") AS ?fieldName)
+    } GROUP BY $this ?field ?fieldName HAVING (COUNT(?cell) != 3)""" .
+
+# ---------------------------------------------------------------- S2  a Shape has a geometry (or is a USE copy)
+
+xs:ShapeGeometry a sh:NodeShape ;
+  rdfs:label "S2 Shape has geometry" ;
+  sh:targetClass x3do:Shape ;
+  sh:or ( [ sh:path owl:sameAs ; sh:minCount 1 ]
+          [ sh:path x3do:hasGeometry ; sh:minCount 1 ; sh:maxCount 1 ] ) ;
+  sh:severity sh:Warning ;
+  sh:message "Shape has no geometry (and is not a USE copy): valid X3D that draws nothing" ;
+  xs:checkId "shape-no-geometry" ;
+  xs:fixHint "Add one geometry node (Box, Sphere, IndexedFaceSet...) inside the Shape, or remove the Shape." ;
+  sh:agentInstruction "Every Shape you write needs exactly one geometry child." .
+
+# ---------------------------------------------------------------- S3  USE names an existing DEF of the same node type
+
+xs:UseRules a sh:NodeShape ;
+  rdfs:label "S3 USE type and target" ;
+  sh:targetSubjectsOf owl:sameAs ;
+  sh:sparql xs:UseTypeConstraint , xs:UseTargetConstraint .
+
+xs:UseTypeConstraint a sh:SPARQLConstraint ;
+  sh:prefixes xs: ;
+  sh:message "USE has type {?useName} but DEF {?def} has type {?defName}" ;
+  xs:checkId "use-type-mismatch" ;
+  xs:fixHint "Point the USE at a DEF of the same node type, or change the element to match the DEF (XML IDREF does not check types)." ;
+  sh:agentInstruction "A USE copies a DEF'd node; write the USE with the same element name as the DEF." ;
+  sh:select """SELECT $this ?useType ?def ?defType ?useName ?defName WHERE {
+      $this owl:sameAs ?target ; a ?useType .
+      ?target x3do:DEF ?def ; a ?defType .
+      FILTER(STRSTARTS(STR(?useType), STR(x3do:)) && STRSTARTS(STR(?defType), STR(x3do:)))
+      FILTER NOT EXISTS { ?target a ?useType }
+      BIND(STRAFTER(STR(?useType), "#") AS ?useName)
+      BIND(STRAFTER(STR(?defType), "#") AS ?defName)
+    }""" .
+
+xs:UseTargetConstraint a sh:SPARQLConstraint ;
+  sh:prefixes xs: ;
+  sh:message "USE names {?name}, which no DEF defines" ;
+  xs:checkId "use-undefined-def" ;
+  xs:fixHint "Add DEF to the node you meant, or correct the USE name (names are case-sensitive)." ;
+  sh:select """SELECT $this ?target ?name WHERE {
+      $this owl:sameAs ?target .
+      FILTER NOT EXISTS { ?target x3do:DEF ?d }
+      BIND(STRAFTER(STR(?target), "#") AS ?name)
+    }""" .
+
+# ---------------------------------------------------------------- S4  the Scene has a viewpoint (best practice)
+
+xs:SceneViewpoint a sh:NodeShape ;
+  rdfs:label "S4 Scene has a viewpoint" ;
+  sh:targetClass x3do:Scene ;
+  sh:property xs:SceneViewpointCount .
+
+xs:SceneViewpointCount a sh:PropertyShape ;
+  sh:path [ sh:inversePath [ sh:oneOrMorePath x3do:hasParent ] ] ;
+  sh:qualifiedValueShape [ sh:class x3do:X3DViewpointNode ] ;
+  sh:qualifiedMinCount 1 ;
+  sh:severity sh:Warning ;
+  sh:message "Scene has no Viewpoint (or other X3DViewpointNode): the browser picks a default camera" ;
+  xs:checkId "no-viewpoint" ;
+  xs:fixHint "Add a Viewpoint with a description and a position that frames the scene; render_image shows the view." .
+
+# ---------------------------------------------------------------- S5  ROUTE endpoints name an existing DEF
+
+xs:RouteEndpoints a sh:NodeShape ;
+  rdfs:label "S5 ROUTE endpoints exist" ;
+  sh:targetClass x3do:ROUTE ;
+  sh:sparql xs:RouteFromConstraint , xs:RouteToConstraint .
+
+xs:RouteFromConstraint a sh:SPARQLConstraint ;
+  sh:prefixes xs: ;
+  sh:message "ROUTE fromNode '{?def}' names no DEF in this scene" ;
+  xs:checkId "route-missing-from-node" ;
+  xs:fixHint "Use the DEF name of an existing node as fromNode (add_x3d_route checks DEFs and field types)." ;
+  sh:select """SELECT $this ?def WHERE {
+      $this x3do:fromNode ?def .
+      FILTER NOT EXISTS { ?n x3do:DEF ?def }
+    }""" .
+
+xs:RouteToConstraint a sh:SPARQLConstraint ;
+  sh:prefixes xs: ;
+  sh:message "ROUTE toNode '{?def}' names no DEF in this scene" ;
+  xs:checkId "route-missing-to-node" ;
+  xs:fixHint "Use the DEF name of an existing node as toNode (add_x3d_route checks DEFs and field types)." ;
+  sh:select """SELECT $this ?def WHERE {
+      $this x3do:toNode ?def .
+      FILTER NOT EXISTS { ?n x3do:DEF ?def }
+    }""" .
+
+# ---------------------------------------------------------------- S6  each node field is one the parent type has (ontology-derived)
+# Reads the ontology's rdfs:domain of each hasChild sub-property as a list of allowed parent classes
+# (any of them, through rdfs:subClassOf*). Two legal cases the domains do not list are exempt:
+# the first node of a ProtoBody, and a Metadata node at the Scene root.
+
+xs:FieldDomain a sh:NodeShape ;
+  rdfs:label "S6 field belongs to the parent type (ontology map)" ;
+  sh:targetSubjectsOf x3do:hasParent ;
+  sh:sparql xs:FieldDomainConstraint .
+
+xs:FieldDomainConstraint a sh:SPARQLConstraint ;
+  sh:prefixes xs: ;
+  sh:message "{?typeName} has no field {?fieldName} in the X3D Ontology, yet holds {?childName}" ;
+  xs:checkId "field-not-in-domain" ;
+  xs:fixHint "Give the child a containerField the parent has (where_can_place lists the parent fields that accept it; autofix_x3d rewrites containerField), or move it under a suitable parent." ;
+  sh:select """SELECT $this ?field ?type ?child ?typeName ?fieldName ?childName WHERE {
+      $this ?field ?child ; a ?type .
+      ?field rdfs:subPropertyOf x3do:hasChild .
+      FILTER(STRSTARTS(STR(?type), STR(x3do:)))
+      FILTER(?type != x3do:ProtoBody)
+      FILTER NOT EXISTS { ?field rdfs:domain ?d . ?type rdfs:subClassOf* ?d }
+      FILTER NOT EXISTS { FILTER(?type = x3do:Scene) ?child a ?m . ?m rdfs:subClassOf* x3do:X3DMetadataObject }
+      BIND(STRAFTER(STR(?type), "#") AS ?typeName)
+      BIND(STRAFTER(STR(?field), "#has") AS ?f0)
+      BIND(CONCAT(LCASE(SUBSTR(?f0, 1, 1)), SUBSTR(?f0, 2)) AS ?fieldName)
+      BIND(STRAFTER(STR(?child), "#") AS ?childName)
+    }""" .
+
+# ---------------------------------------------------------------- S7  nodes in a children field are child nodes (the gate the map leaves open)
+# hasChildren's ranges include X3DNode, so the ontology alone admits a Box as a child.
+
+xs:ChildrenAreChildNodes a sh:NodeShape ;
+  rdfs:label "S7 children are X3DChildNode" ;
+  sh:targetObjectsOf x3do:hasChildren ;
+  sh:or ( [ sh:class x3do:X3DChildNode ] [ sh:path owl:sameAs ; sh:minCount 1 ] ) ;
+  sh:message "node in a children field is not an X3DChildNode" ;
+  xs:checkId "children-not-child-node" ;
+  xs:fixHint "Wrap the node in what accepts it (a geometry goes in a Shape, a Material in an Appearance); where_can_place lists the legal parents." ;
+  sh:agentInstruction "Only X3DChildNode types (Transform, Group, Shape, lights, sensors...) go directly in children." .
+
+# ---------------------------------------------------------------- S8  a DEF names one node
+# Two nodes with one DEF merge into one RDF individual; if they sit under different parents the merged
+# individual has two hasParent values. (Duplicates under the same parent merge silently; the XSD
+# xs:ID check and validate_semantic catch those.)
+
+xs:DefUnique a sh:NodeShape ;
+  rdfs:label "S8 DEF names one node" ;
+  sh:targetSubjectsOf x3do:DEF ;
+  sh:property xs:DefOneParent .
+
+xs:DefOneParent a sh:PropertyShape ;
+  sh:path x3do:hasParent ; sh:maxCount 1 ;
+  sh:message "this DEF names nodes under more than one parent (duplicate DEF)" ;
+  xs:checkId "duplicate-def" ;
+  xs:fixHint "Rename one of the DEFs, or replace the second definition with a USE." .

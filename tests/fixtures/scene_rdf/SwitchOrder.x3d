@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE X3D PUBLIC "ISO//Web3D//DTD X3D 4.0//EN" "https://www.web3d.org/specifications/x3d-4.0.dtd">
+<X3D profile='Interchange' version='4.0'><head><meta name='title' content='SwitchOrder.x3d'/></head>
+<Scene><Switch DEF='Picker' whichChoice='1'>
+  <Shape DEF='Zebra'><Box/></Shape>
+  <Shape DEF='Apple'><Sphere/></Shape>
+  <Shape><Cone/></Shape>
+</Switch></Scene></X3D>

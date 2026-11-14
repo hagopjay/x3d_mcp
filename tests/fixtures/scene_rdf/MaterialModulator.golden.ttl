@@ -1,0 +1,349 @@
+@prefix :        <https://www.web3d.org/x3d/content/examples/X3dForWebAuthors/Chapter14Prototypes/MaterialModulator.ttl#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema:  <http://schema.org/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix x3d:     <https://www.web3d.org/specifications/x3d-4.1.xsd#> .
+@prefix x3do:    <https://www.web3d.org/specifications/X3dOntology4.1#> .
+
+:X3D a owl:NamedIndividual, x3do:X3D ;
+  x3do:hasHead :head ;
+  x3do:hasScene :Scene ;
+  x3do:profile 'Immersive' ;
+  x3do:version '3.3' ;
+  x3do:noNamespaceSchemaLocation 'https://www.web3d.org/specifications/x3d-3.3.xsd' .
+:head a owl:NamedIndividual, x3do:head ;
+  x3do:hasParent :X3D ;
+  x3do:hasMeta :meta_1_1, :meta_1_2, :meta_1_3, :meta_1_4, :meta_1_5, :meta_1_6, :meta_1_7, :meta_1_8, :meta_1_9, :meta_1_10, :meta_1_11 .
+:meta_1_1 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'MaterialModulator.x3d' ;
+  x3do:name 'title' .
+:meta_1_2 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'Mimic a Material node and modulate the diffuseColor field as an animation effect, provided as a prototype for reusability.' ;
+  x3do:name 'description' .
+:meta_1_3 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'Learning suggestion for authors: try changing the modulation script so that it goes from [0 ... 1] and then [1 ... 0] alternating, rather than abruptly shifting from 1 immediately back to 0.' ;
+  x3do:name 'hint' .
+:meta_1_4 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'Don Brutzman' ;
+  x3do:name 'creator' .
+:meta_1_5 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content '10 March 2008' ;
+  x3do:name 'created' .
+:meta_1_6 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content '15 July 2025' ;
+  x3do:name 'modified' .
+:meta_1_7 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'X3D prototype requiring Script inputOutput fields' ;
+  x3do:name 'subject' .
+:meta_1_8 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'MaterialModulator.png' ;
+  x3do:name 'Image' .
+:meta_1_9 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'https://www.web3d.org/x3d/content/examples/X3dForWebAuthors/Chapter14Prototypes/MaterialModulator.x3d' ;
+  x3do:name 'identifier' .
+:meta_1_10 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content 'X3D-Edit 3.3, https://www.web3d.org/x3d/tools/X3D-Edit' ;
+  x3do:name 'generator' .
+:meta_1_11 a owl:NamedIndividual, x3do:meta ;
+  x3do:hasParent :head ;
+  x3do:content '../license.html' ;
+  x3do:name 'license' .
+:meta dcterms:title "MaterialModulator.x3d" .
+:meta dcterms:description "Mimic a Material node and modulate the diffuseColor field as an animation effect, provided as a prototype for reusability." .
+:meta dcterms:hint "Learning suggestion for authors: try changing the modulation script so that it goes from [0 ... 1] and then [1 ... 0] alternating, rather than abruptly shifting from 1 immediately back to 0." .
+:meta dcterms:creator "Don Brutzman" .
+:meta dcterms:created "10 March 2008" .
+:meta dcterms:modified "15 July 2025" .
+:meta dcterms:subject "X3D prototype requiring Script inputOutput fields" .
+:meta dcterms:Image "MaterialModulator.png" .
+:meta dcterms:identifier "https://www.web3d.org/x3d/content/examples/X3dForWebAuthors/Chapter14Prototypes/MaterialModulator.x3d" .
+:meta dcterms:generator "X3D-Edit 3.3, https://www.web3d.org/x3d/tools/X3D-Edit" .
+:meta dcterms:license "../license.html" .
+:Scene a owl:NamedIndividual, x3do:Scene ;
+  x3do:hasParent :X3D ;
+  x3do:hasChildren :WorldInfo_2_1, :Transform_2_3, :Transform_2_4 ;
+  x3do:hasProtoDeclare :ProtoDeclare_2_2 .
+:WorldInfo_2_1 a owl:NamedIndividual, x3do:WorldInfo ;
+  x3do:hasParent :Scene ;
+  x3do:title 'MaterialModulator.x3d' .
+:ProtoDeclare_2_2 a owl:NamedIndividual, x3do:ProtoDeclare ;
+  x3do:hasParent :Scene ;
+  x3do:hasProtoInterface :ProtoInterface_2_2_1 ;
+  x3do:hasProtoBody :ProtoBody_2_2_2 ;
+  x3do:appinfo 'mimic a Material node and modulate the diffuseColor field as an animation effect' ;
+  x3do:documentation 'https://www.web3d.org/x3d/content/examples/X3dForWebAuthors/Chapter14Prototypes/MaterialModulatorIndex.html' ;
+  x3do:name 'MaterialModulator' .
+:ProtoInterface_2_2_1 a owl:NamedIndividual, x3do:ProtoInterface ;
+  x3do:hasParent :ProtoDeclare_2_2 ;
+  x3do:hasField :field_2_2_1_1, :field_2_2_1_2, :field_2_2_1_3, :field_2_2_1_4, :field_2_2_1_5, :field_2_2_1_6, :field_2_2_1_7 .
+:field_2_2_1_1 a owl:NamedIndividual, x3do:field ;
+  x3do:hasParent :ProtoInterface_2_2_1 ;
+  x3do:accessType 'inputOutput' ;
+  x3do:appinfo 'default value true' ;
+  x3do:name 'enabled' ;
+  x3do:type 'SFBool' ;
+  x3do:value true .
+:field_2_2_1_2 a owl:NamedIndividual, x3do:field ;
+  x3do:hasParent :ProtoInterface_2_2_1 ;
+  x3do:accessType 'inputOutput' ;
+  x3do:appinfo 'default value 0.8 0.8 0.8' ;
+  x3do:name 'diffuseColor' ;
+  x3do:type 'SFColor' ;
+  x3do:value ( 0.8 0.8 0.8 ) .
+:field_2_2_1_3 a owl:NamedIndividual, x3do:field ;
+  x3do:hasParent :ProtoInterface_2_2_1 ;
+  x3do:accessType 'inputOutput' ;
+  x3do:appinfo 'default value 0 0 0' ;
+  x3do:name 'emissiveColor' ;
+  x3do:type 'SFColor' ;
+  x3do:value ( 0 0 0 ) .
+:field_2_2_1_4 a owl:NamedIndividual, x3do:field ;
+  x3do:hasParent :ProtoInterface_2_2_1 ;
+  x3do:accessType 'inputOutput' ;
+  x3do:appinfo 'default value 0 0 0' ;
+  x3do:name 'specularColor' ;
+  x3do:type 'SFColor' ;
+  x3do:value ( 0 0 0 ) .
+:field_2_2_1_5 a owl:NamedIndividual, x3do:field ;
+  x3do:hasParent :ProtoInterface_2_2_1 ;
+  x3do:accessType 'inputOutput' ;
+  x3do:appinfo 'default value 0.0' ;
+  x3do:name 'transparency' ;
+  x3do:type 'SFFloat' ;
+  x3do:value 0.0 .
+:field_2_2_1_6 a owl:NamedIndividual, x3do:field ;
+  x3do:hasParent :ProtoInterface_2_2_1 ;
+  x3do:accessType 'inputOutput' ;
+  x3do:appinfo 'default value 0.2' ;
+  x3do:name 'shininess' ;
+  x3do:type 'SFFloat' ;
+  x3do:value 0.2 .
+:field_2_2_1_7 a owl:NamedIndividual, x3do:field ;
+  x3do:hasParent :ProtoInterface_2_2_1 ;
+  x3do:accessType 'inputOutput' ;
+  x3do:appinfo 'default value 0.2' ;
+  x3do:name 'ambientIntensity' ;
+  x3do:type 'SFFloat' ;
+  x3do:value 0.2 .
+:ProtoBody_2_2_2 a owl:NamedIndividual, x3do:ProtoBody ;
+  x3do:hasParent :ProtoDeclare_2_2 ;
+  x3do:hasMaterial :MaterialNode ;
+  x3do:hasChildren :MaterialModulatorScript, :ModulationClock ;
+  x3do:hasROUTE :ROUTE_2_2_2_3, :ROUTE_2_2_2_5 .
+:MaterialNode a owl:NamedIndividual, x3do:Material ;
+  x3do:hasParent :ProtoBody_2_2_2 ;
+  x3do:hasIS :IS_2_2_2_1_1 ;
+  x3do:DEF 'MaterialNode' .
+:IS_2_2_2_1_1 a owl:NamedIndividual, x3do:IS ;
+  x3do:hasParent :MaterialNode ;
+  x3do:hasConnect :connect_2_2_2_1_1_1, :connect_2_2_2_1_1_2, :connect_2_2_2_1_1_3, :connect_2_2_2_1_1_4, :connect_2_2_2_1_1_5, :connect_2_2_2_1_1_6 .
+:connect_2_2_2_1_1_1 a owl:NamedIndividual, x3do:connect ;
+  x3do:hasParent :IS_2_2_2_1_1 ;
+  x3do:nodeField 'diffuseColor' ;
+  x3do:protoField 'diffuseColor' .
+:connect_2_2_2_1_1_2 a owl:NamedIndividual, x3do:connect ;
+  x3do:hasParent :IS_2_2_2_1_1 ;
+  x3do:nodeField 'emissiveColor' ;
+  x3do:protoField 'emissiveColor' .
+:connect_2_2_2_1_1_3 a owl:NamedIndividual, x3do:connect ;
+  x3do:hasParent :IS_2_2_2_1_1 ;
+  x3do:nodeField 'specularColor' ;
+  x3do:protoField 'specularColor' .
+:connect_2_2_2_1_1_4 a owl:NamedIndividual, x3do:connect ;
+  x3do:hasParent :IS_2_2_2_1_1 ;
+  x3do:nodeField 'transparency' ;
+  x3do:protoField 'transparency' .
+:connect_2_2_2_1_1_5 a owl:NamedIndividual, x3do:connect ;
+  x3do:hasParent :IS_2_2_2_1_1 ;
+  x3do:nodeField 'shininess' ;
+  x3do:protoField 'shininess' .
+:connect_2_2_2_1_1_6 a owl:NamedIndividual, x3do:connect ;
+  x3do:hasParent :IS_2_2_2_1_1 ;
+  x3do:nodeField 'ambientIntensity' ;
+  x3do:protoField 'ambientIntensity' .
+:MaterialModulatorScript a owl:NamedIndividual, x3do:Script ;
+  x3do:hasParent :ProtoBody_2_2_2 ;
+  x3do:hasField :field_2_2_2_2_1, :field_2_2_2_2_2, :field_2_2_2_2_3, :field_2_2_2_2_4 ;
+  x3do:hasIS :IS_2_2_2_2_5 ;
+  x3do:DEF 'MaterialModulatorScript' ;
+  x3do:sourceCode """
+ecmascript:
+function initialize ()
+{
+    newColor     = diffuseColor; // start with original color
+//  diffuseColor = diffuseColor; // retain original color, silence warning
+}
+function clockTrigger (timeValue)
+{
+    if (!enabled) return;
+    red   = newColor.r;
+    green = newColor.g;
+    blue  = newColor.b;
+    
+    // note different modulation rates for each color component, % is modulus operator
+    newColor = new SFColor ((red + 0.02) % 1, (green + 0.03) % 1, (blue + 0.04) % 1);
+    if (enabled)
+    {
+            Browser.println ('diffuseColor=(' + red +',' + green + ',' + blue + ') newColor=' + newColor.toString());
+    }
+}
+function set_enabled (newValue)
+{
+	enabled = newValue;
+}
+function set_diffuseColor (newValue)
+{
+    newColor = newValue;
+}
+""" .
+:field_2_2_2_2_1 a owl:NamedIndividual, x3do:field ;
+  x3do:hasParent :MaterialModulatorScript ;
+  x3do:accessType 'inputOutput' ;
+  x3do:name 'enabled' ;
+  x3do:type 'SFBool' .
+:field_2_2_2_2_2 a owl:NamedIndividual, x3do:field ;
+  x3do:hasParent :MaterialModulatorScript ;
+  x3do:accessType 'inputOutput' ;
+  x3do:name 'diffuseColor' ;
+  x3do:type 'SFColor' .
+:field_2_2_2_2_3 a owl:NamedIndividual, x3do:field ;
+  x3do:hasParent :MaterialModulatorScript ;
+  x3do:accessType 'outputOnly' ;
+  x3do:name 'newColor' ;
+  x3do:type 'SFColor' .
+:field_2_2_2_2_4 a owl:NamedIndividual, x3do:field ;
+  x3do:hasParent :MaterialModulatorScript ;
+  x3do:accessType 'inputOnly' ;
+  x3do:name 'clockTrigger' ;
+  x3do:type 'SFTime' .
+:IS_2_2_2_2_5 a owl:NamedIndividual, x3do:IS ;
+  x3do:hasParent :MaterialModulatorScript ;
+  x3do:hasConnect :connect_2_2_2_2_5_1, :connect_2_2_2_2_5_2 .
+:connect_2_2_2_2_5_1 a owl:NamedIndividual, x3do:connect ;
+  x3do:hasParent :IS_2_2_2_2_5 ;
+  x3do:nodeField 'enabled' ;
+  x3do:protoField 'enabled' .
+:connect_2_2_2_2_5_2 a owl:NamedIndividual, x3do:connect ;
+  x3do:hasParent :IS_2_2_2_2_5 ;
+  x3do:nodeField 'diffuseColor' ;
+  x3do:protoField 'diffuseColor' .
+:ROUTE_2_2_2_3 a owl:NamedIndividual, x3do:ROUTE ;
+  x3do:hasParent :ProtoBody_2_2_2 ;
+  x3do:fromField 'newColor' ;
+  x3do:fromNode 'MaterialModulatorScript' ;
+  x3do:toField 'diffuseColor' ;
+  x3do:toNode 'MaterialNode' .
+:ModulationClock a owl:NamedIndividual, x3do:TimeSensor ;
+  x3do:hasParent :ProtoBody_2_2_2 ;
+  x3do:hasIS :IS_2_2_2_4_1 ;
+  x3do:DEF 'ModulationClock' ;
+  x3do:cycleInterval '0.1' ;
+  x3do:loop true .
+:IS_2_2_2_4_1 a owl:NamedIndividual, x3do:IS ;
+  x3do:hasParent :ModulationClock ;
+  x3do:hasConnect :connect_2_2_2_4_1_1 .
+:connect_2_2_2_4_1_1 a owl:NamedIndividual, x3do:connect ;
+  x3do:hasParent :IS_2_2_2_4_1 ;
+  x3do:nodeField 'enabled' ;
+  x3do:protoField 'enabled' .
+:ROUTE_2_2_2_5 a owl:NamedIndividual, x3do:ROUTE ;
+  x3do:hasParent :ProtoBody_2_2_2 ;
+  x3do:fromField 'cycleTime' ;
+  x3do:fromNode 'ModulationClock' ;
+  x3do:toField 'clockTrigger' ;
+  x3do:toNode 'MaterialModulatorScript' .
+:Transform_2_3 a owl:NamedIndividual, x3do:Transform ;
+  x3do:hasParent :Scene ;
+  x3do:hasChildren :Shape_2_3_1 ;
+  x3do:translation ( 0 1 0 ) .
+:Shape_2_3_1 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :Transform_2_3 ;
+  x3do:hasGeometry :Sphere_2_3_1_1 ;
+  x3do:hasAppearance :Appearance_2_3_1_2 .
+:Sphere_2_3_1_1 a owl:NamedIndividual, x3do:Sphere ;
+  x3do:hasParent :Shape_2_3_1 .
+:Appearance_2_3_1_2 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_3_1 ;
+  x3do:hasMaterial :MaterialModulatorInstance .
+:MaterialModulatorInstance a owl:NamedIndividual, x3do:ProtoInstance ;
+  x3do:hasParent :Appearance_2_3_1_2 ;
+  x3do:hasFieldValue :fieldValue_2_3_1_2_1_1, :fieldValue_2_3_1_2_1_2 ;
+  x3do:DEF 'MaterialModulatorInstance' ;
+  x3do:name 'MaterialModulator' .
+:fieldValue_2_3_1_2_1_1 a owl:NamedIndividual, x3do:fieldValue ;
+  x3do:hasParent :MaterialModulatorInstance ;
+  x3do:name 'enabled' ;
+  x3do:value true .
+:fieldValue_2_3_1_2_1_2 a owl:NamedIndividual, x3do:fieldValue ;
+  x3do:hasParent :MaterialModulatorInstance ;
+  x3do:name 'diffuseColor' ;
+  x3do:value ( 0.5 0.1 0.1 ) .
+:Transform_2_4 a owl:NamedIndividual, x3do:Transform ;
+  x3do:hasParent :Scene ;
+  x3do:hasChildren :Shape_2_4_1, :Shape_2_4_2, :TouchTextInterface, :EventToggler ;
+  x3do:hasROUTE :ROUTE_2_4_5, :ROUTE_2_4_6 ;
+  x3do:translation ( 0 -2 0 ) .
+:Shape_2_4_1 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :Transform_2_4 ;
+  x3do:hasGeometry :Text_2_4_1_1 ;
+  x3do:hasAppearance :Appearance_2_4_1_2 .
+:Text_2_4_1_1 a owl:NamedIndividual, x3do:Text ;
+  x3do:hasParent :Shape_2_4_1 ;
+  x3do:hasFontStyle :FontStyle_2_4_1_1_1 ;
+  x3do:string '"enable/disable" "MaterialModulator"' .
+:FontStyle_2_4_1_1_1 a owl:NamedIndividual, x3do:FontStyle ;
+  x3do:hasParent :Text_2_4_1_1 ;
+  x3do:family '"SANS"' ;
+  x3do:justify '"MIDDLE" "MIDDLE"' ;
+  x3do:cssStyle 'BOLD' .
+:Appearance_2_4_1_2 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_4_1 ;
+  x3do:hasMaterial :Material_2_4_1_2_1 .
+:Material_2_4_1_2_1 a owl:NamedIndividual, x3do:Material ;
+  x3do:hasParent :Appearance_2_4_1_2 ;
+  x3do:diffuseColor ( 0.9 0.9 0.9 ) .
+:Shape_2_4_2 a owl:NamedIndividual, x3do:Shape ;
+  x3do:hasParent :Transform_2_4 ;
+  x3do:hasGeometry :Box_2_4_2_1 ;
+  x3do:hasAppearance :Appearance_2_4_2_2 .
+:Box_2_4_2_1 a owl:NamedIndividual, x3do:Box ;
+  x3do:hasParent :Shape_2_4_2 ;
+  x3do:size ( 8 2 .001 ) .
+:Appearance_2_4_2_2 a owl:NamedIndividual, x3do:Appearance ;
+  x3do:hasParent :Shape_2_4_2 ;
+  x3do:hasMaterial :Material_2_4_2_2_1 .
+:Material_2_4_2_2_1 a owl:NamedIndividual, x3do:Material ;
+  x3do:hasParent :Appearance_2_4_2_2 ;
+  x3do:transparency 1 .
+:TouchTextInterface a owl:NamedIndividual, x3do:TouchSensor ;
+  x3do:hasParent :Transform_2_4 ;
+  x3do:DEF 'TouchTextInterface' ;
+  x3do:description 'Select to enable/disable MaterialModulator' .
+:EventToggler a owl:NamedIndividual, x3do:BooleanToggle ;
+  x3do:hasParent :Transform_2_4 ;
+  x3do:DEF 'EventToggler' .
+:ROUTE_2_4_5 a owl:NamedIndividual, x3do:ROUTE ;
+  x3do:hasParent :Transform_2_4 ;
+  x3do:fromField 'isActive' ;
+  x3do:fromNode 'TouchTextInterface' ;
+  x3do:toField 'set_boolean' ;
+  x3do:toNode 'EventToggler' .
+:ROUTE_2_4_6 a owl:NamedIndividual, x3do:ROUTE ;
+  x3do:hasParent :Transform_2_4 ;
+  x3do:fromField 'toggle' ;
+  x3do:fromNode 'EventToggler' ;
+  x3do:toField 'enabled' ;
+  x3do:toNode 'MaterialModulatorInstance' .

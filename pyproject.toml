@@ -17,6 +17,9 @@ dependencies = [
     "xmlschema>=4.3",
     "jsonschema>=4.26",
     "rdflib>=7.0",
+    # shacl_validate (SHACL Core + SPARQL constraints) and rdf_infer's rdfs / owl-rl profiles (owlrl,
+    # a pyshacl dependency); docs/semantic-web-tools.md.
+    "pyshacl>=0.30,<1",
 ]
 
 [project.optional-dependencies]
