@@ -9,6 +9,7 @@ from collections import Counter
 from mcp.server.fastmcp import FastMCP
 
 from validation.validate import validate_xml, validate_json
+from validation.llm_schema import PRESETS, restricted_schema, schema_report
 from validation.semantic import validate_semantic as _validate_semantic
 from mcp.server.fastmcp import Context
 from validation.autofix import autofix_containerfields
@@ -101,6 +102,34 @@ def register(mcp: FastMCP):
             body["report"] = report_info(json.dumps(result, indent=2), "application/json")
         inp = await run_heavy(input_info, text, blob_id, size=len(text))
         return envelope(mode, label, input=inp, **body)
+
+    @mcp.tool()
+    def x3d_json_schema(nodes: str = "", preset: str = "", lean: bool = True) -> str:
+        """A node-restricted X3D 4.0 JSON Schema for constrained decoding or structured output.
+
+        The full Web3D schema is about 500 KB; a model rarely needs more than a few dozen nodes. Name the
+        vocabulary and get a schema that allows only those scene nodes (plus head, meta, ROUTE and the
+        other structural definitions), keeps the field typing, and has the NavigationInfo.type fix.
+        Documents that satisfy it also pass validate_x3d with encoding="json".
+
+        Args:
+            nodes: Comma-separated scene node names, e.g. "Transform,Shape,Box,Material".
+            preset: "starter" (12 nodes) or "animated" (19 nodes), added to `nodes`.
+            lean: Drop @class/@id/@style, IS, metadata, defaults and comments (about 40% smaller).
+        """
+        names = [n.strip() for n in nodes.split(",") if n.strip()]
+        if preset:
+            if preset not in PRESETS:
+                return json.dumps({"error": f"unknown preset '{preset}'; presets: {', '.join(PRESETS)}"})
+            names += PRESETS[preset]
+        if not names:
+            return json.dumps({"error": f"name a vocabulary: nodes=\"Transform,Shape,Box\" or preset in {list(PRESETS)}; "
+                                        "the unrestricted schema is about 500 KB"})
+        try:
+            schema = restricted_schema(sorted(set(names)), lean=lean)
+        except ValueError as exc:
+            return json.dumps({"error": str(exc)})
+        return json.dumps({"report": schema_report(schema), "nodes": sorted(set(names)), "schema": schema})
 
     @mcp.tool()
     def validate_current_scene(ctx: Context = None) -> str:
