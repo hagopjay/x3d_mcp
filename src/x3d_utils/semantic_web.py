@@ -46,6 +46,7 @@ XS = rdflib.Namespace("urn:x3d-mcp:shapes:x3d-core#")
 MAX_TRIPLES_ENV = "X3D_MCP_SCENE_MAX_TRIPLES"
 DEFAULT_MAX_TRIPLES = 300_000
 MAX_SHAPES_CHARS = 256_000
+MAX_DATA_CHARS = 2_000_000       # data_ttl joined to a scene by sparql_scene / shacl_validate
 INFER_PROFILES = ("subclass", "rdfs", "owl-rl")
 SHACL_INFERENCE = ("none", "rdfs", "owlrl", "both")
 
@@ -337,16 +338,60 @@ def _row_key(row: dict) -> str:
     return json.dumps(row, sort_keys=True, ensure_ascii=False)
 
 
-def sparql(sg: SceneGraph, query: str, include_ontology: bool = True, ontology_version: str = "") -> dict:
-    """Guard, then run a SELECT or ASK over the scene (and the ontology), with the server's deadline and
-    row cap. Rows are sorted so pages are stable. Raises QueryRefused / QueryTimeout / RuntimeError."""
+def data_graph(data_ttl: str = "") -> rdflib.Graph | None:
+    """Domain data to join with a scene (asset records, sensor readings, catalogue entries...), or None.
+    Raises SceneError for oversize or unparsable text. Nothing is fetched: owl:imports is kept as a triple."""
+    if not data_ttl or not data_ttl.strip():
+        return None
+    if len(data_ttl) > MAX_DATA_CHARS:
+        raise SceneError(f"data_ttl is {len(data_ttl)} characters; the limit is {MAX_DATA_CHARS}")
+    g = rdflib.Graph()
+    try:
+        g.parse(data=data_ttl, format="turtle")
+    except Exception as e:                      # rdflib raises several syntax error types
+        raise SceneError(f"data_ttl is not Turtle: {str(e)[:300]}") from None
+    if len(g) > max_triples():
+        raise SceneError(f"data_ttl has {len(g)} triples; the limit is {max_triples()}")
+    return g
+
+
+_JOINED: "OrderedDict[tuple, rdflib.Graph]" = OrderedDict()
+_JOINED_KEEP = 8
+
+
+def _joined(sg: SceneGraph, ontology_version: str | None, data_ttl: str = "") -> rdflib.Graph:
+    """The scene, plus data_ttl, plus the ontology, as ONE graph (kept for the 8 most recent combinations).
+    A ReadOnlyGraphAggregate is not used: rdflib evaluates a sequence path (a/b) over each member and over the
+    union, so an aggregate returns some rows twice (HelloWorld: hasAppearance/hasMaterial gave 4 rows for 2)."""
+    extra = data_graph(data_ttl)
+    if ontology_version is None and extra is None:
+        return sg.graph
+    key = (sg.sha256, ontology_version, hashlib.sha256(data_ttl.encode()).hexdigest() if extra is not None else "")
+    g = _JOINED.get(key)
+    if g is None:
+        g = rdflib.Graph()
+        g += sg.graph
+        if extra is not None:
+            g += extra
+        if ontology_version is not None:
+            g += scene_ontology(ontology_version)
+        _JOINED[key] = g
+        while len(_JOINED) > _JOINED_KEEP:
+            _JOINED.popitem(last=False)
+    else:
+        _JOINED.move_to_end(key)
+    return g
+
+
+def sparql(sg: SceneGraph, query: str, include_ontology: bool = True, ontology_version: str = "",
+           data_ttl: str = "") -> dict:
+    """Guard, then run a SELECT or ASK over the scene (plus data_ttl, and the ontology), with the server's
+    deadline and row cap. Rows are sorted so pages are stable. Raises QueryRefused / QueryTimeout / RuntimeError."""
     prefixes = scene_prefixes(sg.base, query)
     text = prefixes + query
     guard_sparql(text)
     ov = check_ontology_version(ontology_version or sg.ontology_version)
-    graph = sg.graph
-    if include_ontology:
-        graph = rdflib.graph.ReadOnlyGraphAggregate([sg.graph, scene_ontology(ov)])
+    graph = _joined(sg, ov if include_ontology else None, data_ttl)
     cap = max_rows()
     total, rows = run_bounded(_run_select, graph, text, sg.base, cap)
     truncated = total > cap
@@ -488,8 +533,8 @@ SHACL_ONTOLOGY = "4.1"
 
 
 def shacl(sg: SceneGraph, shapes: str = "x3d-core", extra_shapes_ttl: str = "", inference: str = "none",
-          ontology_version: str = SHACL_ONTOLOGY, timeout: float | None = None) -> dict:
-    """Validate a scene graph. The data graph is the scene plus the ontology slice the shapes read;
+          ontology_version: str = SHACL_ONTOLOGY, timeout: float | None = None, data_ttl: str = "") -> dict:
+    """Validate a scene graph. The data graph is the scene, plus data_ttl, plus the ontology slice the shapes read;
     with inference other than 'none' pyshacl also gets the whole ontology as ont_graph and expands it.
 
     The x3d-core shapes are written against the 4.1 ontology for every document version: the bundled
@@ -501,6 +546,9 @@ def shacl(sg: SceneGraph, shapes: str = "x3d-core", extra_shapes_ttl: str = "", 
     sgraph = shapes_graph(shapes, extra_shapes_ttl)
     data = rdflib.Graph()
     data += sg.graph
+    extra = data_graph(data_ttl)
+    if extra is not None:
+        data += extra
     data += ontology_slice(ov)
     ont = scene_ontology(ov) if inference != "none" else None
     import pyshacl  # noqa: F401  (imported before the worker forks, so it is loaded once)
