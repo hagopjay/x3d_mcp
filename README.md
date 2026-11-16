@@ -180,6 +180,7 @@ x3d_mcp/
       animate.py           # Animation chain generation (TimeSensor + Interpolator + ROUTE)
       semantics.py         # SPARQL query tools over the bundled X3D Ontology
       semantic_web.py      # scene_to_rdf, sparql_scene, shacl_validate, rdf_infer, ontology_vs_gate
+      scene_brief.py       # scene_brief (a thin wrapper over x3d_utils/scene_brief.py)
       splats.py            # splat_inspect, splat_chunk (optional numpy)
       prompts.py           # MCP prompts for guided workflows
     x3d_utils/
@@ -189,6 +190,7 @@ x3d_mcp/
       ontology.py          # rdflib loader for the X3D Ontology (4.0 default, 4.1 by document version)
       scene_rdf.py         # X3D -> Turtle by the X3dToTurtle.xslt conventions (xpath_mini.py evaluates its rules)
       semantic_web.py      # Scene graphs, guarded SPARQL, SHACL, inference, map vs gate, instrument
+      scene_brief.py       # The budgeted, trust-tiered scene brief (pure functions)
       source.py            # Inline-content / file-path input resolver
     transfer/              # Blob store and routes (blobs.py, routes.py); SPZ/PLY readers, chunker, inspector (spz.py, ply.py, chunk.py, inspect_splats.py)
     validation/
@@ -310,6 +312,14 @@ A scene as RDF, checked with SPARQL and SHACL next to the XML validators. The on
 | `ontology_vs_gate` | Where a node may go, three ways: the ontology's `node_parents`, the X3DUOM's `where_can_place`, the XSD; with the counting rules. |
 
 Every answer carries `instrument` (commit, ontology / shapes / X3DUOM sha256, rdflib and pyshacl versions) for `claim_append`.
+
+### Brief Tools
+
+A scene described in a size you set, without the scene's own words. See [docs/scene-brief.md](docs/scene-brief.md).
+
+| Tool | Description |
+|------|-------------|
+| `scene_brief` | A trust-tiered description of a scene within a hard `budget_bytes` cap: node census, the authored pose's bounding box, first viewpoint, lights, materials, ROUTE counts, and the XSD and semantic verdicts as structure (never their messages). Text the author wrote (DEF names, `meta`, titles, descriptions, urls, Script source, comments) is counted and digested under `untrusted`, and quoted there only on request. Read-only; `return_mode` full, summary or blob. |
 
 ### Render Tools
 
@@ -501,6 +511,7 @@ The test container mounts `src/` and `tests/` from the host. Logs are written to
 | [docs/ecosystem-research.md](docs/ecosystem-research.md) | Survey of existing tools, Python vs TypeScript analysis, community resources |
 | [docs/transfer-layer.md](docs/transfer-layer.md) | Large scenes: the blob store, `/blob` upload routes, `blob_id` / `return_mode` on the tools, operator settings |
 | [docs/semantic-web-tools.md](docs/semantic-web-tools.md) | Scenes as RDF: `scene_to_rdf` conventions and fidelity, `sparql_scene`, the `x3d-core` SHACL shapes, `rdf_infer`, `ontology_vs_gate`, `instrument`, limits |
+| [docs/scene-brief.md](docs/scene-brief.md) | `scene_brief`: a budgeted, trust-tiered scene description; the facets, the budget ladder, what is kept out and why, limits, what was measured |
 | [docs/splats.md](docs/splats.md) | Gaussian splats: `splat_inspect`, `splat_chunk`, the chunked envelope, the oversize verdict of `validate_x3d`, limits, what was and was not verified |
 
 ## External References
