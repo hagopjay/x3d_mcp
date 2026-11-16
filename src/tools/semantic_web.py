@@ -168,7 +168,7 @@ def register(mcp: FastMCP):
     @holds_input
     async def sparql_scene(sparql: str, content: str = "", path: str = "", blob_id: str = "", graph_id: str = "",
                            include_ontology: bool = True, ontology_version: str = "", offset: int = 0,
-                           limit: int = 50, ctx: Context = None) -> str:
+                           limit: int = 50, data_ttl: str = "", ctx: Context = None) -> str:
         """Run a SPARQL SELECT or ASK over a scene's RDF graph, joined with the X3D Ontology.
 
         Prefixes are pre-declared: x3do = X3dOntology4.1# (written x3d: instead when the query uses only
@@ -189,6 +189,10 @@ def register(mcp: FastMCP):
                   no version, 4.0 for 4.0 and 3.x).
             offset: First row of the page (0-based).
             limit: Rows per page, 1 to 500 (default 50).
+            data_ttl: Domain data in Turtle joined to the scene (asset shells, sensor observations, museum
+                  records, FHIR resources...). Link it to scene nodes by their IRIs (the scene's base + DEF,
+                  e.g. <https://example.org/cell/scene.ttl#Station3>) so one query can need both graphs.
+                  Up to 2,000,000 characters; nothing it names is fetched.
 
         Returns JSON {graph_id, rows, total, offset, next_offset, page_sha256, ontology_version, truncated?,
         instrument, ms}.
@@ -197,13 +201,14 @@ def register(mcp: FastMCP):
         try:
             sg, inp, cached = await _scene(ctx, content, path, blob_id, graph_id)
             ov = ontology_version or sg.ontology_version
-            key = (id(_cache(ctx)), sg.graph_id, sparql, bool(include_ontology), ov)
+            dkey = hashlib.sha256(data_ttl.encode()).hexdigest() if data_ttl else ""
+            key = (id(_cache(ctx)), sg.graph_id, sparql, bool(include_ontology), ov, dkey)
             if key in _PAGES:
                 _PAGES.move_to_end(key)
                 result = _PAGES[key]
             else:
                 result = _remember(_PAGES, key, await run_heavy(sw.sparql, sg, sparql, bool(include_ontology), ov,
-                                                                 size=sg.triples * 40))
+                                                                 data_ttl, size=sg.triples * 40 + len(data_ttl)))
         except QueryRefused as e:
             return _err(f"Query refused: {e}")
         except QueryTimeout as e:
@@ -242,7 +247,7 @@ def register(mcp: FastMCP):
     async def shacl_validate(content: str = "", path: str = "", blob_id: str = "", graph_id: str = "",
                              shapes: str = "x3d-core", extra_shapes_ttl: str = "", inference: str = "none",
                              ontology_version: str = "4.1", return_mode: str = "summary",
-                             ctx: Context = None) -> str:
+                             data_ttl: str = "", ctx: Context = None) -> str:
         """Check a scene's RDF graph against SHACL shapes; each result names the node, its DEF and a fix.
 
         The bundled x3d-core shapes: S1 colour and scalar ranges in [0,1]; S1b an SFColor has 3
@@ -262,6 +267,9 @@ def register(mcp: FastMCP):
                   whole ontology first; see the warning it returns.
             ontology_version: Ontology the shapes read (default "4.1", for every document version).
             return_mode: "summary" (default: counts and the first 25 results) or "full" (all results).
+            data_ttl: Domain data in Turtle added to the data graph, as for sparql_scene, so your shapes can
+                  hold the scene to a record (a robot's rated reach, a device's location) and the record to
+                  the scene.
 
         Returns JSON {conforms, counts {Violation, Warning, Info}, by_check, results: [{focus, def,
         node_type, path, value, severity, message, shape, check_id, fix_hint}], graph_id, instrument, ms}.
@@ -273,13 +281,14 @@ def register(mcp: FastMCP):
         try:
             sg, inp, cached = await _scene(ctx, content, path, blob_id, graph_id)
             key = (id(_cache(ctx)), sg.sha256, shapes, hashlib.sha256(extra_shapes_ttl.encode()).hexdigest(),
-                   inference, ontology_version)
+                   inference, ontology_version, hashlib.sha256(data_ttl.encode()).hexdigest() if data_ttl else "")
             if key in _REPORTS:
                 _REPORTS.move_to_end(key)
                 res = _REPORTS[key]
             else:
                 res = _remember(_REPORTS, key, await run_heavy(sw.shacl, sg, shapes, extra_shapes_ttl, inference,
-                                                               ontology_version, size=sg.triples * 40))
+                                                               ontology_version, None, data_ttl,
+                                                               size=sg.triples * 40 + len(data_ttl)))
         except QueryTimeout as e:
             return _err(str(e))
         except (ValueError, sw.SceneError) as e:

@@ -488,3 +488,70 @@ def test_semantic_audit_queries_run():
     for q in queries:
         out = sw.sparql(sg, "SELECT" + q)
         assert out["total"] >= 0
+
+
+# data_ttl: domain records joined to the scene --------------------------------------------------------
+
+CELL = """<?xml version="1.0" encoding="UTF-8"?>
+<X3D profile='Interchange' version='4.0'>
+ <head><meta name='identifier' content='https://example.org/cell/scene.x3d'/></head>
+ <Scene>
+  <Transform DEF='RobotBase'><Shape><Box size='0.5 0.5 0.5'/></Shape></Transform>
+  <Transform DEF='Station3' translation='2.5 0 0.4'><Shape><Box/></Shape></Transform>
+ </Scene>
+</X3D>"""
+CELL_DATA = """@prefix ex: <https://example.org/cell/record#> .
+@prefix sc: <https://example.org/cell/scene.ttl#> .
+ex:Robot ex:depictedBy sc:RobotBase ; ex:maxReach 2.1 ; ex:servesStation ex:S3 .
+ex:S3 ex:depictedBy sc:Station3 .
+"""
+REACH_SHAPE = """@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <https://example.org/cell/record#> .
+ex:ReachShape a sh:NodeShape ; sh:targetSubjectsOf ex:servesStation ;
+  sh:message "station beyond the robot's rated reach" ;
+  sh:sparql [ sh:select \"\"\"
+    PREFIX ex: <https://example.org/cell/record#>
+    PREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    SELECT $this ?value WHERE {
+      $this ex:maxReach ?r ; ex:servesStation/ex:depictedBy ?value .
+      ?value x3do:translation ?L . ?L rdf:first ?x ; rdf:rest/rdf:rest/rdf:first ?z .
+      FILTER(?x * ?x + ?z * ?z > ?r * ?r)
+    }\"\"\" ] .
+"""
+
+
+def test_sparql_scene_joins_data_ttl(mcp):
+    q = ("PREFIX ex: <https://example.org/cell/record#> SELECT ?n ?x WHERE { ?a ex:depictedBy ?n . "
+         "?n x3do:translation ?L . ?L rdf:first ?x }")
+    alone = call(mcp, "sparql_scene", {"sparql": q, "content": CELL})
+    assert alone["ok"] and alone["total"] == 0
+    joined = call(mcp, "sparql_scene", {"sparql": q, "content": CELL, "data_ttl": CELL_DATA})
+    assert joined["ok"] and joined["total"] == 1 and joined["rows"][0]["n"] == ":Station3"
+    again = call(mcp, "sparql_scene", {"sparql": q, "graph_id": joined["graph_id"]})
+    assert again["total"] == 0                     # the cache key includes the data, so no stale join
+
+
+def test_shacl_validate_holds_scene_to_record(mcp):
+    out = call(mcp, "shacl_validate", {"content": CELL, "shapes": "none", "extra_shapes_ttl": REACH_SHAPE,
+                                       "data_ttl": CELL_DATA})
+    assert out["ok"] and out["conforms"] is False and out["counts"]["Violation"] == 1
+    assert out["results"][0]["value"] == ":Station3"
+    near = CELL_DATA.replace("2.1", "3.0")
+    assert call(mcp, "shacl_validate", {"content": CELL, "shapes": "none", "extra_shapes_ttl": REACH_SHAPE,
+                                        "data_ttl": near})["conforms"] is True
+
+
+def test_data_ttl_refused_when_not_turtle(mcp):
+    out = call(mcp, "sparql_scene", {"sparql": "SELECT * WHERE { ?s ?p ?o } LIMIT 1", "content": CELL,
+                                     "data_ttl": "this is not turtle"})
+    assert out["ok"] is False and "data_ttl is not Turtle" in out["error"]
+
+
+def test_sequence_path_rows_not_doubled_by_ontology_join():
+    """rdflib's ReadOnlyGraphAggregate returned sequence-path rows twice; the joined graph must not."""
+    q = "SELECT ?n ?m WHERE { ?n a x3do:Shape ; x3do:hasAppearance/x3do:hasMaterial ?m }"
+    sg = converted("HelloWorld")
+    with_ont = sw.sparql(sg, q, include_ontology=True)
+    without = sw.sparql(sg, q, include_ontology=False)
+    assert with_ont["total"] == without["total"] == 2
