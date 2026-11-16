@@ -1,0 +1,311 @@
+{
+ "clean": {
+  "twin_triples": 1292,
+  "domain_triples": 157,
+  "questions": {
+   "E1": [
+    {
+     "o": "Room401",
+     "room": "Room 401",
+     "area": "186",
+     "occupants": "14"
+    },
+    {
+     "o": "Room402",
+     "room": "Room 402",
+     "area": "186",
+     "occupants": "14"
+    },
+    {
+     "o": "Room403",
+     "room": "Room 403",
+     "area": "186",
+     "occupants": "14"
+    },
+    {
+     "o": "Room404",
+     "room": "Room 404",
+     "area": "186",
+     "occupants": "14"
+    },
+    {
+     "o": "Room405",
+     "room": "Room 405",
+     "area": "186",
+     "occupants": "14"
+    },
+    {
+     "o": "Room406",
+     "room": "Room 406",
+     "area": "186",
+     "occupants": "14"
+    },
+    {
+     "o": "Room407",
+     "room": "Room 407",
+     "area": "750",
+     "occupants": "54"
+    },
+    {
+     "o": "Room408",
+     "room": "Room 408",
+     "area": "374",
+     "occupants": "27"
+    }
+   ],
+   "E2": [
+    {
+     "room": "Room 401",
+     "metres": "17"
+    },
+    {
+     "room": "Room 402",
+     "metres": "37"
+    },
+    {
+     "room": "Room 403",
+     "metres": "57"
+    },
+    {
+     "room": "Room 404",
+     "metres": "57"
+    },
+    {
+     "room": "Room 405",
+     "metres": "37"
+    },
+    {
+     "room": "Room 406",
+     "metres": "17"
+    },
+    {
+     "room": "Room 407",
+     "metres": "47"
+    },
+    {
+     "room": "Room 408",
+     "metres": "27"
+    }
+   ],
+   "E3": [
+    {
+     "o": "Room407",
+     "room": "Room 407",
+     "doors": "2"
+    }
+   ]
+  },
+  "inference": [
+   {
+    "o": "Corridor4",
+    "space": "Corridor"
+   },
+   {
+    "o": "StairB",
+    "space": "Exit stair B"
+   },
+   {
+    "o": "Room401",
+    "space": "Room 401"
+   },
+   {
+    "o": "Room402",
+    "space": "Room 402"
+   },
+   {
+    "o": "Room403",
+    "space": "Room 403"
+   },
+   {
+    "o": "Room404",
+    "space": "Room 404"
+   },
+   {
+    "o": "Room405",
+    "space": "Room 405"
+   },
+   {
+    "o": "Room406",
+    "space": "Room 406"
+   },
+   {
+    "o": "Room407",
+    "space": "Room 407"
+   },
+   {
+    "o": "Room408",
+    "space": "Room 408"
+   }
+  ],
+  "shacl": [],
+  "shacl_seconds": 0.27,
+  "conforms": true
+ },
+ "fault": {
+  "twin_triples": 1292,
+  "domain_triples": 157,
+  "questions": {
+   "E1": [
+    {
+     "o": "Room401",
+     "room": "Room 401",
+     "area": "186",
+     "occupants": "14"
+    },
+    {
+     "o": "Room402",
+     "room": "Room 402",
+     "area": "186",
+     "occupants": "14"
+    },
+    {
+     "o": "Room403",
+     "room": "Room 403",
+     "area": "186",
+     "occupants": "14"
+    },
+    {
+     "o": "Room404",
+     "room": "Room 404",
+     "area": "186",
+     "occupants": "14"
+    },
+    {
+     "o": "Room405",
+     "room": "Room 405",
+     "area": "186",
+     "occupants": "14"
+    },
+    {
+     "o": "Room406",
+     "room": "Room 406",
+     "area": "186",
+     "occupants": "14"
+    },
+    {
+     "o": "Room407",
+     "room": "Room 407",
+     "area": "750",
+     "occupants": "54"
+    },
+    {
+     "o": "Room408",
+     "room": "Room 408",
+     "area": "374",
+     "occupants": "27"
+    }
+   ],
+   "E2": [
+    {
+     "room": "Room 401",
+     "metres": "17"
+    },
+    {
+     "room": "Room 402",
+     "metres": "37"
+    },
+    {
+     "room": "Room 403",
+     "metres": "57"
+    },
+    {
+     "room": "Room 404",
+     "metres": "77"
+    },
+    {
+     "room": "Room 405",
+     "metres": "97"
+    },
+    {
+     "room": "Room 406",
+     "metres": "117"
+    },
+    {
+     "room": "Room 407",
+     "metres": "47"
+    },
+    {
+     "room": "Room 408",
+     "metres": "107"
+    }
+   ],
+   "E3": [
+    {
+     "o": "Room407",
+     "room": "Room 407",
+     "doors": "2"
+    }
+   ]
+  },
+  "inference": [
+   {
+    "o": "Corridor4",
+    "space": "Corridor"
+   },
+   {
+    "o": "StairB",
+    "space": "Exit stair B"
+   },
+   {
+    "o": "Room401",
+    "space": "Room 401"
+   },
+   {
+    "o": "Room402",
+    "space": "Room 402"
+   },
+   {
+    "o": "Room403",
+    "space": "Room 403"
+   },
+   {
+    "o": "Room404",
+    "space": "Room 404"
+   },
+   {
+    "o": "Room405",
+    "space": "Room 405"
+   },
+   {
+    "o": "Room406",
+    "space": "Room 406"
+   },
+   {
+    "o": "Room407",
+    "space": "Room 407"
+   },
+   {
+    "o": "Room408",
+    "space": "Room 408"
+   }
+  ],
+  "shacl": [
+   {
+    "focus": "Door402",
+    "value": "0.76",
+    "shape": "S_E1",
+    "message": "This egress door is drawn narrower than the code's 32 in (0.813 m) clear width."
+   },
+   {
+    "focus": "Room405",
+    "value": "Room405",
+    "shape": "S_E2",
+    "message": "No open exit lies within the code's 300 ft (91.4 m) travel distance of this room (measured along x plus z)."
+   },
+   {
+    "focus": "Room406",
+    "value": "Room406",
+    "shape": "S_E2",
+    "message": "No open exit lies within the code's 300 ft (91.4 m) travel distance of this room (measured along x plus z)."
+   },
+   {
+    "focus": "Room408",
+    "value": "Room408",
+    "shape": "S_E2",
+    "message": "No open exit lies within the code's 300 ft (91.4 m) travel distance of this room (measured along x plus z)."
+   }
+  ],
+  "shacl_seconds": 0.36,
+  "conforms": false
+ }
+}

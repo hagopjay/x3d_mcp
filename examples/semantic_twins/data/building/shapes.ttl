@@ -1,0 +1,39 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix x3do: <https://www.web3d.org/specifications/X3dOntology4.1#> .
+@prefix twin: <https://example.org/scen/twin#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix brick: <https://brickschema.org/schema/Brick#> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix b: <https://example.org/scen/building/record#> .
+@prefix sc: <https://example.org/scen/building/scene.ttl#> .
+
+twin:S_B1 a sh:NodeShape ; sh:targetClass brick:Zone_Air_Temperature_Sensor ;
+  sh:severity sh:Violation ;
+  sh:message "This temperature sensor is drawn outside the room it is recorded for, so the room is controlled by its neighbour's air." ;
+  sh:sparql [ sh:select """
+    PREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX twin: <https://example.org/scen/twin#>
+    PREFIX brick: <https://brickschema.org/schema/Brick#>
+    SELECT DISTINCT $this ?value WHERE {
+      $this brick:hasLocation ?r ; twin:depictedBy ?value . ?r twin:depictedBy ?ro .
+      { SELECT $this ?value ?valuex ?valuez WHERE { ?value x3do:translation ?valueL . ?valueL rdf:first ?valuex . ?valueL rdf:rest ?valueR . ?valueR rdf:rest ?valueR2 . ?valueR2 rdf:first ?valuez . } } { SELECT $this ?ro ?rox ?roz WHERE { ?ro x3do:translation ?roL . ?roL rdf:first ?rox . ?roL rdf:rest ?roR . ?roR rdf:rest ?roR2 . ?roR2 rdf:first ?roz . } } { SELECT $this ?ro ?rosx ?rosy ?rosz WHERE { ?ro x3do:hasChildren ?roH . ?roH x3do:hasGeometry ?roB . ?roB x3do:size ?roS . ?roS rdf:first ?rosx . ?roS rdf:rest ?roSR . ?roSR rdf:first ?rosy . ?roSR rdf:rest ?roSR2 . ?roSR2 rdf:first ?rosz . } }
+      FILTER(ABS(?valuex - ?rox) > ?rosx / 2 || ABS(?valuez - ?roz) > ?rosz / 2)
+    }""" ] .
+
+twin:S_B2 a sh:NodeShape ; sh:targetClass brick:Room ;
+  sh:severity sh:Violation ;
+  sh:message "This room is drawn and served, but the model has no temperature sensor for it." ;
+  sh:sparql [ sh:select """
+    PREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX twin: <https://example.org/scen/twin#>
+    PREFIX brick: <https://brickschema.org/schema/Brick#>
+    SELECT DISTINCT $this WHERE {
+      $this twin:depictedBy ?o .
+      FILTER NOT EXISTS { ?ts a brick:Zone_Air_Temperature_Sensor ; brick:hasLocation $this }
+    }""" ] .
+

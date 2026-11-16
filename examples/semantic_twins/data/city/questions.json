@@ -1,0 +1,34 @@
+{
+ "title": "City: the block that knows its shadows",
+ "prefixes": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX sh: <http://www.w3.org/ns/shacl#>\nPREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>\nPREFIX twin: <https://example.org/scen/twin#>\nPREFIX dcterms: <http://purl.org/dc/terms/>\nPREFIX geo: <http://www.opengis.net/ont/geosparql#>\nPREFIX c: <https://example.org/scen/city/record#>\nPREFIX sc: <https://example.org/scen/city/scene.ttl#>\n",
+ "questions": [
+  {
+   "id": "C1",
+   "title": "Whose noon shadow falls on the park at the winter solstice?",
+   "why": "The X3D has each building's height and north face; the record has the sun (25.9\u00b0 at noon on 21 December at 40.7\u00b0 N, so a shadow runs 2.06 m per metre of height). A planning board sees which towers darken the park in the one season people most want sun.",
+   "lights": "o",
+   "sparql": "SELECT ?o ?building ?height ?shadow WHERE {\n  c:Sun twin:shadowPerMetre ?k . c:Park twin:depictedBy ?pk .\n  ?b twin:permitHeightM ?ph ; twin:depictedBy ?o ; rdfs:label ?building .\n  { SELECT ?o ?ox ?oz WHERE { ?o x3do:translation ?oL . ?oL rdf:first ?ox . ?oL rdf:rest ?oR . ?oR rdf:rest ?oR2 . ?oR2 rdf:first ?oz . } } { SELECT ?o ?osx ?osy ?osz WHERE { ?o x3do:hasChildren ?oH . ?oH x3do:hasGeometry ?oB . ?oB x3do:size ?oS . ?oS rdf:first ?osx . ?oS rdf:rest ?oSR . ?oSR rdf:first ?osy . ?oSR rdf:rest ?oSR2 . ?oSR2 rdf:first ?osz . } } { SELECT ?pk ?pkx ?pkz WHERE { ?pk x3do:translation ?pkL . ?pkL rdf:first ?pkx . ?pkL rdf:rest ?pkR . ?pkR rdf:rest ?pkR2 . ?pkR2 rdf:first ?pkz . } } { SELECT ?pk ?pksx ?pksy ?pksz WHERE { ?pk x3do:hasChildren ?pkH . ?pkH x3do:hasGeometry ?pkB . ?pkB x3do:size ?pkS . ?pkS rdf:first ?pksx . ?pkS rdf:rest ?pkSR . ?pkSR rdf:first ?pksy . ?pkSR rdf:rest ?pkSR2 . ?pkSR2 rdf:first ?pksz . } }\n  BIND(?osy AS ?height) BIND(?height * ?k AS ?shadow)\n  FILTER(?oz - ?osz / 2 - ?shadow < ?pkz + ?pksz / 2 && ?oz - ?osz / 2 > ?pkz - ?pksz / 2)\n  FILTER(ABS(?ox - ?pkx) < (?osx + ?pksx) / 2)\n} ORDER BY ?building"
+  },
+  {
+   "id": "C2",
+   "title": "Which buildings stand in the flood zone?",
+   "why": "GeoSPARQL names the zone and its WKT; the scene gives the drawn footprint. (This page reads positions from the X3D, because none of its engines runs GeoSPARQL's geof: functions; a spatial store such as GraphDB or Jena with GeoSPARQL would test the WKT directly.)",
+   "lights": "o",
+   "sparql": "SELECT ?o ?building WHERE {\n  c:Flood twin:depictedBy ?fz . ?b twin:permitHeightM ?h ; twin:depictedBy ?o ; rdfs:label ?building .\n  { SELECT ?o ?ox ?oz WHERE { ?o x3do:translation ?oL . ?oL rdf:first ?ox . ?oL rdf:rest ?oR . ?oR rdf:rest ?oR2 . ?oR2 rdf:first ?oz . } } { SELECT ?fz ?fzx ?fzz WHERE { ?fz x3do:translation ?fzL . ?fzL rdf:first ?fzx . ?fzL rdf:rest ?fzR . ?fzR rdf:rest ?fzR2 . ?fzR2 rdf:first ?fzz . } } { SELECT ?fz ?fzsx ?fzsy ?fzsz WHERE { ?fz x3do:hasChildren ?fzH . ?fzH x3do:hasGeometry ?fzB . ?fzB x3do:size ?fzS . ?fzS rdf:first ?fzsx . ?fzS rdf:rest ?fzSR . ?fzSR rdf:first ?fzsy . ?fzSR rdf:rest ?fzSR2 . ?fzSR2 rdf:first ?fzsz . } }\n  FILTER(ABS(?ox - ?fzx) < ?fzsx / 2 && ABS(?oz - ?fzz) < ?fzsz / 2)\n} ORDER BY ?building"
+  },
+  {
+   "id": "C3",
+   "title": "Which buildings are within a 400 m walk of the new stop?",
+   "why": "Transit-oriented zoning starts from a radius. The record holds the policy (400 m), the scene holds the distances, and the answer is the set of lots that could be upzoned.",
+   "lights": "o",
+   "sparql": "SELECT ?o ?building WHERE {\n  c:Stop twin:depictedBy ?st ; twin:walkRadiusM ?r . ?b twin:permitHeightM ?h ; twin:depictedBy ?o ; rdfs:label ?building .\n  { SELECT ?o ?ox ?oz WHERE { ?o x3do:translation ?oL . ?oL rdf:first ?ox . ?oL rdf:rest ?oR . ?oR rdf:rest ?oR2 . ?oR2 rdf:first ?oz . } } { SELECT ?st ?stx ?stz WHERE { ?st x3do:translation ?stL . ?stL rdf:first ?stx . ?stL rdf:rest ?stR . ?stR rdf:rest ?stR2 . ?stR2 rdf:first ?stz . } }\n  BIND((?ox - ?stx) * (?ox - ?stx) + (?oz - ?stz) * (?oz - ?stz) AS ?d2)\n  FILTER(?d2 <= ?r * ?r)\n} ORDER BY ?building"
+  }
+ ],
+ "inference": {
+  "title": "Buildings inherit their district from their parcel",
+  "why": "The record puts a building in a parcel and the parcel in a district. sfWithin chains, so a rule puts each building in its district, and the height rule below can read the district's limit.",
+  "sparql": "SELECT ?o ?building ?district WHERE {\n  ?b twin:permitHeightM ?h ; twin:depictedBy ?o ; rdfs:label ?building ; geo:sfWithin+ ?d . ?d twin:maxHeightM ?m ; rdfs:label ?district .\n} ORDER BY ?building",
+  "n3": "{ ?a geo:sfWithin ?b . ?b geo:sfWithin ?c } => { ?a geo:sfWithin ?c } ."
+ },
+ "fault_text": "Tower 5 is drawn 48 m tall in a 36 m district, and Building 2 is drawn 8 m east, overhanging its parcel."
+}

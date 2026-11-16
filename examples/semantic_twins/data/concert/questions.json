@@ -1,0 +1,34 @@
+{
+ "title": "Concert: a stage plot that knows the setlist",
+ "prefixes": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX sh: <http://www.w3.org/ns/shacl#>\nPREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>\nPREFIX twin: <https://example.org/scen/twin#>\nPREFIX dcterms: <http://purl.org/dc/terms/>\nPREFIX mo: <http://purl.org/ontology/mo/>\nPREFIX tl: <http://purl.org/NET/c4dm/timeline.owl#>\nPREFIX event: <http://purl.org/NET/c4dm/event.owl#>\nPREFIX foaf: <http://xmlns.com/foaf/0.1/>\nPREFIX m: <https://example.org/scen/concert/record#>\nPREFIX sc: <https://example.org/scen/concert/scene.ttl#>\n",
+ "questions": [
+  {
+   "id": "M1",
+   "title": "Who is playing at 00:12:30?",
+   "why": "The Timeline says which song is running; the Music Ontology says who performs it and on what; the scene shows where they stand. The lighting desk and the stage manager see the same answer.",
+   "lights": "o",
+   "sparql": "SELECT ?o ?who ?song WHERE {\n  m:Now twin:showSec ?t . ?s twin:startSec ?a ; twin:endSec ?b ; rdfs:label ?song . FILTER(?t >= ?a && ?t < ?b)\n  { ?s mo:performer ?x } UNION { ?s mo:instrument ?x }\n  ?x twin:depictedBy ?o ; rdfs:label ?who .\n} ORDER BY ?who"
+  },
+  {
+   "id": "M2",
+   "title": "What does the crew change between songs 3 and 4?",
+   "why": "Song 4 is the acoustic one. Set difference on the setlist gives the changeover list (in and out), and the stage plot shows the crew where to walk.",
+   "lights": "o",
+   "sparql": "SELECT ?o ?instrument ?change WHERE {\n  { m:Song4 mo:instrument ?i . FILTER NOT EXISTS { m:Song3 mo:instrument ?i } BIND(\"bring on\" AS ?change) }\n  UNION\n  { m:Song3 mo:instrument ?i . FILTER NOT EXISTS { m:Song4 mo:instrument ?i } BIND(\"take off\" AS ?change) }\n  ?i twin:depictedBy ?o ; rdfs:label ?instrument .\n} ORDER BY ?change ?instrument"
+  },
+  {
+   "id": "M3",
+   "title": "Who do the followspots pick up in song 4?",
+   "why": "The cue sheet lives in the record; the throw from each spot to its target is in the scene. The spots and their targets light together.",
+   "lights": "o",
+   "sparql": "SELECT ?o ?what WHERE {\n  m:Song4 twin:followspot ?c . ?c twin:spot ?s ; twin:follows ?p .\n  { ?s x3do:DEF ?what . BIND(?s AS ?o) } UNION { ?p twin:depictedBy ?o ; rdfs:label ?what }\n} ORDER BY ?what"
+  }
+ ],
+ "inference": {
+  "title": "Everything on stage in Set 2",
+  "why": "event:sub_event nests songs in sets in the show. One rule flattens the nesting, so asking about Set 2 reaches every performer and instrument of its songs.",
+  "sparql": "SELECT DISTINCT ?o ?what WHERE {\n  m:Set2 event:sub_event+ ?s . { ?s mo:performer ?x } UNION { ?s mo:instrument ?x } ?x twin:depictedBy ?o ; rdfs:label ?what .\n} ORDER BY ?what",
+  "n3": "{ ?a event:sub_event ?b . ?b event:sub_event ?c } => { ?a event:sub_event ?c } ."
+ },
+ "fault_text": "The guitar amp's mic was kicked 1.65 m downstage, and the keys wedge was set on the bass side of the stage."
+}

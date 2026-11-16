@@ -1,0 +1,44 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix x3do: <https://www.web3d.org/specifications/X3dOntology4.1#> .
+@prefix twin: <https://example.org/scen/twin#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix bot: <https://w3id.org/bot#> .
+@prefix code: <https://example.org/scen/firecode/code#> .
+@prefix f: <https://example.org/scen/firecode/record#> .
+@prefix sc: <https://example.org/scen/firecode/scene.ttl#> .
+
+twin:S_E1 a sh:NodeShape ; sh:targetClass bot:Interface ;
+  sh:severity sh:Violation ;
+  sh:message "This egress door is drawn narrower than the code's 32 in (0.813 m) clear width." ;
+  sh:sparql [ sh:select """
+    PREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX twin: <https://example.org/scen/twin#>
+    PREFIX code: <https://example.org/scen/firecode/code#>
+    SELECT DISTINCT $this ?value WHERE {
+      $this twin:egress true ; twin:widthAxis ?ax ; twin:depictedBy ?o . code:DoorWidth twin:minWidthM ?min .
+      { SELECT $this ?o ?osx ?osy ?osz WHERE { ?o x3do:hasChildren ?oH . ?oH x3do:hasGeometry ?oB . ?oB x3do:size ?oS . ?oS rdf:first ?osx . ?oS rdf:rest ?oSR . ?oSR rdf:first ?osy . ?oSR rdf:rest ?oSR2 . ?oSR2 rdf:first ?osz . } }
+      BIND(IF(?ax = 0, ?osx, ?osz) AS ?value) FILTER(?value < ?min)
+    }""" ] .
+
+twin:S_E2 a sh:NodeShape ; sh:targetSubjectsOf twin:occupancy ;
+  sh:severity sh:Violation ;
+  sh:message "No open exit lies within the code's 300 ft (91.4 m) travel distance of this room (measured along x plus z)." ;
+  sh:sparql [ sh:select """
+    PREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX twin: <https://example.org/scen/twin#>
+    PREFIX code: <https://example.org/scen/firecode/code#>
+    SELECT DISTINCT $this WHERE {
+      $this twin:depictedBy ?o . code:TravelB twin:maxTravelM ?max .
+      { SELECT $this ?o ?ox ?oz WHERE { ?o x3do:translation ?oL . ?oL rdf:first ?ox . ?oL rdf:rest ?oR . ?oR rdf:rest ?oR2 . ?oR2 rdf:first ?oz . } }
+      FILTER NOT EXISTS {
+        ?ex a twin:Exit ; twin:status "open" ; twin:exitDoor/twin:depictedBy ?eo .
+        ?eo x3do:translation ?eL . ?eL rdf:first ?ex1 . ?eL rdf:rest ?eR . ?eR rdf:rest ?eR2 . ?eR2 rdf:first ?ez1 .
+        FILTER(ABS(?ox - ?ex1) + ABS(?oz - ?ez1) <= ?max)
+      }
+    }""" ] .
+

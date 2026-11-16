@@ -1,0 +1,39 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix x3do: <https://www.web3d.org/specifications/X3dOntology4.1#> .
+@prefix twin: <https://example.org/scen/twin#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix crm: <http://www.cidoc-crm.org/cidoc-crm/> .
+@prefix h: <https://example.org/scen/heritage/record#> .
+@prefix sc: <https://example.org/scen/heritage/scene.ttl#> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+
+
+twin:S_H1 a sh:NodeShape ; sh:targetClass crm:E36_Visual_Item ;
+  sh:severity sh:Violation ;
+  sh:message "Drawn element has no attribution with a tier: the picture shows something the record does not vouch for." ;
+  sh:sparql [ sh:select """
+    PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/>
+    SELECT $this WHERE {
+      $this crm:P138_represents ?thing .
+      FILTER NOT EXISTS { ?a crm:P140_assigned_attribute_to ?thing ; crm:P141_assigned ?tier . }
+    }""" ] .
+
+twin:S_H2 a sh:NodeShape ; sh:targetClass crm:E16_Measurement ;
+  sh:severity sh:Violation ;
+  sh:message "The drawn size differs from the documented measurement by more than 5 %." ;
+  sh:sparql [ sh:select """
+    PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/>
+    PREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX twin: <https://example.org/scen/twin#>
+    SELECT $this ?value WHERE {
+      $this crm:P39_measured ?thing ; crm:P40_observed_dimension ?d .
+      ?d crm:P2_has_type ?axis ; crm:P90_has_value ?rec . ?axis twin:axis ?ax .
+      ?thing crm:P138i_has_representation ?o . ?o x3do:hasChildren ?shape . ?shape x3do:hasGeometry ?box .
+      ?box x3do:size ?L . ?L rdf:first ?sx ; rdf:rest/rdf:first ?sy .
+      BIND(IF(?ax = 0, ?sx, ?sy) AS ?value)
+      FILTER(ABS(?value - ?rec) > 0.05 * ?rec)
+    }""" ] .

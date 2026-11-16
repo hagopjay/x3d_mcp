@@ -1,0 +1,30 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix x3do: <https://www.web3d.org/specifications/X3dOntology4.1#> .
+@prefix twin: <https://example.org/scen/twin#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix geo: <http://www.opengis.net/ont/geosparql#> .
+@prefix c: <https://example.org/scen/city/record#> .
+@prefix sc: <https://example.org/scen/city/scene.ttl#> .
+
+c:Sun a twin:SolarCondition ; rdfs:label "Noon, December solstice, 40.7° N" ; twin:elevationDeg 25.86 ; twin:shadowPerMetre 2.0631 .
+c:C4 a geo:Feature ; rdfs:label "Commercial district C4-7" ; twin:maxHeightM 36 .
+c:R6 a geo:Feature ; rdfs:label "Residential district R6" ; twin:maxHeightM 24 .
+c:Block12 a geo:Feature ; rdfs:label "Block 12" .
+c:Parcel1 a geo:Feature ; rdfs:label "Parcel 1" ; twin:depictedBy sc:Parcel1 ; geo:sfWithin c:Block12, c:C4 ; geo:hasGeometry [ a geo:Geometry ; geo:asWKT "<http://www.opengis.net/def/crs/EPSG/0/32618> POLYGON((582925.0 4507005.0, 582955.0 4507005.0, 582955.0 4507035.0, 582925.0 4507035.0, 582925.0 4507005.0))"^^geo:wktLiteral ] .
+c:Bldg1 a geo:Feature ; rdfs:label "Building 1" ; twin:depictedBy sc:Bldg1 ; geo:sfWithin c:Parcel1 ; twin:permitHeightM 12 ; geo:hasGeometry [ a geo:Geometry ; geo:asWKT "<http://www.opengis.net/def/crs/EPSG/0/32618> POLYGON((582930.0 4507010.0, 582950.0 4507010.0, 582950.0 4507030.0, 582930.0 4507030.0, 582930.0 4507010.0))"^^geo:wktLiteral ] .
+c:Parcel2 a geo:Feature ; rdfs:label "Parcel 2" ; twin:depictedBy sc:Parcel2 ; geo:sfWithin c:Block12, c:R6 ; geo:hasGeometry [ a geo:Geometry ; geo:asWKT "<http://www.opengis.net/def/crs/EPSG/0/32618> POLYGON((582965.0 4506975.0, 582995.0 4506975.0, 582995.0 4507005.0, 582965.0 4507005.0, 582965.0 4506975.0))"^^geo:wktLiteral ] .
+c:Bldg2 a geo:Feature ; rdfs:label "Building 2" ; twin:depictedBy sc:Bldg2 ; geo:sfWithin c:Parcel2 ; twin:permitHeightM 18 ; geo:hasGeometry [ a geo:Geometry ; geo:asWKT "<http://www.opengis.net/def/crs/EPSG/0/32618> POLYGON((582970.0 4506980.0, 582990.0 4506980.0, 582990.0 4507000.0, 582970.0 4507000.0, 582970.0 4506980.0))"^^geo:wktLiteral ] .
+c:Parcel5 a geo:Feature ; rdfs:label "Parcel 5" ; twin:depictedBy sc:Parcel5 ; geo:sfWithin c:Block12, c:C4 ; geo:hasGeometry [ a geo:Geometry ; geo:asWKT "<http://www.opengis.net/def/crs/EPSG/0/32618> POLYGON((583005.0 4507005.0, 583035.0 4507005.0, 583035.0 4507035.0, 583005.0 4507035.0, 583005.0 4507005.0))"^^geo:wktLiteral ] .
+c:Tower5 a geo:Feature ; rdfs:label "Tower 5" ; twin:depictedBy sc:Tower5 ; geo:sfWithin c:Parcel5 ; twin:permitHeightM 36 ; geo:hasGeometry [ a geo:Geometry ; geo:asWKT "<http://www.opengis.net/def/crs/EPSG/0/32618> POLYGON((583010.0 4507010.0, 583030.0 4507010.0, 583030.0 4507030.0, 583010.0 4507030.0, 583010.0 4507010.0))"^^geo:wktLiteral ] .
+c:Parcel3 a geo:Feature ; rdfs:label "Parcel 3" ; twin:depictedBy sc:Parcel3 ; geo:sfWithin c:Block12, c:C4 ; geo:hasGeometry [ a geo:Geometry ; geo:asWKT "<http://www.opengis.net/def/crs/EPSG/0/32618> POLYGON((583045.0 4506975.0, 583075.0 4506975.0, 583075.0 4507005.0, 583045.0 4507005.0, 583045.0 4506975.0))"^^geo:wktLiteral ] .
+c:Bldg3 a geo:Feature ; rdfs:label "Building 3" ; twin:depictedBy sc:Bldg3 ; geo:sfWithin c:Parcel3 ; twin:permitHeightM 9 ; geo:hasGeometry [ a geo:Geometry ; geo:asWKT "<http://www.opengis.net/def/crs/EPSG/0/32618> POLYGON((583050.0 4506980.0, 583070.0 4506980.0, 583070.0 4507000.0, 583050.0 4507000.0, 583050.0 4506980.0))"^^geo:wktLiteral ] .
+c:Parcel4 a geo:Feature ; rdfs:label "Parcel 4" ; twin:depictedBy sc:Parcel4 ; geo:sfWithin c:Block12, c:R6 ; geo:hasGeometry [ a geo:Geometry ; geo:asWKT "<http://www.opengis.net/def/crs/EPSG/0/32618> POLYGON((582925.0 4506935.0, 582955.0 4506935.0, 582955.0 4506965.0, 582925.0 4506965.0, 582925.0 4506935.0))"^^geo:wktLiteral ] .
+c:Bldg4 a geo:Feature ; rdfs:label "Building 4" ; twin:depictedBy sc:Bldg4 ; geo:sfWithin c:Parcel4 ; twin:permitHeightM 24 ; geo:hasGeometry [ a geo:Geometry ; geo:asWKT "<http://www.opengis.net/def/crs/EPSG/0/32618> POLYGON((582930.0 4506940.0, 582950.0 4506940.0, 582950.0 4506960.0, 582930.0 4506960.0, 582930.0 4506940.0))"^^geo:wktLiteral ] .
+c:Parcel6 a geo:Feature ; rdfs:label "Parcel 6" ; twin:depictedBy sc:Parcel6 ; geo:sfWithin c:Block12, c:R6 ; geo:hasGeometry [ a geo:Geometry ; geo:asWKT "<http://www.opengis.net/def/crs/EPSG/0/32618> POLYGON((583025.0 4506925.0, 583055.0 4506925.0, 583055.0 4506955.0, 583025.0 4506955.0, 583025.0 4506925.0))"^^geo:wktLiteral ] .
+c:Bldg6 a geo:Feature ; rdfs:label "Building 6" ; twin:depictedBy sc:Bldg6 ; geo:sfWithin c:Parcel6 ; twin:permitHeightM 15 ; geo:hasGeometry [ a geo:Geometry ; geo:asWKT "<http://www.opengis.net/def/crs/EPSG/0/32618> POLYGON((583030.0 4506930.0, 583050.0 4506930.0, 583050.0 4506950.0, 583030.0 4506950.0, 583030.0 4506930.0))"^^geo:wktLiteral ] .
+c:Park a geo:Feature ; rdfs:label "Washington Green (park)" ; twin:depictedBy sc:Park ; geo:hasGeometry [ a geo:Geometry ; geo:asWKT "<http://www.opengis.net/def/crs/EPSG/0/32618> POLYGON((582960.0 4507060.0, 583040.0 4507060.0, 583040.0 4507100.0, 582960.0 4507100.0, 582960.0 4507060.0))"^^geo:wktLiteral ] .
+c:Flood a geo:Feature ; rdfs:label "1 % annual chance flood zone" ; twin:depictedBy sc:FloodZone ; geo:hasGeometry [ a geo:Geometry ; geo:asWKT "<http://www.opengis.net/def/crs/EPSG/0/32618> POLYGON((583030.0 4506900.0, 583100.0 4506900.0, 583100.0 4507000.0, 583030.0 4507000.0, 583030.0 4506900.0))"^^geo:wktLiteral ] .
+c:Stop a geo:Feature ; rdfs:label "New light-rail stop" ; twin:depictedBy sc:TransitStop ; twin:walkRadiusM 400 .

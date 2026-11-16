@@ -1,0 +1,177 @@
+{
+ "clean": {
+  "twin_triples": 1619,
+  "domain_triples": 199,
+  "questions": {
+   "W1": [
+    {
+     "o": "P05",
+     "pallet": "Pallet P05",
+     "bin": "K1"
+    },
+    {
+     "o": "P06",
+     "pallet": "Pallet P06",
+     "bin": "K2"
+    },
+    {
+     "o": "P07",
+     "pallet": "Pallet P07",
+     "bin": "K3"
+    }
+   ],
+   "W2": [
+    {
+     "o": "P03",
+     "pallet": "Pallet P03",
+     "lot": "L-0790",
+     "expires": "2027-01-15"
+    }
+   ],
+   "W3": [
+    {
+     "o": "BinA22",
+     "bin": "A22"
+    },
+    {
+     "o": "BinA23",
+     "bin": "A23"
+    },
+    {
+     "o": "BinB12",
+     "bin": "B12"
+    },
+    {
+     "o": "BinB13",
+     "bin": "B13"
+    },
+    {
+     "o": "BinB21",
+     "bin": "B21"
+    },
+    {
+     "o": "BinB22",
+     "bin": "B22"
+    },
+    {
+     "o": "BinB23",
+     "bin": "B23"
+    }
+   ]
+  },
+  "inference": [
+   {
+    "o": "P05",
+    "pallet": "Pallet P05"
+   },
+   {
+    "o": "P06",
+    "pallet": "Pallet P06"
+   },
+   {
+    "o": "P07",
+    "pallet": "Pallet P07"
+   }
+  ],
+  "shacl": [],
+  "shacl_seconds": 0.47,
+  "conforms": true
+ },
+ "fault": {
+  "twin_triples": 1619,
+  "domain_triples": 199,
+  "questions": {
+   "W1": [
+    {
+     "o": "P05",
+     "pallet": "Pallet P05",
+     "bin": "K1"
+    },
+    {
+     "o": "P06",
+     "pallet": "Pallet P06",
+     "bin": "K2"
+    },
+    {
+     "o": "P07",
+     "pallet": "Pallet P07",
+     "bin": "K3"
+    }
+   ],
+   "W2": [
+    {
+     "o": "P03",
+     "pallet": "Pallet P03",
+     "lot": "L-0790",
+     "expires": "2027-01-15"
+    }
+   ],
+   "W3": [
+    {
+     "o": "BinA22",
+     "bin": "A22"
+    },
+    {
+     "o": "BinA23",
+     "bin": "A23"
+    },
+    {
+     "o": "BinB12",
+     "bin": "B12"
+    },
+    {
+     "o": "BinB13",
+     "bin": "B13"
+    },
+    {
+     "o": "BinB21",
+     "bin": "B21"
+    },
+    {
+     "o": "BinB22",
+     "bin": "B22"
+    },
+    {
+     "o": "BinB23",
+     "bin": "B23"
+    }
+   ]
+  },
+  "inference": [
+   {
+    "o": "P05",
+    "pallet": "Pallet P05"
+   },
+   {
+    "o": "P06",
+    "pallet": "Pallet P06"
+   },
+   {
+    "o": "P07",
+    "pallet": "Pallet P07"
+   }
+  ],
+  "shacl": [
+   {
+    "focus": "P07",
+    "value": "P07",
+    "shape": "S_W1",
+    "message": "A pallet holding a chilled product is drawn outside the cold room."
+   },
+   {
+    "focus": "P03",
+    "value": "BinA13",
+    "shape": "S_W2",
+    "message": "The pallet is drawn in a different bin from the one the warehouse record assigns."
+   },
+   {
+    "focus": "P07",
+    "value": "BinK3",
+    "shape": "S_W2",
+    "message": "The pallet is drawn in a different bin from the one the warehouse record assigns."
+   }
+  ],
+  "shacl_seconds": 0.59,
+  "conforms": false
+ }
+}

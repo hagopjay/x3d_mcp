@@ -1,0 +1,34 @@
+{
+ "title": "Heritage: the Osiris Shaft as a living record",
+ "prefixes": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX sh: <http://www.w3.org/ns/shacl#>\nPREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>\nPREFIX twin: <https://example.org/scen/twin#>\nPREFIX dcterms: <http://purl.org/dc/terms/>\nPREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/>\nPREFIX h: <https://example.org/scen/heritage/record#>\nPREFIX sc: <https://example.org/scen/heritage/scene.ttl#>\nPREFIX unit: <http://qudt.org/vocab/unit/>\n",
+ "questions": [
+  {
+   "id": "H1",
+   "title": "Show everything whose only support is speculative",
+   "why": "The scene draws a Hall of Records; only the record says it is speculative. The query finds every drawn element whose attribution is speculative, so the picture can never pass a guess off as a find.",
+   "lights": "o",
+   "sparql": "SELECT ?o ?label ?grade WHERE {\n  ?a a crm:E13_Attribute_Assignment ; crm:P140_assigned_attribute_to ?thing ;\n     crm:P141_assigned h:tierSpeculative ; twin:grade ?grade .\n  ?thing rdfs:label ?label ; crm:P138i_has_representation ?o .\n  ?o a x3do:Transform .\n} ORDER BY ?label"
+  },
+  {
+   "id": "H2",
+   "title": "Where do the sources disagree about a dimension, and by how much?",
+   "why": "Three accounts give three total depths. Linked as three measurements of one feature, the disagreement becomes a number the page can draw beside the shaft.",
+   "lights": null,
+   "sparql": "SELECT ?feature (COUNT(?m) AS ?accounts) (MIN(?v) AS ?low) (MAX(?v) AS ?high) ((MAX(?v) - MIN(?v)) AS ?spread) WHERE {\n  ?m a crm:E16_Measurement ; crm:P39_measured ?f ; crm:P40_observed_dimension ?d .\n  ?d crm:P2_has_type h:axis_totalDepth ; crm:P90_has_value ?v .\n  ?f rdfs:label ?feature .\n} GROUP BY ?feature"
+  },
+  {
+   "id": "H3",
+   "title": "What does the model draw against what the record measured?",
+   "why": "Only the X3D knows the drawn size; only the record knows the measured one. Joined, every documented dimension gets a drawn-versus-recorded check.",
+   "lights": "o",
+   "sparql": "SELECT ?o ?label ?recorded ?drawn WHERE {\n  ?m a crm:E16_Measurement ; crm:P39_measured ?thing ; crm:P40_observed_dimension ?d .\n  ?d crm:P2_has_type ?axis ; crm:P90_has_value ?recorded .\n  ?axis twin:axis ?ax .\n  ?thing rdfs:label ?label ; crm:P138i_has_representation ?o .\n  ?o x3do:hasChildren ?shape . ?shape x3do:hasGeometry ?box .\n  ?box x3do:size ?boxL . ?boxL rdf:first ?boxsx ; rdf:rest ?boxR1 . ?boxR1 rdf:first ?boxsy ; rdf:rest/rdf:first ?boxsz .\n  BIND(IF(?ax = 0, ?boxsx, ?boxsy) AS ?drawn)\n} ORDER BY ?label"
+  }
+ ],
+ "inference": {
+  "title": "Everything inside Level 2, or inside the whole shaft",
+  "why": "CIDOC-CRM's RDFS file does not declare P46 transitive, so a plain reasoner adds nothing here. One rule (a property path) makes part-of chains collapse, and a click on the shaft lights every part below it.",
+  "sparql": "SELECT ?o ?label WHERE {\n  h:OsirisShaft crm:P46_is_composed_of+ ?part .\n  ?part rdfs:label ?label ; crm:P138i_has_representation ?o .\n} ORDER BY ?label",
+  "n3": "{ ?a crm:P46_is_composed_of ?b . ?b crm:P46_is_composed_of ?c } => { ?a crm:P46_is_composed_of ?c } ."
+ },
+ "fault_text": "Shaft A is drawn 12 m tall against the documented 9.62 m, and the Hall of Records has lost its attribution."
+}

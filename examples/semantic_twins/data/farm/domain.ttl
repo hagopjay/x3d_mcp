@@ -1,0 +1,82 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix x3do: <https://www.web3d.org/specifications/X3dOntology4.1#> .
+@prefix twin: <https://example.org/scen/twin#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix agrovoc: <http://aims.fao.org/aos/agrovoc/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix qudt: <http://qudt.org/schema/qudt/> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix g: <https://example.org/scen/farm/record#> .
+@prefix sc: <https://example.org/scen/farm/scene.ttl#> .
+
+agrovoc:c_10195 a skos:Concept ; skos:prefLabel "cucumbers"@en ; skos:broader agrovoc:c_2006 .
+agrovoc:c_11042 a skos:Concept ; skos:prefLabel "fungal diseases"@en ; skos:broader agrovoc:c_34024 ; skos:broader agrovoc:c_5962 .
+agrovoc:c_12151 a skos:Concept ; skos:prefLabel "lettuces"@en ; skos:broader agrovoc:c_3376 .
+agrovoc:c_13557 a skos:Concept ; skos:prefLabel "powdery mildews"@en ; skos:broader agrovoc:c_4825 .
+agrovoc:c_2006 a skos:Concept ; skos:prefLabel "cucurbit vegetables"@en ; skos:broader agrovoc:c_8174 .
+agrovoc:c_3129 a skos:Concept ; skos:prefLabel "fruit vegetables"@en ; skos:broader agrovoc:c_8174 .
+agrovoc:c_330704 a skos:Concept ; skos:prefLabel "phenomena"@en .
+agrovoc:c_3376 a skos:Concept ; skos:prefLabel "leaf vegetables"@en ; skos:broader agrovoc:c_8174 .
+agrovoc:c_34024 a skos:Concept ; skos:prefLabel "infectious diseases"@en ; skos:broader agrovoc:c_49879 .
+agrovoc:c_3568 a skos:Concept ; skos:prefLabel "culinary herbs"@en ; skos:broader agrovoc:c_8171 .
+agrovoc:c_4825 a skos:Concept ; skos:prefLabel "mildews"@en ; skos:broader agrovoc:c_11042 .
+agrovoc:c_49871 a skos:Concept ; skos:prefLabel "biological phenomena"@en ; skos:broader agrovoc:c_330704 .
+agrovoc:c_49879 a skos:Concept ; skos:prefLabel "diseases"@en ; skos:broader agrovoc:c_49871 .
+agrovoc:c_5962 a skos:Concept ; skos:prefLabel "plant diseases"@en ; skos:broader agrovoc:c_49879 .
+agrovoc:c_6211 a skos:Concept ; skos:prefLabel "products"@en .
+agrovoc:c_7805 a skos:Concept ; skos:prefLabel "tomatoes"@en ; skos:broader agrovoc:c_3129 .
+agrovoc:c_8171 a skos:Concept ; skos:prefLabel "plant products"@en ; skos:broader agrovoc:c_6211 .
+agrovoc:c_8174 a skos:Concept ; skos:prefLabel "vegetables"@en ; skos:broader agrovoc:c_8171 .
+agrovoc:c_9093 a skos:Concept ; skos:prefLabel "basil"@en ; skos:broader agrovoc:c_3568 .
+agrovoc:c_7805 twin:minSoilWaterPct 30 ; twin:susceptibleTo agrovoc:c_13557 .
+agrovoc:c_10195 twin:minSoilWaterPct 32 ; twin:susceptibleTo agrovoc:c_13557 .
+agrovoc:c_12151 twin:minSoilWaterPct 28 .
+agrovoc:c_9093 twin:minSoilWaterPct 25 .
+g:Greenhouse2 rdfs:label "Greenhouse 2" ; twin:depictedBy sc:Greenhouse2 .
+g:BedA1 a sosa:FeatureOfInterest ; rdfs:label "Bed A1" ; twin:row "A" ; twin:depictedBy sc:CropA1 ; twin:crop agrovoc:c_7805 ; twin:areaM2 7.2 ; twin:rootDepthM 0.3 .
+g:MoistA1 a sosa:Sensor ; twin:depictedBy sc:MoistA1 ; sosa:observes agrovoc:c_7208 .
+g:MoistA1_obs a sosa:Observation ; sosa:madeBySensor g:MoistA1 ; sosa:hasFeatureOfInterest g:BedA1 ; sosa:observedProperty agrovoc:c_7208 ; sosa:hasResult [ qudt:numericValue 34 ; qudt:unit unit:PERCENT ] .
+g:ValveA1 a sosa:Actuator ; rdfs:label "Valve A1" ; twin:depictedBy sc:ValveA1 ; twin:waters g:BedA1 .
+g:BedA2 a sosa:FeatureOfInterest ; rdfs:label "Bed A2" ; twin:row "A" ; twin:depictedBy sc:CropA2 ; twin:crop agrovoc:c_7805 ; twin:areaM2 7.2 ; twin:rootDepthM 0.3 .
+g:MoistA2 a sosa:Sensor ; twin:depictedBy sc:MoistA2 ; sosa:observes agrovoc:c_7208 .
+g:MoistA2_obs a sosa:Observation ; sosa:madeBySensor g:MoistA2 ; sosa:hasFeatureOfInterest g:BedA2 ; sosa:observedProperty agrovoc:c_7208 ; sosa:hasResult [ qudt:numericValue 27 ; qudt:unit unit:PERCENT ] .
+g:ValveA2 a sosa:Actuator ; rdfs:label "Valve A2" ; twin:depictedBy sc:ValveA2 ; twin:waters g:BedA2 .
+g:BedA3 a sosa:FeatureOfInterest ; rdfs:label "Bed A3" ; twin:row "A" ; twin:depictedBy sc:CropA3 ; twin:crop agrovoc:c_10195 ; twin:areaM2 7.2 ; twin:rootDepthM 0.3 .
+g:MoistA3 a sosa:Sensor ; twin:depictedBy sc:MoistA3 ; sosa:observes agrovoc:c_7208 .
+g:MoistA3_obs a sosa:Observation ; sosa:madeBySensor g:MoistA3 ; sosa:hasFeatureOfInterest g:BedA3 ; sosa:observedProperty agrovoc:c_7208 ; sosa:hasResult [ qudt:numericValue 33 ; qudt:unit unit:PERCENT ] .
+g:ValveA3 a sosa:Actuator ; rdfs:label "Valve A3" ; twin:depictedBy sc:ValveA3 ; twin:waters g:BedA3 .
+g:BedB1 a sosa:FeatureOfInterest ; rdfs:label "Bed B1" ; twin:row "B" ; twin:depictedBy sc:CropB1 ; twin:crop agrovoc:c_12151 ; twin:areaM2 7.2 ; twin:rootDepthM 0.3 .
+g:MoistB1 a sosa:Sensor ; twin:depictedBy sc:MoistB1 ; sosa:observes agrovoc:c_7208 .
+g:MoistB1_obs a sosa:Observation ; sosa:madeBySensor g:MoistB1 ; sosa:hasFeatureOfInterest g:BedB1 ; sosa:observedProperty agrovoc:c_7208 ; sosa:hasResult [ qudt:numericValue 22 ; qudt:unit unit:PERCENT ] .
+g:ValveB1 a sosa:Actuator ; rdfs:label "Valve B1" ; twin:depictedBy sc:ValveB1 ; twin:waters g:BedB1 .
+g:BedB2 a sosa:FeatureOfInterest ; rdfs:label "Bed B2" ; twin:row "B" ; twin:depictedBy sc:CropB2 ; twin:crop agrovoc:c_12151 ; twin:areaM2 7.2 ; twin:rootDepthM 0.3 .
+g:MoistB2 a sosa:Sensor ; twin:depictedBy sc:MoistB2 ; sosa:observes agrovoc:c_7208 .
+g:MoistB2_obs a sosa:Observation ; sosa:madeBySensor g:MoistB2 ; sosa:hasFeatureOfInterest g:BedB2 ; sosa:observedProperty agrovoc:c_7208 ; sosa:hasResult [ qudt:numericValue 30 ; qudt:unit unit:PERCENT ] .
+g:ValveB2 a sosa:Actuator ; rdfs:label "Valve B2" ; twin:depictedBy sc:ValveB2 ; twin:waters g:BedB2 .
+g:BedB3 a sosa:FeatureOfInterest ; rdfs:label "Bed B3" ; twin:row "B" ; twin:depictedBy sc:CropB3 ; twin:crop agrovoc:c_9093 ; twin:areaM2 7.2 ; twin:rootDepthM 0.3 .
+g:MoistB3 a sosa:Sensor ; twin:depictedBy sc:MoistB3 ; sosa:observes agrovoc:c_7208 .
+g:MoistB3_obs a sosa:Observation ; sosa:madeBySensor g:MoistB3 ; sosa:hasFeatureOfInterest g:BedB3 ; sosa:observedProperty agrovoc:c_7208 ; sosa:hasResult [ qudt:numericValue 26 ; qudt:unit unit:PERCENT ] .
+g:ValveB3 a sosa:Actuator ; rdfs:label "Valve B3" ; twin:depictedBy sc:ValveB3 ; twin:waters g:BedB3 .
+g:BedC1 a sosa:FeatureOfInterest ; rdfs:label "Bed C1" ; twin:row "C" ; twin:depictedBy sc:CropC1 ; twin:crop agrovoc:c_7805 ; twin:areaM2 7.2 ; twin:rootDepthM 0.3 .
+g:MoistC1 a sosa:Sensor ; twin:depictedBy sc:MoistC1 ; sosa:observes agrovoc:c_7208 .
+g:MoistC1_obs a sosa:Observation ; sosa:madeBySensor g:MoistC1 ; sosa:hasFeatureOfInterest g:BedC1 ; sosa:observedProperty agrovoc:c_7208 ; sosa:hasResult [ qudt:numericValue 31 ; qudt:unit unit:PERCENT ] .
+g:ValveC1 a sosa:Actuator ; rdfs:label "Valve C1" ; twin:depictedBy sc:ValveC1 ; twin:waters g:BedC1 .
+g:BedC2 a sosa:FeatureOfInterest ; rdfs:label "Bed C2" ; twin:row "C" ; twin:depictedBy sc:CropC2 ; twin:crop agrovoc:c_12151 ; twin:areaM2 7.2 ; twin:rootDepthM 0.3 .
+g:MoistC2 a sosa:Sensor ; twin:depictedBy sc:MoistC2 ; sosa:observes agrovoc:c_7208 .
+g:MoistC2_obs a sosa:Observation ; sosa:madeBySensor g:MoistC2 ; sosa:hasFeatureOfInterest g:BedC2 ; sosa:observedProperty agrovoc:c_7208 ; sosa:hasResult [ qudt:numericValue 29 ; qudt:unit unit:PERCENT ] .
+g:ValveC2 a sosa:Actuator ; rdfs:label "Valve C2" ; twin:depictedBy sc:ValveC2 ; twin:waters g:BedC2 .
+g:BedC3 a sosa:FeatureOfInterest ; rdfs:label "Bed C3" ; twin:row "C" ; twin:depictedBy sc:CropC3 ; twin:crop agrovoc:c_9093 ; twin:areaM2 7.2 ; twin:rootDepthM 0.3 .
+g:MoistC3 a sosa:Sensor ; twin:depictedBy sc:MoistC3 ; sosa:observes agrovoc:c_7208 .
+g:MoistC3_obs a sosa:Observation ; sosa:madeBySensor g:MoistC3 ; sosa:hasFeatureOfInterest g:BedC3 ; sosa:observedProperty agrovoc:c_7208 ; sosa:hasResult [ qudt:numericValue 24 ; qudt:unit unit:PERCENT ] .
+g:ValveC3 a sosa:Actuator ; rdfs:label "Valve C3" ; twin:depictedBy sc:ValveC3 ; twin:waters g:BedC3 .
+g:RH1 a sosa:Sensor ; rdfs:label "Humidity sensor row A" ; twin:depictedBy sc:RH1 ; twin:coversRow "A" ; sosa:observes agrovoc:c_6496 .
+g:RH1_obs a sosa:Observation ; sosa:madeBySensor g:RH1 ; sosa:observedProperty agrovoc:c_6496 ; sosa:hasResult [ qudt:numericValue 88 ; qudt:unit unit:PERCENT ] .
+g:RH2 a sosa:Sensor ; rdfs:label "Humidity sensor row C" ; twin:depictedBy sc:RH2 ; twin:coversRow "C" ; sosa:observes agrovoc:c_6496 .
+g:RH2_obs a sosa:Observation ; sosa:madeBySensor g:RH2 ; sosa:observedProperty agrovoc:c_6496 ; sosa:hasResult [ qudt:numericValue 72 ; qudt:unit unit:PERCENT ] .
+g:VentA twin:depictedBy sc:VentA ; twin:ventsRow "A" ; rdfs:label "Roof vent over row A" .
+g:VentC twin:depictedBy sc:VentC ; twin:ventsRow "C" ; rdfs:label "Roof vent over row C" .
+g:MildewRule twin:rhAbovePct 85 ; rdfs:label "Powdery mildew risk above 85 % relative humidity (example rule)" .

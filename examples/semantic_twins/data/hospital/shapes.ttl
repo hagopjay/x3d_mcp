@@ -1,0 +1,41 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix x3do: <https://www.web3d.org/specifications/X3dOntology4.1#> .
+@prefix twin: <https://example.org/scen/twin#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix bot: <https://w3id.org/bot#> .
+@prefix p: <https://example.org/scen/hospital/record#> .
+@prefix sc: <https://example.org/scen/hospital/scene.ttl#> .
+
+
+twin:S_P1 a sh:NodeShape ; sh:targetClass fhir:Device ;
+  sh:severity sh:Violation ;
+  sh:message "A non-sterile device stands inside the sterile field (distance from the field's centre is below its radius)." ;
+  sh:sparql [ sh:select """
+    PREFIX twin: <https://example.org/scen/twin#>
+    PREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX p: <https://example.org/scen/hospital/record#>
+    SELECT $this ?value WHERE {
+      $this twin:sterile false ; twin:depictedBy ?o .
+      p:SterileField twin:depictedBy ?z ; twin:radius ?r .
+      ?o x3do:translation ?oL . ?oL rdf:first ?ox ; rdf:rest/rdf:rest/rdf:first ?oz .
+      ?z x3do:translation ?zL . ?zL rdf:first ?zx ; rdf:rest/rdf:rest/rdf:first ?zz .
+      BIND(((?ox - ?zx) * (?ox - ?zx) + (?oz - ?zz) * (?oz - ?zz)) AS ?value)
+      FILTER(?value < ?r * ?r)
+    }""" ] .
+
+twin:S_P2 a sh:NodeShape ; sh:targetClass fhir:Device ;
+  sh:severity sh:Violation ;
+  sh:message "The record places this device in another room, but the scene draws it inside OR 4." ;
+  sh:sparql [ sh:select """
+    PREFIX twin: <https://example.org/scen/twin#>
+    PREFIX fhir: <http://hl7.org/fhir/>
+    PREFIX p: <https://example.org/scen/hospital/record#>
+    SELECT $this ?value WHERE {
+      $this twin:depictedBy ?o ; fhir:location/fhir:l ?value .
+      FILTER(?value != p:OR4)
+    }""" ] .

@@ -1,0 +1,403 @@
+{
+ "server": "<checkout>/src/server.py",
+ "tools": 54,
+ "runs": {
+  "clean": [
+   {
+    "tool": "scene_to_rdf",
+    "args": {
+     "content": "<8,846 chars, sha256 e6431f4fb3191535>",
+     "return_mode": "summary"
+    },
+    "wall_ms": 79.5,
+    "reply_sha256": "1599f6bd041cff2bc1e2162cb9adbd3e2880808541d6f51b87dc96a94809bab4",
+    "reply": {
+     "ok": true,
+     "graph_id": "7117950b05f1ff92",
+     "triples": 1619,
+     "individuals": 155,
+     "base": "https://example.org/scen/warehouse/scene.ttl#",
+     "warnings": []
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<712 chars, sha256 ea3a60c28c33bae4>",
+     "graph_id": "7117950b05f1ff92",
+     "data_ttl": "<5,862 chars, sha256 c856f7aae67b64cb>",
+     "include_ontology": false
+    },
+    "wall_ms": 45.6,
+    "reply_sha256": "fde247f1f45504dc9d814de08e42f2071331ae413c75978d64055d56a075c610",
+    "reply": {
+     "ok": true,
+     "total": 3,
+     "rows": [
+      {
+       "o": ":P05",
+       "pallet": "Pallet P05",
+       "bin": "K1"
+      },
+      {
+       "o": ":P06",
+       "pallet": "Pallet P06",
+       "bin": "K2"
+      },
+      {
+       "o": ":P07",
+       "pallet": "Pallet P07",
+       "bin": "K3"
+      }
+     ],
+     "error": null,
+     "ms": 43.0
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<740 chars, sha256 a32604d292606c2b>",
+     "graph_id": "7117950b05f1ff92",
+     "data_ttl": "<5,862 chars, sha256 c856f7aae67b64cb>",
+     "include_ontology": false
+    },
+    "wall_ms": 33.7,
+    "reply_sha256": "9f4c023eba891603ccea83efd9100a9c331db189ac011c6ad76bc6159a67a293",
+    "reply": {
+     "ok": true,
+     "total": 1,
+     "rows": [
+      {
+       "o": ":P03",
+       "pallet": "Pallet P03",
+       "lot": "L-0790",
+       "expires": "2027-01-15"
+      }
+     ],
+     "error": null,
+     "ms": 30.9
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<692 chars, sha256 962e703018927146>",
+     "graph_id": "7117950b05f1ff92",
+     "data_ttl": "<5,862 chars, sha256 c856f7aae67b64cb>",
+     "include_ontology": false
+    },
+    "wall_ms": 36.2,
+    "reply_sha256": "3d80afe3c214e0ff9f6567bc12c56c41df003f5c9587bb897d8867245954f5cc",
+    "reply": {
+     "ok": true,
+     "total": 7,
+     "rows": [
+      {
+       "o": ":BinA22",
+       "bin": "A22"
+      },
+      {
+       "o": ":BinA23",
+       "bin": "A23"
+      },
+      {
+       "o": ":BinB12",
+       "bin": "B12"
+      },
+      {
+       "o": ":BinB13",
+       "bin": "B13"
+      },
+      {
+       "o": ":BinB21",
+       "bin": "B21"
+      },
+      {
+       "o": ":BinB22",
+       "bin": "B22"
+      },
+      {
+       "o": ":BinB23",
+       "bin": "B23"
+      }
+     ],
+     "error": null,
+     "ms": 33.5
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<668 chars, sha256 d3a95cfc62aadc44>",
+     "graph_id": "7117950b05f1ff92",
+     "data_ttl": "<5,862 chars, sha256 c856f7aae67b64cb>",
+     "include_ontology": false
+    },
+    "wall_ms": 27.3,
+    "reply_sha256": "c98a77dd6634fd505bd7625efc5a63261b0d80ff904fe8ecee44cc4e05eace4f",
+    "reply": {
+     "ok": true,
+     "total": 3,
+     "rows": [
+      {
+       "o": ":P05",
+       "pallet": "Pallet P05"
+      },
+      {
+       "o": ":P06",
+       "pallet": "Pallet P06"
+      },
+      {
+       "o": ":P07",
+       "pallet": "Pallet P07"
+      }
+     ],
+     "error": null,
+     "ms": 24.8
+    }
+   },
+   {
+    "tool": "shacl_validate",
+    "args": {
+     "graph_id": "7117950b05f1ff92",
+     "shapes": "none",
+     "extra_shapes_ttl": "<2,887 chars, sha256 1a99cff59c5bdc8b>",
+     "data_ttl": "<5,862 chars, sha256 c856f7aae67b64cb>",
+     "return_mode": "full"
+    },
+    "wall_ms": 649.2,
+    "reply_sha256": "4cc711b208de0fe07f5ba82062159210ab1b83d0fa59c224d9400b3dd04ca4e9",
+    "reply": {
+     "ok": true,
+     "conforms": true,
+     "counts": {
+      "Violation": 0,
+      "Warning": 0,
+      "Info": 0
+     },
+     "results": [],
+     "error": null,
+     "ms": 646.4
+    }
+   }
+  ],
+  "fault": [
+   {
+    "tool": "scene_to_rdf",
+    "args": {
+     "content": "<8,847 chars, sha256 f9d712fa2c87f09f>",
+     "return_mode": "summary"
+    },
+    "wall_ms": 32.0,
+    "reply_sha256": "779c910bd1ac580f12d6d10889a5c667d38c6230846b1e713a589c45c41db983",
+    "reply": {
+     "ok": true,
+     "graph_id": "396963d0f127d3ed",
+     "triples": 1619,
+     "individuals": 155,
+     "base": "https://example.org/scen/warehouse/scene.ttl#",
+     "warnings": []
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<712 chars, sha256 ea3a60c28c33bae4>",
+     "graph_id": "396963d0f127d3ed",
+     "data_ttl": "<5,862 chars, sha256 c856f7aae67b64cb>",
+     "include_ontology": false
+    },
+    "wall_ms": 44.7,
+    "reply_sha256": "2613bca5ed6e8d9165f8ac79f61755a707c1fb30a5616f38d98b7e77ebd71820",
+    "reply": {
+     "ok": true,
+     "total": 3,
+     "rows": [
+      {
+       "o": ":P05",
+       "pallet": "Pallet P05",
+       "bin": "K1"
+      },
+      {
+       "o": ":P06",
+       "pallet": "Pallet P06",
+       "bin": "K2"
+      },
+      {
+       "o": ":P07",
+       "pallet": "Pallet P07",
+       "bin": "K3"
+      }
+     ],
+     "error": null,
+     "ms": 42.3
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<740 chars, sha256 a32604d292606c2b>",
+     "graph_id": "396963d0f127d3ed",
+     "data_ttl": "<5,862 chars, sha256 c856f7aae67b64cb>",
+     "include_ontology": false
+    },
+    "wall_ms": 33.9,
+    "reply_sha256": "f63ad35eba8d771b8651d851a2e8ce67661b045985e7444217869e7e563e192c",
+    "reply": {
+     "ok": true,
+     "total": 1,
+     "rows": [
+      {
+       "o": ":P03",
+       "pallet": "Pallet P03",
+       "lot": "L-0790",
+       "expires": "2027-01-15"
+      }
+     ],
+     "error": null,
+     "ms": 31.2
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<692 chars, sha256 962e703018927146>",
+     "graph_id": "396963d0f127d3ed",
+     "data_ttl": "<5,862 chars, sha256 c856f7aae67b64cb>",
+     "include_ontology": false
+    },
+    "wall_ms": 41.6,
+    "reply_sha256": "ced00b1c0295d0c127dc4a9b484cf48c0bb45b5b1df39cf80dace24be7113532",
+    "reply": {
+     "ok": true,
+     "total": 7,
+     "rows": [
+      {
+       "o": ":BinA22",
+       "bin": "A22"
+      },
+      {
+       "o": ":BinA23",
+       "bin": "A23"
+      },
+      {
+       "o": ":BinB12",
+       "bin": "B12"
+      },
+      {
+       "o": ":BinB13",
+       "bin": "B13"
+      },
+      {
+       "o": ":BinB21",
+       "bin": "B21"
+      },
+      {
+       "o": ":BinB22",
+       "bin": "B22"
+      },
+      {
+       "o": ":BinB23",
+       "bin": "B23"
+      }
+     ],
+     "error": null,
+     "ms": 38.8
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<668 chars, sha256 d3a95cfc62aadc44>",
+     "graph_id": "396963d0f127d3ed",
+     "data_ttl": "<5,862 chars, sha256 c856f7aae67b64cb>",
+     "include_ontology": false
+    },
+    "wall_ms": 34.7,
+    "reply_sha256": "2c330ef5af200c5941b82c850768ee2f78a99ed93720397ac05bce09a729b11d",
+    "reply": {
+     "ok": true,
+     "total": 3,
+     "rows": [
+      {
+       "o": ":P05",
+       "pallet": "Pallet P05"
+      },
+      {
+       "o": ":P06",
+       "pallet": "Pallet P06"
+      },
+      {
+       "o": ":P07",
+       "pallet": "Pallet P07"
+      }
+     ],
+     "error": null,
+     "ms": 31.9
+    }
+   },
+   {
+    "tool": "shacl_validate",
+    "args": {
+     "graph_id": "396963d0f127d3ed",
+     "shapes": "none",
+     "extra_shapes_ttl": "<2,887 chars, sha256 1a99cff59c5bdc8b>",
+     "data_ttl": "<5,862 chars, sha256 c856f7aae67b64cb>",
+     "return_mode": "full"
+    },
+    "wall_ms": 494.8,
+    "reply_sha256": "029bc9c3503a6cf04f582f9d1638804b4b3f554cf20f3a0f2e2c7de3a9101e9c",
+    "reply": {
+     "ok": true,
+     "conforms": false,
+     "counts": {
+      "Violation": 3,
+      "Warning": 0,
+      "Info": 0
+     },
+     "results": [
+      {
+       "focus": "https://example.org/scen/warehouse/record#P07",
+       "def": null,
+       "node_type": null,
+       "path": "",
+       "value": ":P07",
+       "severity": "Violation",
+       "message": "A pallet holding a chilled product is drawn outside the cold room.",
+       "shape": "https://example.org/scen/twin#S_W1",
+       "check_id": "//example.org/scen/twin#S_W1",
+       "fix_hint": null
+      },
+      {
+       "focus": "https://example.org/scen/warehouse/record#P03",
+       "def": null,
+       "node_type": null,
+       "path": "",
+       "value": ":BinA13",
+       "severity": "Violation",
+       "message": "The pallet is drawn in a different bin from the one the warehouse record assigns.",
+       "shape": "https://example.org/scen/twin#S_W2",
+       "check_id": "//example.org/scen/twin#S_W2",
+       "fix_hint": null
+      },
+      {
+       "focus": "https://example.org/scen/warehouse/record#P07",
+       "def": null,
+       "node_type": null,
+       "path": "",
+       "value": ":BinK3",
+       "severity": "Violation",
+       "message": "The pallet is drawn in a different bin from the one the warehouse record assigns.",
+       "shape": "https://example.org/scen/twin#S_W2",
+       "check_id": "//example.org/scen/twin#S_W2",
+       "fix_hint": null
+      }
+     ],
+     "error": null,
+     "ms": 492.0
+    }
+   }
+  ]
+ }
+}

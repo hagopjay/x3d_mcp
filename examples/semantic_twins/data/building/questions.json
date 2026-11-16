@@ -1,0 +1,34 @@
+{
+ "title": "Building: Floor 3 heats an empty room",
+ "prefixes": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX sh: <http://www.w3.org/ns/shacl#>\nPREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>\nPREFIX twin: <https://example.org/scen/twin#>\nPREFIX dcterms: <http://purl.org/dc/terms/>\nPREFIX brick: <https://brickschema.org/schema/Brick#>\nPREFIX unit: <http://qudt.org/vocab/unit/>\nPREFIX b: <https://example.org/scen/building/record#>\nPREFIX sc: <https://example.org/scen/building/scene.ttl#>\n",
+ "questions": [
+  {
+   "id": "B1",
+   "title": "Which empty rooms are being heated anyway?",
+   "why": "Brick says which sensor reads which room and what the setpoint is; the scene says where the room is. A room at least 1 K over setpoint with nobody in it is energy paid for nothing, and it turns red on the plan.",
+   "lights": "o",
+   "sparql": "SELECT ?o ?room ?temp ?setpoint WHERE {\n  ?ts a brick:Zone_Air_Temperature_Sensor ; brick:hasLocation ?r ; brick:value ?temp .\n  ?os a brick:Occupancy_Sensor ; brick:hasLocation ?r ; brick:value 0 .\n  ?vav brick:feeds/brick:hasPart ?r ; brick:hasPoint ?sp . ?sp a brick:Zone_Air_Temperature_Setpoint ; brick:value ?setpoint .\n  ?r rdfs:label ?room ; twin:depictedBy ?o .\n  FILTER(?temp >= ?setpoint + 1)\n} ORDER BY ?room"
+  },
+  {
+   "id": "B2",
+   "title": "If air handler 1 trips, what loses air?",
+   "why": "The air path (AHU feeds VAV feeds zone, which contains the room) lives only in Brick. Walked as a path, it lights the boxes and rooms that go warm, before the complaint calls start.",
+   "lights": "o",
+   "sparql": "SELECT ?o ?thing WHERE {\n  b:AHU1 brick:feeds+ ?x .\n  { ?x twin:depictedBy ?o ; rdfs:label ?thing } UNION { ?x brick:hasPart ?r . ?r twin:depictedBy ?o ; rdfs:label ?thing }\n} ORDER BY ?thing"
+  },
+  {
+   "id": "B3",
+   "title": "Which rooms are more than 2 K off setpoint?",
+   "why": "Comfort complaints, found before they are made. The answer is a heat map of the floor, warm and cold together.",
+   "lights": "o",
+   "sparql": "SELECT ?o ?room ?temp ?setpoint WHERE {\n  ?ts a brick:Zone_Air_Temperature_Sensor ; brick:hasLocation ?r ; brick:value ?temp .\n  ?vav brick:feeds/brick:hasPart ?r ; brick:hasPoint ?sp . ?sp a brick:Zone_Air_Temperature_Setpoint ; brick:value ?setpoint .\n  ?r rdfs:label ?room ; twin:depictedBy ?o .\n  FILTER(ABS(?temp - ?setpoint) > 2)\n} ORDER BY ?room"
+  }
+ ],
+ "inference": {
+  "title": "Which rooms does each air handler serve?",
+  "why": "Brick's feeds is a chain: air handler, VAV box, zone. One rule closes the chain, and every room lights in the colour of the unit that serves it.",
+  "sparql": "SELECT ?o ?room ?ahu WHERE {\n  ?a a brick:AHU ; rdfs:label ?ahu ; brick:feeds+ ?z . ?z brick:hasPart ?r . ?r rdfs:label ?room ; twin:depictedBy ?o .\n} ORDER BY ?room",
+  "n3": "{ ?a brick:feeds ?b . ?b brick:feeds ?c } => { ?a brick:feeds ?c } ."
+ },
+ "fault_text": "Room 303's temperature sensor is mounted in Room 304, and Room 306's temperature point has been deleted from the model."
+}

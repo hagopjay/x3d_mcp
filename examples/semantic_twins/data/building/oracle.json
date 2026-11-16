@@ -1,0 +1,205 @@
+{
+ "clean": {
+  "twin_triples": 1956,
+  "domain_triples": 161,
+  "questions": {
+   "B1": [
+    {
+     "o": "Room302",
+     "room": "Room 302",
+     "temp": "23.6",
+     "setpoint": "21.0"
+    },
+    {
+     "o": "Room304",
+     "room": "Room 304",
+     "temp": "22.4",
+     "setpoint": "21.0"
+    }
+   ],
+   "B2": [
+    {
+     "o": "Room301",
+     "thing": "Room 301"
+    },
+    {
+     "o": "Room302",
+     "thing": "Room 302"
+    },
+    {
+     "o": "Room303",
+     "thing": "Room 303"
+    },
+    {
+     "o": "VAV301",
+     "thing": "VAV box 301"
+    },
+    {
+     "o": "VAV302",
+     "thing": "VAV box 302"
+    },
+    {
+     "o": "VAV303",
+     "thing": "VAV box 303"
+    }
+   ],
+   "B3": [
+    {
+     "o": "Room302",
+     "room": "Room 302",
+     "temp": "23.6",
+     "setpoint": "21.0"
+    },
+    {
+     "o": "Room305",
+     "room": "Room 305",
+     "temp": "18.4",
+     "setpoint": "21.0"
+    }
+   ]
+  },
+  "inference": [
+   {
+    "o": "Room301",
+    "room": "Room 301",
+    "ahu": "Air handler 1"
+   },
+   {
+    "o": "Room302",
+    "room": "Room 302",
+    "ahu": "Air handler 1"
+   },
+   {
+    "o": "Room303",
+    "room": "Room 303",
+    "ahu": "Air handler 1"
+   },
+   {
+    "o": "Room304",
+    "room": "Room 304",
+    "ahu": "Air handler 2"
+   },
+   {
+    "o": "Room305",
+    "room": "Room 305",
+    "ahu": "Air handler 2"
+   },
+   {
+    "o": "Room306",
+    "room": "Room 306",
+    "ahu": "Air handler 2"
+   }
+  ],
+  "shacl": [],
+  "shacl_seconds": 0.27,
+  "conforms": true
+ },
+ "fault": {
+  "twin_triples": 1956,
+  "domain_triples": 156,
+  "questions": {
+   "B1": [
+    {
+     "o": "Room302",
+     "room": "Room 302",
+     "temp": "23.6",
+     "setpoint": "21.0"
+    },
+    {
+     "o": "Room304",
+     "room": "Room 304",
+     "temp": "22.4",
+     "setpoint": "21.0"
+    }
+   ],
+   "B2": [
+    {
+     "o": "Room301",
+     "thing": "Room 301"
+    },
+    {
+     "o": "Room302",
+     "thing": "Room 302"
+    },
+    {
+     "o": "Room303",
+     "thing": "Room 303"
+    },
+    {
+     "o": "VAV301",
+     "thing": "VAV box 301"
+    },
+    {
+     "o": "VAV302",
+     "thing": "VAV box 302"
+    },
+    {
+     "o": "VAV303",
+     "thing": "VAV box 303"
+    }
+   ],
+   "B3": [
+    {
+     "o": "Room302",
+     "room": "Room 302",
+     "temp": "23.6",
+     "setpoint": "21.0"
+    },
+    {
+     "o": "Room305",
+     "room": "Room 305",
+     "temp": "18.4",
+     "setpoint": "21.0"
+    }
+   ]
+  },
+  "inference": [
+   {
+    "o": "Room301",
+    "room": "Room 301",
+    "ahu": "Air handler 1"
+   },
+   {
+    "o": "Room302",
+    "room": "Room 302",
+    "ahu": "Air handler 1"
+   },
+   {
+    "o": "Room303",
+    "room": "Room 303",
+    "ahu": "Air handler 1"
+   },
+   {
+    "o": "Room304",
+    "room": "Room 304",
+    "ahu": "Air handler 2"
+   },
+   {
+    "o": "Room305",
+    "room": "Room 305",
+    "ahu": "Air handler 2"
+   },
+   {
+    "o": "Room306",
+    "room": "Room 306",
+    "ahu": "Air handler 2"
+   }
+  ],
+  "shacl": [
+   {
+    "focus": "TS303",
+    "value": "TempSensor303",
+    "shape": "S_B1",
+    "message": "This temperature sensor is drawn outside the room it is recorded for, so the room is controlled by its neighbour's air."
+   },
+   {
+    "focus": "Room306",
+    "value": "Room306",
+    "shape": "S_B2",
+    "message": "This room is drawn and served, but the model has no temperature sensor for it."
+   }
+  ],
+  "shacl_seconds": 0.18,
+  "conforms": false
+ }
+}

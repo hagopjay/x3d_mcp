@@ -1,0 +1,41 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix x3do: <https://www.web3d.org/specifications/X3dOntology4.1#> .
+@prefix twin: <https://example.org/scen/twin#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix mo: <http://purl.org/ontology/mo/> .
+@prefix tl: <http://purl.org/NET/c4dm/timeline.owl#> .
+@prefix event: <http://purl.org/NET/c4dm/event.owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix m: <https://example.org/scen/concert/record#> .
+@prefix sc: <https://example.org/scen/concert/scene.ttl#> .
+
+twin:S_M1 a sh:NodeShape ; sh:targetClass mo:Instrument ;
+  sh:severity sh:Violation ;
+  sh:message "An instrument on the setlist has no mic or DI within 1.0 m on the stage plot." ;
+  sh:sparql [ sh:select """
+    PREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX twin: <https://example.org/scen/twin#>
+    PREFIX mo: <http://purl.org/ontology/mo/>
+    SELECT DISTINCT $this ?value WHERE {
+      ?song mo:instrument $this . $this twin:depictedBy ?o ; twin:channel ?value .
+      { SELECT $this ?o ?ox ?oy ?oz WHERE { ?o x3do:translation ?oL . ?oL rdf:first ?ox . ?oL rdf:rest ?oR . ?oR rdf:first ?oy . ?oR rdf:rest ?oR2 . ?oR2 rdf:first ?oz . } } { SELECT $this ?value ?valuex ?valuey ?valuez WHERE { ?value x3do:translation ?valueL . ?valueL rdf:first ?valuex . ?valueL rdf:rest ?valueR . ?valueR rdf:first ?valuey . ?valueR rdf:rest ?valueR2 . ?valueR2 rdf:first ?valuez . } }
+      FILTER((?ox - ?valuex) * (?ox - ?valuex) + (?oy - ?valuey) * (?oy - ?valuey) + (?oz - ?valuez) * (?oz - ?valuez) > 1.0)
+    }""" ] .
+
+twin:S_M2 a sh:NodeShape ; sh:targetClass mo:MusicArtist ;
+  sh:severity sh:Violation ;
+  sh:message "A performer's monitor wedge is more than 2.5 m away from where they stand." ;
+  sh:sparql [ sh:select """
+    PREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX twin: <https://example.org/scen/twin#>
+    SELECT DISTINCT $this ?value WHERE {
+      $this twin:depictedBy ?o ; twin:monitor ?value .
+      { SELECT $this ?o ?ox ?oz WHERE { ?o x3do:translation ?oL . ?oL rdf:first ?ox . ?oL rdf:rest ?oR . ?oR rdf:rest ?oR2 . ?oR2 rdf:first ?oz . } } { SELECT $this ?value ?valuex ?valuez WHERE { ?value x3do:translation ?valueL . ?valueL rdf:first ?valuex . ?valueL rdf:rest ?valueR . ?valueR rdf:rest ?valueR2 . ?valueR2 rdf:first ?valuez . } }
+      FILTER((?ox - ?valuex) * (?ox - ?valuex) + (?oz - ?valuez) * (?oz - ?valuez) > 6.25)
+    }""" ] .
+

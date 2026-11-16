@@ -1,0 +1,543 @@
+{
+ "server": "<checkout>/src/server.py",
+ "tools": 54,
+ "runs": {
+  "clean": [
+   {
+    "tool": "scene_to_rdf",
+    "args": {
+     "content": "<7,246 chars, sha256 16e950438653a6ae>",
+     "return_mode": "summary"
+    },
+    "wall_ms": 66.1,
+    "reply_sha256": "0258a05231f26d061eeba0c4d40322fa2024ccf2661e6c5763f5a077ca594bd1",
+    "reply": {
+     "ok": true,
+     "graph_id": "1658058c166d854b",
+     "triples": 1292,
+     "individuals": 125,
+     "base": "https://example.org/scen/firecode/scene.ttl#",
+     "warnings": []
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<1,026 chars, sha256 03ddabc38c9a4d60>",
+     "graph_id": "1658058c166d854b",
+     "data_ttl": "<4,471 chars, sha256 0b9d098a45ea8b6c>",
+     "include_ontology": false
+    },
+    "wall_ms": 84.2,
+    "reply_sha256": "ba7f61322835a4560b2cef02eab1ce852af097614c5f78c4c6391c673dbbdf90",
+    "reply": {
+     "ok": true,
+     "total": 8,
+     "rows": [
+      {
+       "o": ":Room401",
+       "room": "Room 401",
+       "area": "186",
+       "occupants": "14"
+      },
+      {
+       "o": ":Room402",
+       "room": "Room 402",
+       "area": "186",
+       "occupants": "14"
+      },
+      {
+       "o": ":Room403",
+       "room": "Room 403",
+       "area": "186",
+       "occupants": "14"
+      },
+      {
+       "o": ":Room404",
+       "room": "Room 404",
+       "area": "186",
+       "occupants": "14"
+      },
+      {
+       "o": ":Room405",
+       "room": "Room 405",
+       "area": "186",
+       "occupants": "14"
+      },
+      {
+       "o": ":Room406",
+       "room": "Room 406",
+       "area": "186",
+       "occupants": "14"
+      },
+      {
+       "o": ":Room408",
+       "room": "Room 408",
+       "area": "374",
+       "occupants": "27"
+      },
+      {
+       "o": ":Room407",
+       "room": "Room 407",
+       "area": "750",
+       "occupants": "54"
+      }
+     ],
+     "error": null,
+     "ms": 81.6
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<1,123 chars, sha256 c2da703d1bf29f4f>",
+     "graph_id": "1658058c166d854b",
+     "data_ttl": "<4,471 chars, sha256 0b9d098a45ea8b6c>",
+     "include_ontology": false
+    },
+    "wall_ms": 66.7,
+    "reply_sha256": "21e0510244f8097bf9e5580603a0f0c524c561bc09eb8f18a77ad24345d0c015",
+    "reply": {
+     "ok": true,
+     "total": 8,
+     "rows": [
+      {
+       "room": "Room 401",
+       "metres": "17"
+      },
+      {
+       "room": "Room 406",
+       "metres": "17"
+      },
+      {
+       "room": "Room 408",
+       "metres": "27"
+      },
+      {
+       "room": "Room 402",
+       "metres": "37"
+      },
+      {
+       "room": "Room 405",
+       "metres": "37"
+      },
+      {
+       "room": "Room 407",
+       "metres": "47"
+      },
+      {
+       "room": "Room 403",
+       "metres": "57"
+      },
+      {
+       "room": "Room 404",
+       "metres": "57"
+      }
+     ],
+     "error": null,
+     "ms": 63.9
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<1,095 chars, sha256 05e5872ca76533c4>",
+     "graph_id": "1658058c166d854b",
+     "data_ttl": "<4,471 chars, sha256 0b9d098a45ea8b6c>",
+     "include_ontology": false
+    },
+    "wall_ms": 94.6,
+    "reply_sha256": "4b995be5f5e0b0ccb518d39fe0c0530862994fda26ebcf0b5a978fe3fa94603c",
+    "reply": {
+     "ok": true,
+     "total": 1,
+     "rows": [
+      {
+       "o": ":Room407",
+       "room": "Room 407",
+       "doors": "2"
+      }
+     ],
+     "error": null,
+     "ms": 91.8
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<731 chars, sha256 bd7cf36a2ec26ae5>",
+     "graph_id": "1658058c166d854b",
+     "data_ttl": "<4,471 chars, sha256 0b9d098a45ea8b6c>",
+     "include_ontology": false
+    },
+    "wall_ms": 36.1,
+    "reply_sha256": "67f22595502e54da7befcd0bcb3ce7f271bea0cf86b8d38089420b64e899c30e",
+    "reply": {
+     "ok": true,
+     "total": 10,
+     "rows": [
+      {
+       "o": ":Corridor4",
+       "space": "Corridor"
+      },
+      {
+       "o": ":Room401",
+       "space": "Room 401"
+      },
+      {
+       "o": ":Room402",
+       "space": "Room 402"
+      },
+      {
+       "o": ":Room403",
+       "space": "Room 403"
+      },
+      {
+       "o": ":Room404",
+       "space": "Room 404"
+      },
+      {
+       "o": ":Room405",
+       "space": "Room 405"
+      },
+      {
+       "o": ":Room406",
+       "space": "Room 406"
+      },
+      {
+       "o": ":Room407",
+       "space": "Room 407"
+      },
+      {
+       "o": ":Room408",
+       "space": "Room 408"
+      },
+      {
+       "o": ":StairB",
+       "space": "Exit stair B"
+      }
+     ],
+     "error": null,
+     "ms": 33.5
+    }
+   },
+   {
+    "tool": "shacl_validate",
+    "args": {
+     "graph_id": "1658058c166d854b",
+     "shapes": "none",
+     "extra_shapes_ttl": "<2,563 chars, sha256 6b59069b5fad861b>",
+     "data_ttl": "<4,471 chars, sha256 0b9d098a45ea8b6c>",
+     "return_mode": "full"
+    },
+    "wall_ms": 364.2,
+    "reply_sha256": "3225189cc2bc12259d889ea81db33e68ea349ce2b1b73774d77feccffebcc4d1",
+    "reply": {
+     "ok": true,
+     "conforms": true,
+     "counts": {
+      "Violation": 0,
+      "Warning": 0,
+      "Info": 0
+     },
+     "results": [],
+     "error": null,
+     "ms": 361.2
+    }
+   }
+  ],
+  "fault": [
+   {
+    "tool": "scene_to_rdf",
+    "args": {
+     "content": "<7,246 chars, sha256 7d97790e1101ad1a>",
+     "return_mode": "summary"
+    },
+    "wall_ms": 33.4,
+    "reply_sha256": "fb6fb53ff28ec443e0b8231334c74f1383372b826eea7266457b2ecb0cc3eb49",
+    "reply": {
+     "ok": true,
+     "graph_id": "f1d4151f0c95a0e4",
+     "triples": 1292,
+     "individuals": 125,
+     "base": "https://example.org/scen/firecode/scene.ttl#",
+     "warnings": []
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<1,026 chars, sha256 03ddabc38c9a4d60>",
+     "graph_id": "f1d4151f0c95a0e4",
+     "data_ttl": "<4,473 chars, sha256 a75c1133b4dce5ea>",
+     "include_ontology": false
+    },
+    "wall_ms": 104.5,
+    "reply_sha256": "9428cd112d861329ce1acbbf9245ef9f88466323a8a7a1b2c690efb16b3f8619",
+    "reply": {
+     "ok": true,
+     "total": 8,
+     "rows": [
+      {
+       "o": ":Room401",
+       "room": "Room 401",
+       "area": "186",
+       "occupants": "14"
+      },
+      {
+       "o": ":Room402",
+       "room": "Room 402",
+       "area": "186",
+       "occupants": "14"
+      },
+      {
+       "o": ":Room403",
+       "room": "Room 403",
+       "area": "186",
+       "occupants": "14"
+      },
+      {
+       "o": ":Room404",
+       "room": "Room 404",
+       "area": "186",
+       "occupants": "14"
+      },
+      {
+       "o": ":Room405",
+       "room": "Room 405",
+       "area": "186",
+       "occupants": "14"
+      },
+      {
+       "o": ":Room406",
+       "room": "Room 406",
+       "area": "186",
+       "occupants": "14"
+      },
+      {
+       "o": ":Room408",
+       "room": "Room 408",
+       "area": "374",
+       "occupants": "27"
+      },
+      {
+       "o": ":Room407",
+       "room": "Room 407",
+       "area": "750",
+       "occupants": "54"
+      }
+     ],
+     "error": null,
+     "ms": 101.5
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<1,123 chars, sha256 c2da703d1bf29f4f>",
+     "graph_id": "f1d4151f0c95a0e4",
+     "data_ttl": "<4,473 chars, sha256 a75c1133b4dce5ea>",
+     "include_ontology": false
+    },
+    "wall_ms": 65.4,
+    "reply_sha256": "3278d24c1036d6b3d2cb435e69e542590c51d70ed25acb7cbecdf3164b92ff54",
+    "reply": {
+     "ok": true,
+     "total": 8,
+     "rows": [
+      {
+       "room": "Room 408",
+       "metres": "107"
+      },
+      {
+       "room": "Room 406",
+       "metres": "117"
+      },
+      {
+       "room": "Room 401",
+       "metres": "17"
+      },
+      {
+       "room": "Room 402",
+       "metres": "37"
+      },
+      {
+       "room": "Room 407",
+       "metres": "47"
+      },
+      {
+       "room": "Room 403",
+       "metres": "57"
+      },
+      {
+       "room": "Room 404",
+       "metres": "77"
+      },
+      {
+       "room": "Room 405",
+       "metres": "97"
+      }
+     ],
+     "error": null,
+     "ms": 62.1
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<1,095 chars, sha256 05e5872ca76533c4>",
+     "graph_id": "f1d4151f0c95a0e4",
+     "data_ttl": "<4,473 chars, sha256 a75c1133b4dce5ea>",
+     "include_ontology": false
+    },
+    "wall_ms": 102.8,
+    "reply_sha256": "04e67de767c1e12c6fcd90cd9ff4511ed89dcd327c59bd1c5ef82996cff2cbd9",
+    "reply": {
+     "ok": true,
+     "total": 1,
+     "rows": [
+      {
+       "o": ":Room407",
+       "room": "Room 407",
+       "doors": "2"
+      }
+     ],
+     "error": null,
+     "ms": 99.7
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<731 chars, sha256 bd7cf36a2ec26ae5>",
+     "graph_id": "f1d4151f0c95a0e4",
+     "data_ttl": "<4,473 chars, sha256 a75c1133b4dce5ea>",
+     "include_ontology": false
+    },
+    "wall_ms": 35.1,
+    "reply_sha256": "b2af10b6aa963bb80bacdfdbe088a00c280e1502d69a6defe342fbf5528ec288",
+    "reply": {
+     "ok": true,
+     "total": 10,
+     "rows": [
+      {
+       "o": ":Corridor4",
+       "space": "Corridor"
+      },
+      {
+       "o": ":Room401",
+       "space": "Room 401"
+      },
+      {
+       "o": ":Room402",
+       "space": "Room 402"
+      },
+      {
+       "o": ":Room403",
+       "space": "Room 403"
+      },
+      {
+       "o": ":Room404",
+       "space": "Room 404"
+      },
+      {
+       "o": ":Room405",
+       "space": "Room 405"
+      },
+      {
+       "o": ":Room406",
+       "space": "Room 406"
+      },
+      {
+       "o": ":Room407",
+       "space": "Room 407"
+      },
+      {
+       "o": ":Room408",
+       "space": "Room 408"
+      },
+      {
+       "o": ":StairB",
+       "space": "Exit stair B"
+      }
+     ],
+     "error": null,
+     "ms": 32.4
+    }
+   },
+   {
+    "tool": "shacl_validate",
+    "args": {
+     "graph_id": "f1d4151f0c95a0e4",
+     "shapes": "none",
+     "extra_shapes_ttl": "<2,563 chars, sha256 6b59069b5fad861b>",
+     "data_ttl": "<4,473 chars, sha256 a75c1133b4dce5ea>",
+     "return_mode": "full"
+    },
+    "wall_ms": 547.4,
+    "reply_sha256": "a36660f5e21e83cdd95385b58aac00dec5057a3ca4b617bbc1899f0e2c8816d8",
+    "reply": {
+     "ok": true,
+     "conforms": false,
+     "counts": {
+      "Violation": 4,
+      "Warning": 0,
+      "Info": 0
+     },
+     "results": [
+      {
+       "focus": "https://example.org/scen/firecode/record#Door402",
+       "def": null,
+       "node_type": null,
+       "path": "",
+       "value": "0.76",
+       "severity": "Violation",
+       "message": "This egress door is drawn narrower than the code's 32 in (0.813 m) clear width.",
+       "shape": "https://example.org/scen/twin#S_E1",
+       "check_id": "//example.org/scen/twin#S_E1",
+       "fix_hint": null
+      },
+      {
+       "focus": "https://example.org/scen/firecode/record#Room405",
+       "def": null,
+       "node_type": null,
+       "path": "",
+       "value": "https://example.org/scen/firecode/record#Room405",
+       "severity": "Violation",
+       "message": "No open exit lies within the code's 300 ft (91.4 m) travel distance of this room (measured along x plus z).",
+       "shape": "https://example.org/scen/twin#S_E2",
+       "check_id": "//example.org/scen/twin#S_E2",
+       "fix_hint": null
+      },
+      {
+       "focus": "https://example.org/scen/firecode/record#Room406",
+       "def": null,
+       "node_type": null,
+       "path": "",
+       "value": "https://example.org/scen/firecode/record#Room406",
+       "severity": "Violation",
+       "message": "No open exit lies within the code's 300 ft (91.4 m) travel distance of this room (measured along x plus z).",
+       "shape": "https://example.org/scen/twin#S_E2",
+       "check_id": "//example.org/scen/twin#S_E2",
+       "fix_hint": null
+      },
+      {
+       "focus": "https://example.org/scen/firecode/record#Room408",
+       "def": null,
+       "node_type": null,
+       "path": "",
+       "value": "https://example.org/scen/firecode/record#Room408",
+       "severity": "Violation",
+       "message": "No open exit lies within the code's 300 ft (91.4 m) travel distance of this room (measured along x plus z).",
+       "shape": "https://example.org/scen/twin#S_E2",
+       "check_id": "//example.org/scen/twin#S_E2",
+       "fix_hint": null
+      }
+     ],
+     "error": null,
+     "ms": 544.3
+    }
+   }
+  ]
+ }
+}

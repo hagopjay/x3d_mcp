@@ -1,0 +1,55 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix x3do: <https://www.web3d.org/specifications/X3dOntology4.1#> .
+@prefix twin: <https://example.org/scen/twin#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix aas: <https://admin-shell.io/aas/3/2/> .
+@prefix shell: <https://admin-shell.io/aas/3/2/AssetAdministrationShell/> .
+@prefix ref: <https://admin-shell.io/aas/3/2/Referable/> .
+@prefix sm: <https://admin-shell.io/aas/3/2/Submodel/> .
+@prefix prop: <https://admin-shell.io/aas/3/2/Property/> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix qudt: <http://qudt.org/schema/qudt/> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix qk: <http://qudt.org/vocab/quantitykind/> .
+@prefix f: <https://example.org/scen/factory/record#> .
+@prefix sc: <https://example.org/scen/factory/scene.ttl#> .
+
+unit:DEG_C qudt:conversionMultiplier 1.0 ; qudt:conversionOffset 273.15 ; qudt:hasQuantityKind qk:Temperature .
+unit:DEG_F qudt:conversionMultiplier 0.5555555555555556 ; qudt:conversionOffset 459.67 ; qudt:hasQuantityKind qk:Temperature .
+unit:MilliM-PER-SEC qudt:conversionMultiplier 0.001 ; qudt:conversionOffset 0.0 ; qudt:hasQuantityKind qk:Velocity .
+unit:IN-PER-SEC qudt:conversionMultiplier 0.0254 ; qudt:conversionOffset 0.0 ; qudt:hasQuantityKind qk:Velocity .
+unit:M qudt:conversionMultiplier 1.0 ; qudt:conversionOffset 0.0 ; qudt:hasQuantityKind qk:Length .
+f:Robot1 a aas:AssetAdministrationShell ; ref:idShort "Robot1" ; rdfs:label "6-axis robot R-1" ; twin:depictedBy sc:Robot1Base ; shell:submodels f:Robot1_TD, f:Robot1_Maint .
+f:Robot1_TD a aas:Submodel ; ref:idShort "TechnicalData" ; sm:submodelElements f:Robot1_MaxReach, f:Robot1_Payload .
+f:Robot1_MaxReach a aas:Property ; ref:idShort "MaxReach" ; prop:value 2.1 ; qudt:unit unit:M .
+f:Robot1_Payload a aas:Property ; ref:idShort "Payload" ; prop:value 12 .
+f:Robot1_Maint a aas:Submodel ; ref:idShort "Maintenance" .
+f:Conveyor1 a aas:AssetAdministrationShell ; ref:idShort "Conveyor1" ; rdfs:label "Conveyor C-1" ; twin:depictedBy sc:Conveyor1 ; shell:submodels f:Conveyor1_TD, f:Conveyor1_Maint .
+f:Conveyor1_TD a aas:Submodel ; ref:idShort "TechnicalData" .
+f:Conveyor1_Maint a aas:Submodel ; ref:idShort "Maintenance" .
+f:Station1 a aas:AssetAdministrationShell ; ref:idShort "Station1" ; rdfs:label "Press station S-1" ; twin:depictedBy sc:Station1 ; shell:submodels f:Station1_TD, f:Station1_Maint .
+f:Station1_TD a aas:Submodel ; ref:idShort "TechnicalData" ; sm:submodelElements f:Station1_RatedTemperature .
+f:Station1_RatedTemperature a aas:Property ; ref:idShort "RatedTemperature" ; prop:value 60 ; qudt:unit unit:DEG_C .
+f:Station1_Maint a aas:Submodel ; ref:idShort "Maintenance" .
+f:Station2 a aas:AssetAdministrationShell ; ref:idShort "Station2" ; rdfs:label "Screw station S-2" ; twin:depictedBy sc:Station2 ; shell:submodels f:Station2_TD .
+f:Station2_TD a aas:Submodel ; ref:idShort "TechnicalData" ; sm:submodelElements f:Station2_RatedTemperature .
+f:Station2_RatedTemperature a aas:Property ; ref:idShort "RatedTemperature" ; prop:value 55 ; qudt:unit unit:DEG_C .
+f:Station3 a aas:AssetAdministrationShell ; ref:idShort "Station3" ; rdfs:label "Test station S-3" ; twin:depictedBy sc:Station3 ; shell:submodels f:Station3_TD, f:Station3_Maint .
+f:Station3_TD a aas:Submodel ; ref:idShort "TechnicalData" ; sm:submodelElements f:Station3_RatedTemperature .
+f:Station3_RatedTemperature a aas:Property ; ref:idShort "RatedTemperature" ; prop:value 50 ; qudt:unit unit:DEG_C .
+f:Station3_Maint a aas:Submodel ; ref:idShort "Maintenance" .
+f:TempSensor1 a sosa:Sensor ; twin:depictedBy sc:TempSensor1 ; sosa:isHostedBy f:Station2 ; sosa:observes qk:Temperature .
+f:TempSensor1_obs a sosa:Observation ; sosa:madeBySensor f:TempSensor1 ; sosa:observedProperty qk:Temperature ; sosa:hasFeatureOfInterest f:Station2 ; sosa:hasResult [ qudt:numericValue 52.0 ; qudt:unit unit:DEG_C ] .
+f:TempSensor2 a sosa:Sensor ; twin:depictedBy sc:TempSensor2 ; sosa:isHostedBy f:Station3 ; sosa:observes qk:Temperature .
+f:TempSensor2_obs a sosa:Observation ; sosa:madeBySensor f:TempSensor2 ; sosa:observedProperty qk:Temperature ; sosa:hasFeatureOfInterest f:Station3 ; sosa:hasResult [ qudt:numericValue 131.0 ; qudt:unit unit:DEG_F ] .
+f:VibSensor1 a sosa:Sensor ; twin:depictedBy sc:VibSensor1 ; sosa:isHostedBy f:Conveyor1 ; sosa:observes qk:Velocity .
+f:VibSensor1_obs a sosa:Observation ; sosa:madeBySensor f:VibSensor1 ; sosa:observedProperty qk:Velocity ; sosa:hasFeatureOfInterest f:Conveyor1 ; sosa:hasResult [ qudt:numericValue 4.2 ; qudt:unit unit:MilliM-PER-SEC ] .
+f:VibSensor2 a sosa:Sensor ; twin:depictedBy sc:VibSensor2 ; sosa:isHostedBy f:Station1 ; sosa:observes qk:Velocity .
+f:VibSensor2_obs a sosa:Observation ; sosa:madeBySensor f:VibSensor2 ; sosa:observedProperty qk:Velocity ; sosa:hasFeatureOfInterest f:Station1 ; sosa:hasResult [ qudt:numericValue 0.31 ; qudt:unit unit:IN-PER-SEC ] .
+f:Station1 twin:feeds f:Conveyor1 .
+f:Conveyor1 twin:feeds f:Station2 .
+f:Station2 twin:feeds f:Station3 .
+f:Robot1 twin:picksAt sc:PickPoint ; twin:placesAt sc:PlacePoint .

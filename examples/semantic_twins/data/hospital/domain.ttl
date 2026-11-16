@@ -1,0 +1,39 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix x3do: <https://www.web3d.org/specifications/X3dOntology4.1#> .
+@prefix twin: <https://example.org/scen/twin#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix bot: <https://w3id.org/bot#> .
+@prefix p: <https://example.org/scen/hospital/record#> .
+@prefix sc: <https://example.org/scen/hospital/scene.ttl#> .
+
+p:Hospital a bot:Building ; bot:hasStorey p:Floor2 .
+p:Floor2 a bot:Storey ; bot:hasSpace p:OR4, p:Storage2, p:Corridor2 .
+p:OR4 a bot:Space, fhir:Location ; rdfs:label "Operating Room 4" ; twin:depictedBy sc:OR4Room ; bot:adjacentZone p:Corridor2 .
+p:Corridor2 a bot:Space ; rdfs:label "Corridor, floor 2" ; bot:adjacentZone p:Storage2 .
+p:Storage2 a bot:Space, fhir:Location ; rdfs:label "Equipment storage 2" .
+p:SterileField a bot:Zone ; rdfs:label "Sterile field" ; twin:depictedBy sc:SterileField ; twin:radius 1.6 .
+p:OR4 bot:containsZone p:SterileField .
+p:ORTable a fhir:Device, bot:Element ; rdfs:label "Operating table" ; fhir:status [ fhir:v "active" ] ; twin:nextServiceDue "2027-03-01"^^xsd:date ; twin:sterile true ; fhir:location [ fhir:l p:OR4 ] ; twin:depictedBy sc:ORTable .
+p:OR4 bot:containsElement p:ORTable .
+p:Anesthesia1 a fhir:Device, bot:Element ; rdfs:label "Anaesthesia workstation" ; fhir:status [ fhir:v "active" ] ; twin:nextServiceDue "2026-11-10"^^xsd:date ; twin:sterile false ; fhir:location [ fhir:l p:OR4 ] ; twin:depictedBy sc:AnesthesiaMachine .
+p:OR4 bot:containsElement p:Anesthesia1 .
+p:Light1 a fhir:Device, bot:Element ; rdfs:label "Surgical light 1" ; fhir:status [ fhir:v "active" ] ; twin:nextServiceDue "2027-01-15"^^xsd:date ; twin:sterile true ; fhir:location [ fhir:l p:OR4 ] ; twin:depictedBy sc:SurgicalLight1 .
+p:OR4 bot:containsElement p:Light1 .
+p:Light2 a fhir:Device, bot:Element ; rdfs:label "Surgical light 2" ; fhir:status [ fhir:v "active" ] ; twin:nextServiceDue "2027-01-15"^^xsd:date ; twin:sterile true ; fhir:location [ fhir:l p:OR4 ] ; twin:depictedBy sc:SurgicalLight2 .
+p:OR4 bot:containsElement p:Light2 .
+p:CArm1 a fhir:Device, bot:Element ; rdfs:label "Mobile C-arm" ; fhir:status [ fhir:v "active" ] ; twin:nextServiceDue "2027-02-01"^^xsd:date ; twin:sterile false ; fhir:location [ fhir:l p:OR4 ] ; twin:depictedBy sc:CArm .
+p:OR4 bot:containsElement p:CArm1 .
+p:InstrumentTable1 a fhir:Device, bot:Element ; rdfs:label "Instrument table" ; fhir:status [ fhir:v "active" ] ; twin:nextServiceDue "2027-06-01"^^xsd:date ; twin:sterile true ; fhir:location [ fhir:l p:OR4 ] ; twin:depictedBy sc:InstrumentTable .
+p:OR4 bot:containsElement p:InstrumentTable1 .
+p:SupplyCart1 a fhir:Device, bot:Element ; rdfs:label "Supply cart" ; fhir:status [ fhir:v "active" ] ; twin:nextServiceDue "2027-06-01"^^xsd:date ; twin:sterile false ; fhir:location [ fhir:l p:OR4 ] ; twin:depictedBy sc:SupplyCart .
+p:OR4 bot:containsElement p:SupplyCart1 .
+p:Sink1 a fhir:Device, bot:Element ; rdfs:label "Scrub sink" ; fhir:status [ fhir:v "active" ] ; twin:nextServiceDue "2027-06-01"^^xsd:date ; twin:sterile false ; fhir:location [ fhir:l p:OR4 ] ; twin:depictedBy sc:ScrubSink .
+p:OR4 bot:containsElement p:Sink1 .
+p:Defib1 a fhir:Device, bot:Element ; rdfs:label "Defibrillator" ; fhir:status [ fhir:v "active" ] ; twin:nextServiceDue "2027-04-01"^^xsd:date ; twin:sterile false ; fhir:location [ fhir:l p:Storage2 ] .
+p:Storage2 bot:containsElement p:Defib1 .
+p:Proc1 a fhir:Procedure ; rdfs:label "Hip arthroplasty, 16 Nov 2026 13:00" ; fhir:status [ fhir:v "preparation" ] ; fhir:location [ fhir:l p:OR4 ] ; fhir:occurrence [ fhir:v "2026-11-16T13:00:00-05:00"^^xsd:dateTime ] ; fhir:used [ fhir:concept [ fhir:text "ORTable" ] ; fhir:reference [ fhir:l p:ORTable ] ], [ fhir:concept [ fhir:text "Anesthesia1" ] ; fhir:reference [ fhir:l p:Anesthesia1 ] ], [ fhir:concept [ fhir:text "Light1" ] ; fhir:reference [ fhir:l p:Light1 ] ], [ fhir:concept [ fhir:text "CArm1" ] ; fhir:reference [ fhir:l p:CArm1 ] ], [ fhir:concept [ fhir:text "Defib1" ] ; fhir:reference [ fhir:l p:Defib1 ] ] .
+p:today twin:date "2026-11-16"^^xsd:date .

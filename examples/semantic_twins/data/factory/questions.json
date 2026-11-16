@@ -1,0 +1,34 @@
+{
+ "title": "Factory: Cell 7, the line that checks its own layout",
+ "prefixes": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX sh: <http://www.w3.org/ns/shacl#>\nPREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>\nPREFIX twin: <https://example.org/scen/twin#>\nPREFIX dcterms: <http://purl.org/dc/terms/>\nPREFIX aas: <https://admin-shell.io/aas/3/2/>\nPREFIX shell: <https://admin-shell.io/aas/3/2/AssetAdministrationShell/>\nPREFIX ref: <https://admin-shell.io/aas/3/2/Referable/>\nPREFIX sm: <https://admin-shell.io/aas/3/2/Submodel/>\nPREFIX prop: <https://admin-shell.io/aas/3/2/Property/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX unit: <http://qudt.org/vocab/unit/>\nPREFIX qk: <http://qudt.org/vocab/quantitykind/>\nPREFIX f: <https://example.org/scen/factory/record#>\nPREFIX sc: <https://example.org/scen/factory/scene.ttl#>\n",
+ "questions": [
+  {
+   "id": "F1",
+   "title": "Which machines run hotter than their datasheet allows, in one unit?",
+   "why": "One sensor reports in degrees Celsius, one in Fahrenheit. QUDT's conversion factors bring both to kelvin inside the query, the AAS datasheet gives each station's limit, and the X3D tells the page which box to turn red.",
+   "lights": "o",
+   "sparql": "SELECT ?o ?asset ?readK ?limitK WHERE {\n  ?obs sosa:hasFeatureOfInterest ?a ; sosa:observedProperty qk:Temperature ; sosa:hasResult ?r .\n  ?r qudt:numericValue ?v ; qudt:unit ?u . ?u qudt:conversionMultiplier ?m ; qudt:conversionOffset ?off .\n  ?a shell:submodels/sm:submodelElements ?p ; rdfs:label ?asset ; twin:depictedBy ?o .\n  ?p ref:idShort \"RatedTemperature\" ; prop:value ?lim ; qudt:unit ?lu .\n  ?lu qudt:conversionMultiplier ?lm ; qudt:conversionOffset ?loff .\n  BIND((?v + ?off) * ?m AS ?readK) BIND((?lim + ?loff) * ?lm AS ?limitK)\n  FILTER(?readK > ?limitK)\n}"
+  },
+  {
+   "id": "F2",
+   "title": "If the press station stops, what else stops?",
+   "why": "The feeds-into chain lives in the record, the layout in the scene. A path query walks the chain and the downstream line lights up.",
+   "lights": "o",
+   "sparql": "SELECT ?o ?asset WHERE {\n  f:Station1 twin:feeds+ ?a . ?a rdfs:label ?asset ; twin:depictedBy ?o .\n}"
+  },
+  {
+   "id": "F3",
+   "title": "Which assets have no maintenance record?",
+   "why": "Absence is a question RDF can ask with NOT EXISTS; the answer is a spot on the floor plan, not a row in a spreadsheet.",
+   "lights": "o",
+   "sparql": "SELECT ?o ?asset WHERE {\n  ?a a aas:AssetAdministrationShell ; rdfs:label ?asset ; twin:depictedBy ?o .\n  FILTER NOT EXISTS { ?a shell:submodels/ref:idShort \"Maintenance\" }\n}"
+  }
+ ],
+ "inference": {
+  "title": "A failing sensor's whole line",
+  "why": "SOSA says which asset hosts the sensor; the feeds chain says what that asset supplies. Chained, one red reading lights every machine it affects.",
+  "sparql": "SELECT DISTINCT ?o ?asset WHERE {\n  f:TempSensor1 sosa:isHostedBy ?h . ?h twin:feeds* ?a . ?a rdfs:label ?asset ; twin:depictedBy ?o .\n}",
+  "n3": "{ ?s sosa:isHostedBy ?a . ?a twin:feeds ?b } => { ?s twin:affects ?b } ."
+ },
+ "fault_text": "Station 3 is moved 0.98 m outward, past the robot's 2.1 m reach, and a vibration reading is recorded in degrees Celsius."
+}

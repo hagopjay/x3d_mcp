@@ -1,0 +1,109 @@
+{
+ "clean": {
+  "twin_triples": 918,
+  "domain_triples": 135,
+  "questions": {
+   "F1": [
+    {
+     "o": "Station3",
+     "asset": "Test station S-3",
+     "readK": "328.150000000000026252",
+     "limitK": "323.150"
+    }
+   ],
+   "F2": [
+    {
+     "o": "Conveyor1",
+     "asset": "Conveyor C-1"
+    },
+    {
+     "o": "Station2",
+     "asset": "Screw station S-2"
+    },
+    {
+     "o": "Station3",
+     "asset": "Test station S-3"
+    }
+   ],
+   "F3": [
+    {
+     "o": "Station2",
+     "asset": "Screw station S-2"
+    }
+   ]
+  },
+  "inference": [
+   {
+    "o": "Station2",
+    "asset": "Screw station S-2"
+   },
+   {
+    "o": "Station3",
+    "asset": "Test station S-3"
+   }
+  ],
+  "shacl": [],
+  "shacl_seconds": 0.04,
+  "conforms": true
+ },
+ "fault": {
+  "twin_triples": 918,
+  "domain_triples": 135,
+  "questions": {
+   "F1": [
+    {
+     "o": "Station3",
+     "asset": "Test station S-3",
+     "readK": "328.150000000000026252",
+     "limitK": "323.150"
+    }
+   ],
+   "F2": [
+    {
+     "o": "Conveyor1",
+     "asset": "Conveyor C-1"
+    },
+    {
+     "o": "Station2",
+     "asset": "Screw station S-2"
+    },
+    {
+     "o": "Station3",
+     "asset": "Test station S-3"
+    }
+   ],
+   "F3": [
+    {
+     "o": "Station2",
+     "asset": "Screw station S-2"
+    }
+   ]
+  },
+  "inference": [
+   {
+    "o": "Station2",
+    "asset": "Screw station S-2"
+   },
+   {
+    "o": "Station3",
+    "asset": "Test station S-3"
+   }
+  ],
+  "shacl": [
+   {
+    "focus": "Robot1",
+    "value": "PlacePoint",
+    "shape": "S_F1",
+    "message": "A pick or place point is beyond the robot's maximum reach in its Asset Administration Shell."
+   },
+   {
+    "focus": "VibSensor1_obs",
+    "value": "DEG_C",
+    "shape": "S_F2",
+    "message": "The result's unit does not measure the observed property (QUDT quantity kind mismatch)."
+   }
+  ],
+  "shacl_seconds": 0.06,
+  "conforms": false
+ }
+}

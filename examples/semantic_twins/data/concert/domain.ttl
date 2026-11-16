@@ -1,0 +1,44 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix x3do: <https://www.web3d.org/specifications/X3dOntology4.1#> .
+@prefix twin: <https://example.org/scen/twin#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix mo: <http://purl.org/ontology/mo/> .
+@prefix tl: <http://purl.org/NET/c4dm/timeline.owl#> .
+@prefix event: <http://purl.org/NET/c4dm/event.owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix m: <https://example.org/scen/concert/record#> .
+@prefix sc: <https://example.org/scen/concert/scene.ttl#> .
+
+m:ShowTL a tl:TimeLine ; rdfs:label "Show clock (0 = doors down)" .
+m:Show a mo:Performance ; rdfs:label "Loomsong live, 16 Nov 2026" ; event:sub_event m:Set1, m:Set2 .
+m:Set1 a mo:Performance ; rdfs:label "Set 1" ; event:sub_event m:Song1, m:Song2, m:Song3 .
+m:Set2 a mo:Performance ; rdfs:label "Set 2" ; event:sub_event m:Song4, m:Song5 .
+m:Vox a mo:MusicArtist ; foaf:name "Lead vocal" ; rdfs:label "Lead vocal" ; twin:depictedBy sc:PerfVox ; twin:monitor sc:WedgeVox .
+m:Gtr a mo:MusicArtist ; foaf:name "Electric guitar" ; rdfs:label "Electric guitar" ; twin:depictedBy sc:PerfGtr ; twin:monitor sc:WedgeGtr .
+m:Bass a mo:MusicArtist ; foaf:name "Bass" ; rdfs:label "Bass" ; twin:depictedBy sc:PerfBass ; twin:monitor sc:WedgeBass .
+m:Drums a mo:MusicArtist ; foaf:name "Drums" ; rdfs:label "Drums" ; twin:depictedBy sc:PerfDrums ; twin:monitor sc:DrumFill .
+m:Keys a mo:MusicArtist ; foaf:name "Keys" ; rdfs:label "Keys" ; twin:depictedBy sc:PerfKeys ; twin:monitor sc:WedgeKeys .
+m:GuitarAmp a mo:Instrument ; rdfs:label "Electric guitar rig" ; twin:depictedBy sc:GuitarAmp ; twin:channel sc:MicGtrAmp .
+m:BassAmp a mo:Instrument ; rdfs:label "Bass rig" ; twin:depictedBy sc:BassAmp ; twin:channel sc:DIBass .
+m:DrumKit a mo:Instrument ; rdfs:label "Drum kit" ; twin:depictedBy sc:DrumKit ; twin:channel sc:MicKick .
+m:KeysRig a mo:Instrument ; rdfs:label "Keyboard rig" ; twin:depictedBy sc:KeysRig ; twin:channel sc:DIKeys .
+m:AcousticGtr a mo:Instrument ; rdfs:label "Acoustic guitar" ; twin:depictedBy sc:AcousticGtr ; twin:channel sc:MicAcoustic .
+m:Song1 a mo:Performance ; rdfs:label "1. Lantern Weather" ; twin:order 1 ; event:time [ a tl:Interval ; tl:onTimeLine m:ShowTL ; tl:beginsAtDuration "PT0M"^^xsd:duration ; tl:durationXSD "PT4M30S"^^xsd:duration ] ; twin:startSec 0 ; twin:endSec 270 ; mo:performer m:Vox, m:Gtr, m:Bass, m:Drums ; mo:instrument m:GuitarAmp, m:BassAmp, m:DrumKit .
+m:Song1 twin:followspot [ twin:spot sc:Spot1 ; twin:follows m:Vox ] .
+m:Song1 twin:followspot [ twin:spot sc:Spot2 ; twin:follows m:Gtr ] .
+m:Song2 a mo:Performance ; rdfs:label "2. Copper Hours" ; twin:order 2 ; event:time [ a tl:Interval ; tl:onTimeLine m:ShowTL ; tl:beginsAtDuration "PT4M30S"^^xsd:duration ; tl:durationXSD "PT4M50S"^^xsd:duration ] ; twin:startSec 270 ; twin:endSec 560 ; mo:performer m:Vox, m:Gtr, m:Bass, m:Drums, m:Keys ; mo:instrument m:GuitarAmp, m:BassAmp, m:DrumKit, m:KeysRig .
+m:Song2 twin:followspot [ twin:spot sc:Spot1 ; twin:follows m:Vox ] .
+m:Song2 twin:followspot [ twin:spot sc:Spot2 ; twin:follows m:Keys ] .
+m:Song3 a mo:Performance ; rdfs:label "3. Saltwater Clock" ; twin:order 3 ; event:time [ a tl:Interval ; tl:onTimeLine m:ShowTL ; tl:beginsAtDuration "PT9M20S"^^xsd:duration ; tl:durationXSD "PT4M40S"^^xsd:duration ] ; twin:startSec 560 ; twin:endSec 840 ; mo:performer m:Vox, m:Gtr, m:Bass, m:Drums ; mo:instrument m:GuitarAmp, m:BassAmp, m:DrumKit .
+m:Song3 twin:followspot [ twin:spot sc:Spot1 ; twin:follows m:Vox ] .
+m:Song3 twin:followspot [ twin:spot sc:Spot2 ; twin:follows m:Drums ] .
+m:Song4 a mo:Performance ; rdfs:label "4. Small Lights" ; twin:order 4 ; event:time [ a tl:Interval ; tl:onTimeLine m:ShowTL ; tl:beginsAtDuration "PT15M"^^xsd:duration ; tl:durationXSD "PT4M40S"^^xsd:duration ] ; twin:startSec 900 ; twin:endSec 1180 ; mo:performer m:Vox, m:Bass, m:Keys ; mo:instrument m:AcousticGtr, m:BassAmp, m:KeysRig .
+m:Song4 twin:followspot [ twin:spot sc:Spot1 ; twin:follows m:Vox ] .
+m:Song4 twin:followspot [ twin:spot sc:Spot2 ; twin:follows m:Keys ] .
+m:Song5 a mo:Performance ; rdfs:label "5. Loom" ; twin:order 5 ; event:time [ a tl:Interval ; tl:onTimeLine m:ShowTL ; tl:beginsAtDuration "PT19M40S"^^xsd:duration ; tl:durationXSD "PT5M20S"^^xsd:duration ] ; twin:startSec 1180 ; twin:endSec 1500 ; mo:performer m:Vox, m:Gtr, m:Bass, m:Drums, m:Keys ; mo:instrument m:GuitarAmp, m:BassAmp, m:DrumKit, m:KeysRig .
+m:Song5 twin:followspot [ twin:spot sc:Spot1 ; twin:follows m:Gtr ] .
+m:Song5 twin:followspot [ twin:spot sc:Spot2 ; twin:follows m:Vox ] .
+m:Now twin:showSec 750 ; rdfs:label "00:12:30 into the show" .

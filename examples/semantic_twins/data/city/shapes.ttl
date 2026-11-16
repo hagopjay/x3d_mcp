@@ -1,0 +1,40 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix x3do: <https://www.web3d.org/specifications/X3dOntology4.1#> .
+@prefix twin: <https://example.org/scen/twin#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix geo: <http://www.opengis.net/ont/geosparql#> .
+@prefix c: <https://example.org/scen/city/record#> .
+@prefix sc: <https://example.org/scen/city/scene.ttl#> .
+
+twin:S_C1 a sh:NodeShape ; sh:targetSubjectsOf twin:permitHeightM ;
+  sh:severity sh:Violation ;
+  sh:message "The drawn building is taller than its zoning district allows." ;
+  sh:sparql [ sh:select """
+    PREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX twin: <https://example.org/scen/twin#>
+    PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+    SELECT DISTINCT $this ?value WHERE {
+      $this twin:depictedBy ?o ; geo:sfWithin+ ?d . ?d twin:maxHeightM ?max .
+      { SELECT $this ?o ?osx ?osy ?osz WHERE { ?o x3do:hasChildren ?oH . ?oH x3do:hasGeometry ?oB . ?oB x3do:size ?oS . ?oS rdf:first ?osx . ?oS rdf:rest ?oSR . ?oSR rdf:first ?osy . ?oSR rdf:rest ?oSR2 . ?oSR2 rdf:first ?osz . } }
+      BIND(?osy AS ?value) FILTER(?value > ?max)
+    }""" ] .
+
+twin:S_C2 a sh:NodeShape ; sh:targetSubjectsOf twin:permitHeightM ;
+  sh:severity sh:Violation ;
+  sh:message "The drawn building does not fit inside its parcel." ;
+  sh:sparql [ sh:select """
+    PREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX twin: <https://example.org/scen/twin#>
+    PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+    SELECT DISTINCT $this ?value WHERE {
+      $this twin:depictedBy ?o ; geo:sfWithin ?p . ?p twin:depictedBy ?pp .
+      { SELECT $this ?o ?ox ?oz WHERE { ?o x3do:translation ?oL . ?oL rdf:first ?ox . ?oL rdf:rest ?oR . ?oR rdf:rest ?oR2 . ?oR2 rdf:first ?oz . } } { SELECT $this ?o ?osx ?osy ?osz WHERE { ?o x3do:hasChildren ?oH . ?oH x3do:hasGeometry ?oB . ?oB x3do:size ?oS . ?oS rdf:first ?osx . ?oS rdf:rest ?oSR . ?oSR rdf:first ?osy . ?oSR rdf:rest ?oSR2 . ?oSR2 rdf:first ?osz . } } { SELECT $this ?pp ?ppx ?ppz WHERE { ?pp x3do:translation ?ppL . ?ppL rdf:first ?ppx . ?ppL rdf:rest ?ppR . ?ppR rdf:rest ?ppR2 . ?ppR2 rdf:first ?ppz . } } { SELECT $this ?pp ?ppsx ?ppsy ?ppsz WHERE { ?pp x3do:hasChildren ?ppH . ?ppH x3do:hasGeometry ?ppB . ?ppB x3do:size ?ppS . ?ppS rdf:first ?ppsx . ?ppS rdf:rest ?ppSR . ?ppSR rdf:first ?ppsy . ?ppSR rdf:rest ?ppSR2 . ?ppSR2 rdf:first ?ppsz . } }
+      FILTER(ABS(?ox - ?ppx) + ?osx / 2 > ?ppsx / 2 || ABS(?oz - ?ppz) + ?osz / 2 > ?ppsz / 2)
+      BIND(?pp AS ?value)
+    }""" ] .
+

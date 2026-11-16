@@ -1,0 +1,113 @@
+{
+ "http://aims.fao.org/aos/agrovoc/c_8171": [
+  "plant products",
+  [
+   "http://aims.fao.org/aos/agrovoc/c_6211"
+  ]
+ ],
+ "http://aims.fao.org/aos/agrovoc/c_6211": [
+  "products",
+  []
+ ],
+ "http://aims.fao.org/aos/agrovoc/c_2006": [
+  "cucurbit vegetables",
+  [
+   "http://aims.fao.org/aos/agrovoc/c_8174"
+  ]
+ ],
+ "http://aims.fao.org/aos/agrovoc/c_10195": [
+  "cucumbers",
+  [
+   "http://aims.fao.org/aos/agrovoc/c_2006"
+  ]
+ ],
+ "http://aims.fao.org/aos/agrovoc/c_8174": [
+  "vegetables",
+  [
+   "http://aims.fao.org/aos/agrovoc/c_8171"
+  ]
+ ],
+ "http://aims.fao.org/aos/agrovoc/c_34024": [
+  "infectious diseases",
+  [
+   "http://aims.fao.org/aos/agrovoc/c_49879"
+  ]
+ ],
+ "http://aims.fao.org/aos/agrovoc/c_5962": [
+  "plant diseases",
+  [
+   "http://aims.fao.org/aos/agrovoc/c_49879"
+  ]
+ ],
+ "http://aims.fao.org/aos/agrovoc/c_330704": [
+  "phenomena",
+  []
+ ],
+ "http://aims.fao.org/aos/agrovoc/c_13557": [
+  "powdery mildews",
+  [
+   "http://aims.fao.org/aos/agrovoc/c_4825"
+  ]
+ ],
+ "http://aims.fao.org/aos/agrovoc/c_49879": [
+  "diseases",
+  [
+   "http://aims.fao.org/aos/agrovoc/c_49871"
+  ]
+ ],
+ "http://aims.fao.org/aos/agrovoc/c_49871": [
+  "biological phenomena",
+  [
+   "http://aims.fao.org/aos/agrovoc/c_330704"
+  ]
+ ],
+ "http://aims.fao.org/aos/agrovoc/c_4825": [
+  "mildews",
+  [
+   "http://aims.fao.org/aos/agrovoc/c_11042"
+  ]
+ ],
+ "http://aims.fao.org/aos/agrovoc/c_11042": [
+  "fungal diseases",
+  [
+   "http://aims.fao.org/aos/agrovoc/c_34024",
+   "http://aims.fao.org/aos/agrovoc/c_5962"
+  ]
+ ],
+ "http://aims.fao.org/aos/agrovoc/c_3129": [
+  "fruit vegetables",
+  [
+   "http://aims.fao.org/aos/agrovoc/c_8174"
+  ]
+ ],
+ "http://aims.fao.org/aos/agrovoc/c_7805": [
+  "tomatoes",
+  [
+   "http://aims.fao.org/aos/agrovoc/c_3129"
+  ]
+ ],
+ "http://aims.fao.org/aos/agrovoc/c_12151": [
+  "lettuces",
+  [
+   "http://aims.fao.org/aos/agrovoc/c_3376"
+  ]
+ ],
+ "http://aims.fao.org/aos/agrovoc/c_3376": [
+  "leaf vegetables",
+  [
+   "http://aims.fao.org/aos/agrovoc/c_8174"
+  ]
+ ],
+ "http://aims.fao.org/aos/agrovoc/c_9093": [
+  "basil",
+  [
+   "http://aims.fao.org/aos/agrovoc/c_3568"
+  ]
+ ],
+ "http://aims.fao.org/aos/agrovoc/c_3568": [
+  "culinary herbs",
+  [
+   "http://aims.fao.org/aos/agrovoc/c_8171"
+  ]
+ ]
+}

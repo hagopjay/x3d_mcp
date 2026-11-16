@@ -1,0 +1,34 @@
+{
+ "title": "Fire code: can everyone get out of Floor 4?",
+ "prefixes": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX sh: <http://www.w3.org/ns/shacl#>\nPREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>\nPREFIX twin: <https://example.org/scen/twin#>\nPREFIX dcterms: <http://purl.org/dc/terms/>\nPREFIX bot: <https://w3id.org/bot#>\nPREFIX code: <https://example.org/scen/firecode/code#>\nPREFIX f: <https://example.org/scen/firecode/record#>\nPREFIX sc: <https://example.org/scen/firecode/scene.ttl#>\n",
+ "questions": [
+  {
+   "id": "E1",
+   "title": "How many people can each room hold, by the code?",
+   "why": "Occupant load is floor area divided by the code's load factor. The area comes from the drawn room, the factor from the clause, both kept as data, so changing either recomputes the floor. Rooms over 49 need a second exit (question E3).",
+   "lights": "o",
+   "sparql": "SELECT ?o ?room ?area ?occupants WHERE {\n  code:LoadFactorB twin:m2PerOccupant ?k . ?r twin:occupancy \"B\" ; twin:depictedBy ?o ; rdfs:label ?room .\n  { SELECT ?o ?osx ?osy ?osz WHERE { ?o x3do:hasChildren ?oH . ?oH x3do:hasGeometry ?oB . ?oB x3do:size ?oS . ?oS rdf:first ?osx . ?oS rdf:rest ?oSR . ?oSR rdf:first ?osy . ?oSR rdf:rest ?oSR2 . ?oSR2 rdf:first ?osz . } }\n  BIND(ROUND(?osx * ?osz) AS ?area) BIND(CEIL(?osx * ?osz / ?k) AS ?occupants)\n} ORDER BY ?room"
+  },
+  {
+   "id": "E2",
+   "title": "How far is each room from its nearest open exit?",
+   "why": "Distance along the corridor and into the room (x plus z, from the scene) to each open exit door; whether a stair is open, from the record. A code review measures the true walking path, so this is a screening number, not a finding.",
+   "lights": null,
+   "sparql": "SELECT ?room (ROUND(MIN(?d)) AS ?metres) WHERE {\n  ?r twin:occupancy \"B\" ; twin:depictedBy ?o ; rdfs:label ?room .\n  ?ex a twin:Exit ; twin:status \"open\" ; twin:exitDoor/twin:depictedBy ?eo .\n  { SELECT ?o ?ox ?oz WHERE { ?o x3do:translation ?oL . ?oL rdf:first ?ox . ?oL rdf:rest ?oR . ?oR rdf:rest ?oR2 . ?oR2 rdf:first ?oz . } } { SELECT ?eo ?eox ?eoz WHERE { ?eo x3do:translation ?eoL . ?eoL rdf:first ?eox . ?eoL rdf:rest ?eoR . ?eoR rdf:rest ?eoR2 . ?eoR2 rdf:first ?eoz . } }\n  BIND(ABS(?ox - ?eox) + ABS(?oz - ?eoz) AS ?d)\n} GROUP BY ?room ORDER BY ?room"
+  },
+  {
+   "id": "E3",
+   "title": "Does every room over 49 people have two ways out?",
+   "why": "Counting doors is a record question (BOT interfaces); which rooms need two is a scene question (area). The room lights green when it has them.",
+   "lights": "o",
+   "sparql": "SELECT ?o ?room (COUNT(DISTINCT ?door) AS ?doors) WHERE {\n  code:LoadFactorB twin:m2PerOccupant ?k . code:TwoExits twin:maxOccupantsOneExit ?max .\n  ?r twin:occupancy \"B\" ; twin:depictedBy ?o ; rdfs:label ?room . ?door bot:interfaceOf ?r ; twin:egress true .\n  { SELECT ?o ?osx ?osy ?osz WHERE { ?o x3do:hasChildren ?oH . ?oH x3do:hasGeometry ?oB . ?oB x3do:size ?oS . ?oS rdf:first ?osx . ?oS rdf:rest ?oSR . ?oSR rdf:first ?osy . ?oSR rdf:rest ?oSR2 . ?oSR2 rdf:first ?osz . } }\n  FILTER(?osx * ?osz / ?k > ?max)\n} GROUP BY ?o ?room"
+  }
+ ],
+ "inference": {
+  "title": "Every space that can reach Exit stair A",
+  "why": "BOT says which spaces each door joins. A rule turns doors into connections, and the path query lights everything that can reach the stair.",
+  "sparql": "SELECT DISTINCT ?o ?space WHERE {\n  f:StairA (^bot:interfaceOf/bot:interfaceOf)+ ?s . ?s twin:depictedBy ?o ; rdfs:label ?space . FILTER(?s != f:StairA)\n} ORDER BY ?space",
+  "n3": "{ ?d bot:interfaceOf ?a . ?d bot:interfaceOf ?b } => { ?a twin:connects ?b } ."
+ },
+ "fault_text": "Door 402 is drawn 0.76 m (30 in) wide, and the record says Exit stair B is locked."
+}

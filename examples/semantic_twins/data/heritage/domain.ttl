@@ -1,0 +1,86 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix x3do: <https://www.web3d.org/specifications/X3dOntology4.1#> .
+@prefix twin: <https://example.org/scen/twin#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix crm: <http://www.cidoc-crm.org/cidoc-crm/> .
+@prefix h: <https://example.org/scen/heritage/record#> .
+@prefix sc: <https://example.org/scen/heritage/scene.ttl#> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+
+h:tierDocumented a crm:E55_Type ; rdfs:label "documented" .
+h:tierTheorized a crm:E55_Type ; rdfs:label "theorized" .
+h:tierSpeculative a crm:E55_Type ; rdfs:label "speculative" .
+h:Giza a crm:E27_Site ; rdfs:label "Giza plateau" ; crm:P46_is_composed_of h:OsirisShaft, h:Sphinx, h:GreatPyramid, h:HallOfRecords, h:OneSystem .
+h:OsirisShaft a crm:E25_Human-Made_Feature ; rdfs:label "Osiris Shaft" ; crm:P46_is_composed_of h:Level1, h:Level2, h:Level3 .
+h:Level1 a crm:E25_Human-Made_Feature ; rdfs:label "Osiris Shaft, Level 1" ; crm:P46_is_composed_of h:OsirisShaftA, h:OsirisChamberA .
+h:Level2 a crm:E25_Human-Made_Feature ; rdfs:label "Osiris Shaft, Level 2" ; crm:P46_is_composed_of h:OsirisShaftB, h:OsirisChamberB .
+h:Level3 a crm:E25_Human-Made_Feature ; rdfs:label "Osiris Shaft, Level 3" ; crm:P46_is_composed_of h:OsirisShaftC, h:OsirisLevel3 .
+h:GreatPyramid a crm:E22_Human-Made_Object ; rdfs:label "Great Pyramid of Khufu" ; crm:P46_is_composed_of h:KingsChamber, h:BigVoid .
+h:Sphinx crm:P46_is_composed_of h:PawVoid .
+h:src_hawass2007 a crm:E31_Document ; rdfs:label "Hawass 2007, The Discovery of the Osiris Shaft at Giza, ASAE 36" ; dcterms:source <https://giza.fas.harvard.edu/pubdocs/476/full/> .
+h:src_lehner2008 a crm:E31_Document ; rdfs:label "Lehner 2008, The Complete Pyramids" .
+h:src_popular a crm:E31_Document ; rdfs:label "Popular accounts of the Dobecki and Schoch 1992 survey" .
+h:src_cayce a crm:E31_Document ; rdfs:label "Wikipedia, Hall of Records (quoting the Cayce readings)" ; dcterms:source <https://en.wikipedia.org/wiki/Hall_of_Records> .
+h:src_petrie1883 a crm:E31_Document ; rdfs:label "Petrie 1883, The Pyramids and Temples of Gizeh" .
+h:src_morishima2017 a crm:E31_Document ; rdfs:label "Morishima et al. 2017, Nature, doi 10.1038/nature24647" ; dcterms:source <https://doi.org/10.1038/nature24647> .
+h:src_hawass_osiris1 a crm:E31_Document ; rdfs:label "Hawass, guardians.net osiris1" ; dcterms:source <http://guardians.net/hawass/osiris1.htm> .
+h:src_whiting2021 a crm:E31_Document ; rdfs:label "Whiting 2021, MS thesis, University of Montana" ; dcterms:source <https://scholarworks.umt.edu/etd/11693> .
+h:src_diagram a crm:E31_Document ; rdfs:label "A depth diagram of unknown origin" .
+h:OsirisShaftA a crm:E25_Human-Made_Feature ; rdfs:label "Osiris Shaft, Shaft A" ; crm:P138i_has_representation sc:OsirisShaftA .
+sc:OsirisShaftA a crm:E36_Visual_Item ; crm:P138_represents h:OsirisShaftA .
+h:attr_OsirisShaftA a crm:E13_Attribute_Assignment ; crm:P140_assigned_attribute_to h:OsirisShaftA ; crm:P141_assigned h:tierDocumented ; crm:P177_assigned_property_of_type crm:P2_has_type ; twin:grade "S" ; crm:P70i_is_documented_in h:src_hawass2007 .
+h:OsirisChamberA a crm:E25_Human-Made_Feature ; rdfs:label "Osiris Shaft, Chamber A (size schematic)" ; crm:P138i_has_representation sc:OsirisChamberA .
+sc:OsirisChamberA a crm:E36_Visual_Item ; crm:P138_represents h:OsirisChamberA .
+h:attr_OsirisChamberA a crm:E13_Attribute_Assignment ; crm:P140_assigned_attribute_to h:OsirisChamberA ; crm:P141_assigned h:tierDocumented ; crm:P177_assigned_property_of_type crm:P2_has_type ; twin:grade "S" ; crm:P70i_is_documented_in h:src_hawass2007 .
+h:OsirisShaftB a crm:E25_Human-Made_Feature ; rdfs:label "Osiris Shaft, Shaft B" ; crm:P138i_has_representation sc:OsirisShaftB .
+sc:OsirisShaftB a crm:E36_Visual_Item ; crm:P138_represents h:OsirisShaftB .
+h:attr_OsirisShaftB a crm:E13_Attribute_Assignment ; crm:P140_assigned_attribute_to h:OsirisShaftB ; crm:P141_assigned h:tierDocumented ; crm:P177_assigned_property_of_type crm:P2_has_type ; twin:grade "S" ; crm:P70i_is_documented_in h:src_hawass2007 .
+h:OsirisChamberB a crm:E25_Human-Made_Feature ; rdfs:label "Osiris Shaft, Chamber B with six side chambers" ; crm:P138i_has_representation sc:OsirisChamberB .
+sc:OsirisChamberB a crm:E36_Visual_Item ; crm:P138_represents h:OsirisChamberB .
+h:attr_OsirisChamberB a crm:E13_Attribute_Assignment ; crm:P140_assigned_attribute_to h:OsirisChamberB ; crm:P141_assigned h:tierDocumented ; crm:P177_assigned_property_of_type crm:P2_has_type ; twin:grade "S" ; crm:P70i_is_documented_in h:src_hawass2007 .
+h:OsirisShaftC a crm:E25_Human-Made_Feature ; rdfs:label "Osiris Shaft, Shaft C" ; crm:P138i_has_representation sc:OsirisShaftC .
+sc:OsirisShaftC a crm:E36_Visual_Item ; crm:P138_represents h:OsirisShaftC .
+h:attr_OsirisShaftC a crm:E13_Attribute_Assignment ; crm:P140_assigned_attribute_to h:OsirisShaftC ; crm:P141_assigned h:tierDocumented ; crm:P177_assigned_property_of_type crm:P2_has_type ; twin:grade "S" ; crm:P70i_is_documented_in h:src_hawass2007 .
+h:OsirisLevel3 a crm:E25_Human-Made_Feature ; rdfs:label "Osiris Shaft, flooded Level 3" ; crm:P138i_has_representation sc:OsirisLevel3Water .
+sc:OsirisLevel3Water a crm:E36_Visual_Item ; crm:P138_represents h:OsirisLevel3 .
+h:attr_OsirisLevel3 a crm:E13_Attribute_Assignment ; crm:P140_assigned_attribute_to h:OsirisLevel3 ; crm:P141_assigned h:tierDocumented ; crm:P177_assigned_property_of_type crm:P2_has_type ; twin:grade "S" ; crm:P70i_is_documented_in h:src_hawass2007 .
+h:Sphinx a crm:E22_Human-Made_Object ; rdfs:label "Great Sphinx (massing only)" ; crm:P138i_has_representation sc:SphinxBody .
+sc:SphinxBody a crm:E36_Visual_Item ; crm:P138_represents h:Sphinx .
+h:attr_Sphinx a crm:E13_Attribute_Assignment ; crm:P140_assigned_attribute_to h:Sphinx ; crm:P141_assigned h:tierDocumented ; crm:P177_assigned_property_of_type crm:P2_has_type ; twin:grade "C" ; crm:P70i_is_documented_in h:src_lehner2008 .
+h:PawVoid a crm:E25_Human-Made_Feature ; rdfs:label "Reported void beneath the paws" ; crm:P138i_has_representation sc:SphinxPawVoid .
+sc:SphinxPawVoid a crm:E36_Visual_Item ; crm:P138_represents h:PawVoid .
+h:attr_PawVoid a crm:E13_Attribute_Assignment ; crm:P140_assigned_attribute_to h:PawVoid ; crm:P141_assigned h:tierTheorized ; crm:P177_assigned_property_of_type crm:P2_has_type ; twin:grade "S" ; crm:P70i_is_documented_in h:src_popular .
+h:HallOfRecords a crm:E25_Human-Made_Feature ; rdfs:label "Hall of Records (Cayce readings)" ; crm:P138i_has_representation sc:HallOfRecords .
+sc:HallOfRecords a crm:E36_Visual_Item ; crm:P138_represents h:HallOfRecords .
+h:attr_HallOfRecords a crm:E13_Attribute_Assignment ; crm:P140_assigned_attribute_to h:HallOfRecords ; crm:P141_assigned h:tierSpeculative ; crm:P177_assigned_property_of_type crm:P2_has_type ; twin:grade "L" ; crm:P70i_is_documented_in h:src_cayce .
+h:KingsChamber a crm:E25_Human-Made_Feature ; rdfs:label "King's Chamber, Great Pyramid" ; crm:P138i_has_representation sc:KhufuKingsChamber .
+sc:KhufuKingsChamber a crm:E36_Visual_Item ; crm:P138_represents h:KingsChamber .
+h:attr_KingsChamber a crm:E13_Attribute_Assignment ; crm:P140_assigned_attribute_to h:KingsChamber ; crm:P141_assigned h:tierDocumented ; crm:P177_assigned_property_of_type crm:P2_has_type ; twin:grade "C" ; crm:P70i_is_documented_in h:src_petrie1883 .
+h:BigVoid a crm:E25_Human-Made_Feature ; rdfs:label "Big Void found by muon imaging" ; crm:P138i_has_representation sc:KhufuBigVoid .
+sc:KhufuBigVoid a crm:E36_Visual_Item ; crm:P138_represents h:BigVoid .
+h:attr_BigVoid a crm:E13_Attribute_Assignment ; crm:P140_assigned_attribute_to h:BigVoid ; crm:P141_assigned h:tierDocumented ; crm:P177_assigned_property_of_type crm:P2_has_type ; twin:grade "L" ; crm:P70i_is_documented_in h:src_morishima2017 .
+h:OneSystem a crm:E89_Propositional_Object ; rdfs:label "All of it as one connected system" ; crm:P138i_has_representation sc:UndergroundLink .
+sc:UndergroundLink a crm:E36_Visual_Item ; crm:P138_represents h:OneSystem .
+h:attr_OneSystem a crm:E13_Attribute_Assignment ; crm:P140_assigned_attribute_to h:OneSystem ; crm:P141_assigned h:tierSpeculative ; crm:P177_assigned_property_of_type crm:P2_has_type ; twin:grade "S" .
+h:dimShaftA a crm:E16_Measurement ; crm:P39_measured h:OsirisShaftA ; crm:P40_observed_dimension h:dimShaftA_v ; crm:P70i_is_documented_in h:src_hawass2007 .
+h:dimShaftA_v a crm:E54_Dimension ; crm:P2_has_type h:axis_height ; crm:P90_has_value 9.62 ; crm:P91_has_unit unit:M .
+h:dimShaftB a crm:E16_Measurement ; crm:P39_measured h:OsirisShaftB ; crm:P40_observed_dimension h:dimShaftB_v ; crm:P70i_is_documented_in h:src_hawass2007 .
+h:dimShaftB_v a crm:E54_Dimension ; crm:P2_has_type h:axis_height ; crm:P90_has_value 13.25 ; crm:P91_has_unit unit:M .
+h:dimShaftC a crm:E16_Measurement ; crm:P39_measured h:OsirisShaftC ; crm:P40_observed_dimension h:dimShaftC_v ; crm:P70i_is_documented_in h:src_hawass2007 .
+h:dimShaftC_v a crm:E54_Dimension ; crm:P2_has_type h:axis_height ; crm:P90_has_value 7.5 ; crm:P91_has_unit unit:M .
+h:dimChamberBx a crm:E16_Measurement ; crm:P39_measured h:OsirisChamberB ; crm:P40_observed_dimension h:dimChamberBx_v ; crm:P70i_is_documented_in h:src_hawass2007 .
+h:dimChamberBx_v a crm:E54_Dimension ; crm:P2_has_type h:axis_length ; crm:P90_has_value 6.8 ; crm:P91_has_unit unit:M .
+h:dimKingsChamberx a crm:E16_Measurement ; crm:P39_measured h:KingsChamber ; crm:P40_observed_dimension h:dimKingsChamberx_v ; crm:P70i_is_documented_in h:src_petrie1883 .
+h:dimKingsChamberx_v a crm:E54_Dimension ; crm:P2_has_type h:axis_length ; crm:P90_has_value 10.47 ; crm:P91_has_unit unit:M .
+h:axis_height a crm:E55_Type ; rdfs:label "height (y)" ; twin:axis 1 .
+h:axis_length a crm:E55_Type ; rdfs:label "length (x)" ; twin:axis 0 .
+h:depth25 a crm:E16_Measurement ; crm:P39_measured h:OsirisShaft ; rdfs:comment "One Hawass write-up (last level)" ; crm:P40_observed_dimension h:depth25_v ; crm:P70i_is_documented_in h:src_hawass_osiris1 .
+h:depth25_v a crm:E54_Dimension ; crm:P2_has_type h:axis_totalDepth ; crm:P90_has_value 25.0 ; crm:P91_has_unit unit:M .
+h:depth30 a crm:E16_Measurement ; crm:P39_measured h:OsirisShaft ; rdfs:comment "About 30 m / 100 ft (Hawass, Whiting)" ; crm:P40_observed_dimension h:depth30_v ; crm:P70i_is_documented_in h:src_whiting2021 .
+h:depth30_v a crm:E54_Dimension ; crm:P2_has_type h:axis_totalDepth ; crm:P90_has_value 30.0 ; crm:P91_has_unit unit:M .
+h:depth4148 a crm:E16_Measurement ; crm:P39_measured h:OsirisShaft ; rdfs:comment "Diagram of unknown origin" ; crm:P40_observed_dimension h:depth4148_v ; crm:P70i_is_documented_in h:src_diagram .
+h:depth4148_v a crm:E54_Dimension ; crm:P2_has_type h:axis_totalDepth ; crm:P90_has_value 41.48 ; crm:P91_has_unit unit:M .
+h:axis_totalDepth a crm:E55_Type ; rdfs:label "total depth" .
