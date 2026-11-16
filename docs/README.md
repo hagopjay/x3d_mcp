@@ -17,6 +17,7 @@ and nothing is generated from it.
 | [ecosystem-research.md](ecosystem-research.md) | The wider ecosystem the server sits in |
 | [transfer-layer.md](transfer-layer.md) | Moving large scenes in and out without the model: the blob store, `/blob` routes, `blob_id` and `return_mode`, settings, security |
 | [scene-brief.md](scene-brief.md) | `scene_brief`: a scene described in a byte budget you set, with the author's text kept out: facets, the budget ladder, trust tiers, limits |
+| [scene-evidence.md](scene-evidence.md) | `scene_evidence`: the quote behind a value, checked by code (FIND, COMPARE, BIND): verdicts, field forms, trust tiers, limits, timings |
 | [splats.md](splats.md) | Gaussian splat files: `splat_inspect`, `splat_chunk`, the chunked envelope, the oversize verdict of `validate_x3d`, settings, limits, what was verified |
 
 ## The Accountability Playground

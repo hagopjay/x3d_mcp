@@ -181,6 +181,7 @@ x3d_mcp/
       semantics.py         # SPARQL query tools over the bundled X3D Ontology
       semantic_web.py      # scene_to_rdf, sparql_scene, shacl_validate, rdf_infer, ontology_vs_gate
       scene_brief.py       # scene_brief (a thin wrapper over x3d_utils/scene_brief.py)
+      scene_evidence.py    # scene_evidence (a thin wrapper over x3d_utils/scene_evidence.py)
       splats.py            # splat_inspect, splat_chunk (optional numpy)
       prompts.py           # MCP prompts for guided workflows
     x3d_utils/
@@ -191,6 +192,8 @@ x3d_mcp/
       scene_rdf.py         # X3D -> Turtle by the X3dToTurtle.xslt conventions (xpath_mini.py evaluates its rules)
       semantic_web.py      # Scene graphs, guarded SPARQL, SHACL, inference, map vs gate, instrument
       scene_brief.py       # The budgeted, trust-tiered scene brief (pure functions)
+      scene_evidence.py    # Claims about a scene's values checked against their sources (pure functions)
+      x3dtrace.py          # The quote-find-compare-locate engine, vendored from x3d.ML (stdlib only; NOTICE-x3dtrace.md)
       source.py            # Inline-content / file-path input resolver
     transfer/              # Blob store and routes (blobs.py, routes.py); SPZ/PLY readers, chunker, inspector (spz.py, ply.py, chunk.py, inspect_splats.py)
     validation/
@@ -320,6 +323,14 @@ A scene described in a size you set, without the scene's own words. See [docs/sc
 | Tool | Description |
 |------|-------------|
 | `scene_brief` | A trust-tiered description of a scene within a hard `budget_bytes` cap: node census, the authored pose's bounding box, first viewpoint, lights, materials, ROUTE counts, and the XSD and semantic verdicts as structure (never their messages). Text the author wrote (DEF names, `meta`, titles, descriptions, urls, Script source, comments) is counted and digested under `untrusted`, and quoted there only on request. Read-only; `return_mode` full, summary or blob. |
+
+### Evidence Tools
+
+The quote behind a value, checked by code. A writer lists, per value, the exact words it read the value from; the tool finds the quote in its source, compares the value with it, and binds the value to the scene's own attribute. Verdicts `verified`, `reworded`, `check`, `unchecked`. No model is called. See [docs/scene-evidence.md](docs/scene-evidence.md).
+
+| Tool | Description |
+|------|-------------|
+| `scene_evidence` | Claims `{field, value, quote, source}` against the sources they cite and against the scene: FIND (is the quote there), COMPARE (is the value in it, with unit, colour-name and number-word readings accepted only when the quote itself carries the evidence), BIND (does the scene hold the value). Items carry verdicts, offsets, line and column and the `n<k>` handles of `scene_brief`; a quote or value is never repeated unless `text="quoted"`. `expect="inventory"` adds coverage over the scene's value-bearing attributes. Read-only; `return_mode` full, summary or blob. |
 
 ### Render Tools
 
@@ -512,6 +523,7 @@ The test container mounts `src/` and `tests/` from the host. Logs are written to
 | [docs/transfer-layer.md](docs/transfer-layer.md) | Large scenes: the blob store, `/blob` upload routes, `blob_id` / `return_mode` on the tools, operator settings |
 | [docs/semantic-web-tools.md](docs/semantic-web-tools.md) | Scenes as RDF: `scene_to_rdf` conventions and fidelity, `sparql_scene`, the `x3d-core` SHACL shapes, `rdf_infer`, `ontology_vs_gate`, `instrument`, limits |
 | [docs/scene-brief.md](docs/scene-brief.md) | `scene_brief`: a budgeted, trust-tiered scene description; the facets, the budget ladder, what is kept out and why, limits, what was measured |
+| [docs/scene-evidence.md](docs/scene-evidence.md) | `scene_evidence`: the quote behind a value, checked by code; the verdicts, the field forms, what is kept out, limits, what was measured |
 | [docs/splats.md](docs/splats.md) | Gaussian splats: `splat_inspect`, `splat_chunk`, the chunked envelope, the oversize verdict of `validate_x3d`, limits, what was and was not verified |
 
 ## External References
