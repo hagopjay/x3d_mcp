@@ -1,0 +1,52 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix x3do: <https://www.web3d.org/specifications/X3dOntology4.1#> .
+@prefix twin: <https://example.org/scen/twin#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix brick: <https://brickschema.org/schema/Brick#> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix b: <https://example.org/scen/building/record#> .
+@prefix sc: <https://example.org/scen/building/scene.ttl#> .
+
+b:HQ a brick:Building ; rdfs:label "Head office" ; brick:hasPart b:Floor3 .
+b:Floor3 a brick:Floor ; rdfs:label "Floor 3" .
+b:AHU1 a brick:AHU ; rdfs:label "Air handler 1" ; twin:depictedBy sc:AHU1 ; brick:feeds b:VAV301, b:VAV302, b:VAV303 .
+b:AHU2 a brick:AHU ; rdfs:label "Air handler 2" ; twin:depictedBy sc:AHU2 ; brick:feeds b:VAV304, b:VAV305, b:VAV306 .
+b:Room301 a brick:Room ; rdfs:label "Room 301" ; twin:depictedBy sc:Room301 ; brick:isPartOf b:Floor3 .
+b:Zone301 a brick:HVAC_Zone ; rdfs:label "Zone 301" ; brick:hasPart b:Room301 .
+b:VAV301 a brick:VAV ; rdfs:label "VAV box 301" ; twin:depictedBy sc:VAV301 ; brick:feeds b:Zone301 ; brick:hasPoint b:SP301 .
+b:SP301 a brick:Zone_Air_Temperature_Setpoint ; brick:value 21.0 ; brick:hasUnit unit:DEG_C .
+b:OS301 a brick:Occupancy_Sensor ; brick:hasLocation b:Room301 ; twin:depictedBy sc:OccSensor301 ; brick:value 1 .
+b:TS301 a brick:Zone_Air_Temperature_Sensor ; brick:hasLocation b:Room301 ; twin:depictedBy sc:TempSensor301 ; brick:value 21.4 ; brick:hasUnit unit:DEG_C .
+b:Room302 a brick:Room ; rdfs:label "Room 302" ; twin:depictedBy sc:Room302 ; brick:isPartOf b:Floor3 .
+b:Zone302 a brick:HVAC_Zone ; rdfs:label "Zone 302" ; brick:hasPart b:Room302 .
+b:VAV302 a brick:VAV ; rdfs:label "VAV box 302" ; twin:depictedBy sc:VAV302 ; brick:feeds b:Zone302 ; brick:hasPoint b:SP302 .
+b:SP302 a brick:Zone_Air_Temperature_Setpoint ; brick:value 21.0 ; brick:hasUnit unit:DEG_C .
+b:OS302 a brick:Occupancy_Sensor ; brick:hasLocation b:Room302 ; twin:depictedBy sc:OccSensor302 ; brick:value 0 .
+b:TS302 a brick:Zone_Air_Temperature_Sensor ; brick:hasLocation b:Room302 ; twin:depictedBy sc:TempSensor302 ; brick:value 23.6 ; brick:hasUnit unit:DEG_C .
+b:Room303 a brick:Room ; rdfs:label "Room 303" ; twin:depictedBy sc:Room303 ; brick:isPartOf b:Floor3 .
+b:Zone303 a brick:HVAC_Zone ; rdfs:label "Zone 303" ; brick:hasPart b:Room303 .
+b:VAV303 a brick:VAV ; rdfs:label "VAV box 303" ; twin:depictedBy sc:VAV303 ; brick:feeds b:Zone303 ; brick:hasPoint b:SP303 .
+b:SP303 a brick:Zone_Air_Temperature_Setpoint ; brick:value 21.0 ; brick:hasUnit unit:DEG_C .
+b:OS303 a brick:Occupancy_Sensor ; brick:hasLocation b:Room303 ; twin:depictedBy sc:OccSensor303 ; brick:value 1 .
+b:TS303 a brick:Zone_Air_Temperature_Sensor ; brick:hasLocation b:Room303 ; twin:depictedBy sc:TempSensor303 ; brick:value 20.8 ; brick:hasUnit unit:DEG_C .
+b:Room304 a brick:Room ; rdfs:label "Room 304" ; twin:depictedBy sc:Room304 ; brick:isPartOf b:Floor3 .
+b:Zone304 a brick:HVAC_Zone ; rdfs:label "Zone 304" ; brick:hasPart b:Room304 .
+b:VAV304 a brick:VAV ; rdfs:label "VAV box 304" ; twin:depictedBy sc:VAV304 ; brick:feeds b:Zone304 ; brick:hasPoint b:SP304 .
+b:SP304 a brick:Zone_Air_Temperature_Setpoint ; brick:value 21.0 ; brick:hasUnit unit:DEG_C .
+b:OS304 a brick:Occupancy_Sensor ; brick:hasLocation b:Room304 ; twin:depictedBy sc:OccSensor304 ; brick:value 0 .
+b:TS304 a brick:Zone_Air_Temperature_Sensor ; brick:hasLocation b:Room304 ; twin:depictedBy sc:TempSensor304 ; brick:value 22.4 ; brick:hasUnit unit:DEG_C .
+b:Room305 a brick:Room ; rdfs:label "Room 305" ; twin:depictedBy sc:Room305 ; brick:isPartOf b:Floor3 .
+b:Zone305 a brick:HVAC_Zone ; rdfs:label "Zone 305" ; brick:hasPart b:Room305 .
+b:VAV305 a brick:VAV ; rdfs:label "VAV box 305" ; twin:depictedBy sc:VAV305 ; brick:feeds b:Zone305 ; brick:hasPoint b:SP305 .
+b:SP305 a brick:Zone_Air_Temperature_Setpoint ; brick:value 21.0 ; brick:hasUnit unit:DEG_C .
+b:OS305 a brick:Occupancy_Sensor ; brick:hasLocation b:Room305 ; twin:depictedBy sc:OccSensor305 ; brick:value 1 .
+b:TS305 a brick:Zone_Air_Temperature_Sensor ; brick:hasLocation b:Room305 ; twin:depictedBy sc:TempSensor305 ; brick:value 18.4 ; brick:hasUnit unit:DEG_C .
+b:Room306 a brick:Room ; rdfs:label "Room 306" ; twin:depictedBy sc:Room306 ; brick:isPartOf b:Floor3 .
+b:Zone306 a brick:HVAC_Zone ; rdfs:label "Zone 306" ; brick:hasPart b:Room306 .
+b:VAV306 a brick:VAV ; rdfs:label "VAV box 306" ; twin:depictedBy sc:VAV306 ; brick:feeds b:Zone306 ; brick:hasPoint b:SP306 .
+b:SP306 a brick:Zone_Air_Temperature_Setpoint ; brick:value 21.0 ; brick:hasUnit unit:DEG_C .
+b:OS306 a brick:Occupancy_Sensor ; brick:hasLocation b:Room306 ; twin:depictedBy sc:OccSensor306 ; brick:value 0 .
+b:TS306 a brick:Zone_Air_Temperature_Sensor ; brick:hasLocation b:Room306 ; twin:depictedBy sc:TempSensor306 ; brick:value 21.2 ; brick:hasUnit unit:DEG_C .

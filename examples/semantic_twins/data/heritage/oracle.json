@@ -1,0 +1,186 @@
+{
+ "clean": {
+  "twin_triples": 806,
+  "domain_triples": 264,
+  "questions": {
+   "H1": [
+    {
+     "o": "UndergroundLink",
+     "label": "All of it as one connected system",
+     "grade": "S"
+    },
+    {
+     "o": "HallOfRecords",
+     "label": "Hall of Records (Cayce readings)",
+     "grade": "L"
+    }
+   ],
+   "H2": [
+    {
+     "feature": "Osiris Shaft",
+     "accounts": "3",
+     "low": "25.0",
+     "high": "41.48",
+     "spread": "16.48"
+    }
+   ],
+   "H3": [
+    {
+     "o": "KhufuKingsChamber",
+     "label": "King's Chamber, Great Pyramid",
+     "recorded": "10.47",
+     "drawn": "10.47"
+    },
+    {
+     "o": "OsirisChamberB",
+     "label": "Osiris Shaft, Chamber B with six side chambers",
+     "recorded": "6.8",
+     "drawn": "6.8"
+    },
+    {
+     "o": "OsirisShaftA",
+     "label": "Osiris Shaft, Shaft A",
+     "recorded": "9.62",
+     "drawn": "9.62"
+    },
+    {
+     "o": "OsirisShaftB",
+     "label": "Osiris Shaft, Shaft B",
+     "recorded": "13.25",
+     "drawn": "13.25"
+    },
+    {
+     "o": "OsirisShaftC",
+     "label": "Osiris Shaft, Shaft C",
+     "recorded": "7.5",
+     "drawn": "7.5"
+    }
+   ]
+  },
+  "inference": [
+   {
+    "o": "OsirisChamberA",
+    "label": "Osiris Shaft, Chamber A (size schematic)"
+   },
+   {
+    "o": "OsirisChamberB",
+    "label": "Osiris Shaft, Chamber B with six side chambers"
+   },
+   {
+    "o": "OsirisShaftA",
+    "label": "Osiris Shaft, Shaft A"
+   },
+   {
+    "o": "OsirisShaftB",
+    "label": "Osiris Shaft, Shaft B"
+   },
+   {
+    "o": "OsirisShaftC",
+    "label": "Osiris Shaft, Shaft C"
+   },
+   {
+    "o": "OsirisLevel3Water",
+    "label": "Osiris Shaft, flooded Level 3"
+   }
+  ],
+  "shacl": [],
+  "shacl_seconds": 0.17,
+  "conforms": true
+ },
+ "fault": {
+  "twin_triples": 806,
+  "domain_triples": 258,
+  "questions": {
+   "H1": [
+    {
+     "o": "UndergroundLink",
+     "label": "All of it as one connected system",
+     "grade": "S"
+    }
+   ],
+   "H2": [
+    {
+     "feature": "Osiris Shaft",
+     "accounts": "3",
+     "low": "25.0",
+     "high": "41.48",
+     "spread": "16.48"
+    }
+   ],
+   "H3": [
+    {
+     "o": "KhufuKingsChamber",
+     "label": "King's Chamber, Great Pyramid",
+     "recorded": "10.47",
+     "drawn": "10.47"
+    },
+    {
+     "o": "OsirisChamberB",
+     "label": "Osiris Shaft, Chamber B with six side chambers",
+     "recorded": "6.8",
+     "drawn": "6.8"
+    },
+    {
+     "o": "OsirisShaftA",
+     "label": "Osiris Shaft, Shaft A",
+     "recorded": "9.62",
+     "drawn": "12"
+    },
+    {
+     "o": "OsirisShaftB",
+     "label": "Osiris Shaft, Shaft B",
+     "recorded": "13.25",
+     "drawn": "13.25"
+    },
+    {
+     "o": "OsirisShaftC",
+     "label": "Osiris Shaft, Shaft C",
+     "recorded": "7.5",
+     "drawn": "7.5"
+    }
+   ]
+  },
+  "inference": [
+   {
+    "o": "OsirisChamberA",
+    "label": "Osiris Shaft, Chamber A (size schematic)"
+   },
+   {
+    "o": "OsirisChamberB",
+    "label": "Osiris Shaft, Chamber B with six side chambers"
+   },
+   {
+    "o": "OsirisShaftA",
+    "label": "Osiris Shaft, Shaft A"
+   },
+   {
+    "o": "OsirisShaftB",
+    "label": "Osiris Shaft, Shaft B"
+   },
+   {
+    "o": "OsirisShaftC",
+    "label": "Osiris Shaft, Shaft C"
+   },
+   {
+    "o": "OsirisLevel3Water",
+    "label": "Osiris Shaft, flooded Level 3"
+   }
+  ],
+  "shacl": [
+   {
+    "focus": "HallOfRecords",
+    "value": "HallOfRecords",
+    "shape": "S_H1",
+    "message": "Drawn element has no attribution with a tier: the picture shows something the record does not vouch for."
+   },
+   {
+    "focus": "dimShaftA",
+    "value": "12",
+    "shape": "S_H2",
+    "message": "The drawn size differs from the documented measurement by more than 5 %."
+   }
+  ],
+  "shacl_seconds": 0.21,
+  "conforms": false
+ }
+}

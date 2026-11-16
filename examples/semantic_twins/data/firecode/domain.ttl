@@ -1,0 +1,41 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix x3do: <https://www.web3d.org/specifications/X3dOntology4.1#> .
+@prefix twin: <https://example.org/scen/twin#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix bot: <https://w3id.org/bot#> .
+@prefix code: <https://example.org/scen/firecode/code#> .
+@prefix f: <https://example.org/scen/firecode/record#> .
+@prefix sc: <https://example.org/scen/firecode/scene.ttl#> .
+
+code:IBC2021 a twin:Code ; rdfs:label "International Building Code 2021 (as read for this example)" .
+code:LoadFactorB a twin:Clause ; twin:partOf code:IBC2021 ; rdfs:label "Table 1004.5: business areas, 150 gross sq ft per occupant" ; twin:m2PerOccupant 13.94 .
+code:TwoExits a twin:Clause ; twin:partOf code:IBC2021 ; rdfs:label "Table 1006.2.1: two exits above 49 occupants (B)" ; twin:maxOccupantsOneExit 49 .
+code:TravelB a twin:Clause ; twin:partOf code:IBC2021 ; rdfs:label "Table 1017.2: exit access travel 300 ft, sprinklered B" ; twin:maxTravelM 91.44 .
+code:DoorWidth a twin:Clause ; twin:partOf code:IBC2021 ; rdfs:label "1010.1.1: 32 in clear door width" ; twin:minWidthM 0.813 .
+f:Tower a bot:Building ; bot:hasStorey f:Floor4 .
+f:Floor4 a bot:Storey ; rdfs:label "Floor 4 (sprinklered, business)" ; bot:hasSpace f:Corridor4, f:StairA, f:StairB, f:Room401, f:Room402, f:Room403, f:Room404, f:Room405, f:Room406, f:Room407, f:Room408 .
+f:Corridor4 a bot:Space ; rdfs:label "Corridor" ; twin:depictedBy sc:Corridor4 .
+f:StairA a bot:Space, twin:Exit ; rdfs:label "Exit stair A" ; twin:depictedBy sc:StairA ; twin:exitDoor f:DoorStairA ; twin:status "open" .
+f:StairB a bot:Space, twin:Exit ; rdfs:label "Exit stair B" ; twin:depictedBy sc:StairB ; twin:exitDoor f:DoorStairB ; twin:status "open" .
+f:Room401 a bot:Space ; rdfs:label "Room 401" ; twin:depictedBy sc:Room401 ; twin:occupancy "B" .
+f:Room402 a bot:Space ; rdfs:label "Room 402" ; twin:depictedBy sc:Room402 ; twin:occupancy "B" .
+f:Room403 a bot:Space ; rdfs:label "Room 403" ; twin:depictedBy sc:Room403 ; twin:occupancy "B" .
+f:Room404 a bot:Space ; rdfs:label "Room 404" ; twin:depictedBy sc:Room404 ; twin:occupancy "B" .
+f:Room405 a bot:Space ; rdfs:label "Room 405" ; twin:depictedBy sc:Room405 ; twin:occupancy "B" .
+f:Room406 a bot:Space ; rdfs:label "Room 406" ; twin:depictedBy sc:Room406 ; twin:occupancy "B" .
+f:Room407 a bot:Space ; rdfs:label "Room 407" ; twin:depictedBy sc:Room407 ; twin:occupancy "B" .
+f:Room408 a bot:Space ; rdfs:label "Room 408" ; twin:depictedBy sc:Room408 ; twin:occupancy "B" .
+f:Door401 a bot:Interface ; rdfs:label "Door 401" ; twin:depictedBy sc:Door401 ; bot:interfaceOf f:Room401, f:Corridor4 ; twin:widthAxis 0 ; twin:egress true .
+f:Door402 a bot:Interface ; rdfs:label "Door 402" ; twin:depictedBy sc:Door402 ; bot:interfaceOf f:Room402, f:Corridor4 ; twin:widthAxis 0 ; twin:egress true .
+f:Door403 a bot:Interface ; rdfs:label "Door 403" ; twin:depictedBy sc:Door403 ; bot:interfaceOf f:Room403, f:Corridor4 ; twin:widthAxis 0 ; twin:egress true .
+f:Door404 a bot:Interface ; rdfs:label "Door 404" ; twin:depictedBy sc:Door404 ; bot:interfaceOf f:Room404, f:Corridor4 ; twin:widthAxis 0 ; twin:egress true .
+f:Door405 a bot:Interface ; rdfs:label "Door 405" ; twin:depictedBy sc:Door405 ; bot:interfaceOf f:Room405, f:Corridor4 ; twin:widthAxis 0 ; twin:egress true .
+f:Door406 a bot:Interface ; rdfs:label "Door 406" ; twin:depictedBy sc:Door406 ; bot:interfaceOf f:Room406, f:Corridor4 ; twin:widthAxis 0 ; twin:egress true .
+f:Door407a a bot:Interface ; rdfs:label "Door 407a" ; twin:depictedBy sc:Door407a ; bot:interfaceOf f:Room407, f:Corridor4 ; twin:widthAxis 0 ; twin:egress true .
+f:Door407b a bot:Interface ; rdfs:label "Door 407b" ; twin:depictedBy sc:Door407b ; bot:interfaceOf f:Room407, f:Corridor4 ; twin:widthAxis 0 ; twin:egress true .
+f:Door408 a bot:Interface ; rdfs:label "Door 408" ; twin:depictedBy sc:Door408 ; bot:interfaceOf f:Room408, f:Corridor4 ; twin:widthAxis 0 ; twin:egress true .
+f:DoorStairA a bot:Interface ; rdfs:label "Door StairA" ; twin:depictedBy sc:DoorStairA ; bot:interfaceOf f:StairA, f:Corridor4 ; twin:widthAxis 2 ; twin:egress true .
+f:DoorStairB a bot:Interface ; rdfs:label "Door StairB" ; twin:depictedBy sc:DoorStairB ; bot:interfaceOf f:StairB, f:Corridor4 ; twin:widthAxis 2 ; twin:egress true .

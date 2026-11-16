@@ -1,0 +1,34 @@
+{
+ "title": "Farm: Greenhouse 2 waters what is thirsty",
+ "prefixes": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX sh: <http://www.w3.org/ns/shacl#>\nPREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>\nPREFIX twin: <https://example.org/scen/twin#>\nPREFIX dcterms: <http://purl.org/dc/terms/>\nPREFIX agrovoc: <http://aims.fao.org/aos/agrovoc/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX unit: <http://qudt.org/vocab/unit/>\nPREFIX g: <https://example.org/scen/farm/record#>\nPREFIX sc: <https://example.org/scen/farm/scene.ttl#>\n",
+ "questions": [
+  {
+   "id": "A1",
+   "title": "Which beds are thirsty, and how much water do they need?",
+   "why": "SOSA gives each probe's reading and bed; AGROVOC names the crop, and the crop carries its threshold; the scene shows where to walk. Litres = shortfall x bed area x root depth.",
+   "lights": "o",
+   "sparql": "SELECT ?o ?bed ?crop ?reading ?needs ?litres WHERE {\n  ?obs sosa:hasFeatureOfInterest ?b ; sosa:observedProperty agrovoc:c_7208 ; sosa:hasResult/qudt:numericValue ?reading .\n  ?b rdfs:label ?bed ; twin:depictedBy ?o ; twin:crop ?c ; twin:areaM2 ?a ; twin:rootDepthM ?d . ?c skos:prefLabel ?crop ; twin:minSoilWaterPct ?needs .\n  FILTER(?reading < ?needs) BIND(ROUND((?needs - ?reading) / 100 * ?a * ?d * 1000) AS ?litres)\n} ORDER BY ?bed"
+  },
+  {
+   "id": "A2",
+   "title": "Where is powdery mildew likely, and which vent should open?",
+   "why": "Humidity is read per row (SOSA); susceptibility belongs to the crop concept (AGROVOC's powdery mildews, c_13557); the vents are in the scene. High humidity over a susceptible crop lights the beds and the vent above them.",
+   "lights": "o",
+   "sparql": "SELECT ?o ?what ?rh WHERE {\n  g:MildewRule twin:rhAbovePct ?lim . ?s twin:coversRow ?row . ?obs sosa:madeBySensor ?s ; sosa:hasResult/qudt:numericValue ?rh . FILTER(?rh > ?lim)\n  { ?b twin:row ?row ; twin:crop/twin:susceptibleTo agrovoc:c_13557 ; twin:depictedBy ?o ; rdfs:label ?what }\n  UNION { ?v twin:ventsRow ?row ; twin:depictedBy ?o ; rdfs:label ?what }\n} ORDER BY ?what"
+  },
+  {
+   "id": "A3",
+   "title": "Which valves should open now?",
+   "why": "The valve-to-bed map is in the record; the valves are in the scene. Thirsty beds become a list of valves a grower can walk to, or an irrigation controller can be sent.",
+   "lights": "o",
+   "sparql": "SELECT ?o ?valve ?bed WHERE {\n  ?obs sosa:hasFeatureOfInterest ?b ; sosa:observedProperty agrovoc:c_7208 ; sosa:hasResult/qudt:numericValue ?r .\n  ?b twin:crop/twin:minSoilWaterPct ?n ; rdfs:label ?bed . FILTER(?r < ?n)\n  ?v twin:waters ?b ; rdfs:label ?valve ; twin:depictedBy ?o .\n} ORDER BY ?valve"
+  }
+ ],
+ "inference": {
+  "title": "All vegetable beds (and why basil is not one)",
+  "why": "AGROVOC is a SKOS thesaurus: tomatoes are fruit vegetables, which are vegetables; basil is a culinary herb, which is a plant product but not a vegetable. One rule over skos:broader answers a buyer's 'show me the vegetables' with the right beds.",
+  "sparql": "SELECT ?o ?bed ?crop WHERE {\n  ?b twin:crop ?c ; twin:depictedBy ?o ; rdfs:label ?bed . ?c skos:broader+ agrovoc:c_8174 ; skos:prefLabel ?crop .\n} ORDER BY ?bed",
+  "n3": "{ ?a skos:broader ?b . ?b skos:broader ?c } => { ?a skos:broader ?c } ."
+ },
+ "fault_text": "Bed B2's moisture probe is pushed into Bed B3, and Bed C2's valve was never entered in the irrigation record."
+}

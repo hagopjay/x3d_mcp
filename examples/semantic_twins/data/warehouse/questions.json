@@ -1,0 +1,34 @@
+{
+ "title": "Warehouse: recall lot L-2291 before lunch",
+ "prefixes": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX sh: <http://www.w3.org/ns/shacl#>\nPREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>\nPREFIX twin: <https://example.org/scen/twin#>\nPREFIX dcterms: <http://purl.org/dc/terms/>\nPREFIX gs1: <https://ref.gs1.org/voc/>\nPREFIX w: <https://example.org/scen/warehouse/record#>\nPREFIX sc: <https://example.org/scen/warehouse/scene.ttl#>\n",
+ "questions": [
+  {
+   "id": "W1",
+   "title": "Where is every pallet holding lot L-2291?",
+   "why": "The recall names a lot; the warehouse stores pallets. GS1 identifies the lot, the record says which case and pallet hold it, and the scene shows the bins to empty. Pallet P07 is mostly juice, but one case of the recalled yoghurt is on it.",
+   "lights": "o",
+   "sparql": "SELECT ?o ?pallet ?bin WHERE {\n  w:Recall2291 twin:recalls ?lot .\n  ?p a twin:Pallet ; twin:contains+ ?lot ; rdfs:label ?pallet ; twin:depictedBy ?o ; twin:storedIn/rdfs:label ?bin .\n} ORDER BY ?pallet"
+  },
+  {
+   "id": "W2",
+   "title": "Which cereal should be picked first (first expiry, first out)?",
+   "why": "Two lots of the same cereal, two expiry dates, two bins. The pick list comes out in expiry order, and the first bin is lit for the picker.",
+   "lights": "o",
+   "sparql": "SELECT ?o ?pallet ?lot ?expires WHERE {\n  ?p a twin:Pallet ; twin:contains+ ?l ; rdfs:label ?pallet ; twin:depictedBy ?o .\n  ?l twin:ofProduct w:Cereal ; rdfs:label ?lot ; gs1:expirationDate ?expires .\n} ORDER BY ?expires LIMIT 1"
+  },
+  {
+   "id": "W3",
+   "title": "Which bins are free for put-away?",
+   "why": "Absence again: a bin that no pallet record points to. The scene turns that into spots on the racks a driver can see.",
+   "lights": "o",
+   "sparql": "SELECT ?o ?bin WHERE {\n  ?b a gs1:Place ; twin:depictedBy ?o ; rdfs:label ?bin .\n  FILTER(STRSTARTS(STR(?b), STR(w:Bin)))\n  FILTER NOT EXISTS { ?p twin:storedIn ?b }\n} ORDER BY ?bin"
+  }
+ ],
+ "inference": {
+  "title": "A recall reaches through pallets and cases",
+  "why": "Contains is transitive: a pallet holds cases, a case holds a lot. One rule closes the chain, so asking about the lot reaches every pallet, mixed ones included.",
+  "sparql": "SELECT ?o ?pallet WHERE {\n  ?p a twin:Pallet ; twin:contains ?c ; rdfs:label ?pallet ; twin:depictedBy ?o . ?c twin:contains w:lot_L2291 .\n} ORDER BY ?pallet",
+  "n3": "{ ?a twin:contains ?b . ?b twin:contains ?c } => { ?a twin:contains ?c } ."
+ },
+ "fault_text": "The mixed pallet P07, holding one case of chilled yoghurt, is put away in ambient Rack B, and P03 is drawn one bin over from its recorded bin."
+}

@@ -1,0 +1,38 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix x3do: <https://www.web3d.org/specifications/X3dOntology4.1#> .
+@prefix twin: <https://example.org/scen/twin#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix gs1: <https://ref.gs1.org/voc/> .
+@prefix w: <https://example.org/scen/warehouse/record#> .
+@prefix sc: <https://example.org/scen/warehouse/scene.ttl#> .
+
+twin:S_W1 a sh:NodeShape ; sh:targetClass twin:Pallet ;
+  sh:severity sh:Violation ;
+  sh:message "A pallet holding a chilled product is drawn outside the cold room." ;
+  sh:sparql [ sh:select """
+    PREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX twin: <https://example.org/scen/twin#>
+    SELECT DISTINCT $this ?value WHERE {
+      $this twin:contains+ ?lot ; twin:depictedBy ?value . ?lot twin:ofProduct ?prod . ?prod twin:storeMaxC ?max .
+      ?cold twin:minC ?cmin ; twin:depictedBy ?co .
+      { SELECT $this ?value ?valuex ?valuez WHERE { ?value x3do:translation ?valueL . ?valueL rdf:first ?valuex . ?valueL rdf:rest ?valueR . ?valueR rdf:rest ?valueR2 . ?valueR2 rdf:first ?valuez . } } { SELECT $this ?co ?cox ?coz WHERE { ?co x3do:translation ?coL . ?coL rdf:first ?cox . ?coL rdf:rest ?coR . ?coR rdf:rest ?coR2 . ?coR2 rdf:first ?coz . } } { SELECT $this ?co ?cosx ?cosy ?cosz WHERE { ?co x3do:hasChildren ?coH . ?coH x3do:hasGeometry ?coB . ?coB x3do:size ?coS . ?coS rdf:first ?cosx . ?coS rdf:rest ?coSR . ?coSR rdf:first ?cosy . ?coSR rdf:rest ?coSR2 . ?coSR2 rdf:first ?cosz . } }
+      FILTER(ABS(?valuex - ?cox) > ?cosx / 2 || ABS(?valuez - ?coz) > ?cosz / 2)
+    }""" ] .
+
+twin:S_W2 a sh:NodeShape ; sh:targetClass twin:Pallet ;
+  sh:severity sh:Violation ;
+  sh:message "The pallet is drawn in a different bin from the one the warehouse record assigns." ;
+  sh:sparql [ sh:select """
+    PREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX twin: <https://example.org/scen/twin#>
+    SELECT DISTINCT $this ?value WHERE {
+      $this twin:storedIn ?bin ; twin:depictedBy ?po . ?bin twin:depictedBy ?value .
+      { SELECT $this ?po ?pox ?poy ?poz WHERE { ?po x3do:translation ?poL . ?poL rdf:first ?pox . ?poL rdf:rest ?poR . ?poR rdf:first ?poy . ?poR rdf:rest ?poR2 . ?poR2 rdf:first ?poz . } } { SELECT $this ?value ?valuex ?valuey ?valuez WHERE { ?value x3do:translation ?valueL . ?valueL rdf:first ?valuex . ?valueL rdf:rest ?valueR . ?valueR rdf:first ?valuey . ?valueR rdf:rest ?valueR2 . ?valueR2 rdf:first ?valuez . } }
+      FILTER(ABS(?pox - ?valuex) > 0.3 || ABS(?poz - ?valuez) > 0.3 || ABS(?poy - ?valuey) > 0.5)
+    }""" ] .
+

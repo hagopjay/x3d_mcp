@@ -1,0 +1,1359 @@
+{
+ "meta": {
+  "name": "Semantic Twin eval set v1",
+  "made": "2026-11-16",
+  "source": "oracle answers (rdflib + pyshacl) from the nine Semantic Twin cases; scenes in scenarios-v2-2026-11-16.tgz",
+  "conditions": {
+   "A_scene_only": "the model gets the X3D scene and the x3d_mcp tools, no domain records",
+   "B_raw_records": "the model gets the scene plus the domain records flattened to JSON rows with no vocabulary IRIs, no rules, no shapes",
+   "C_ontology_mcp": "the model gets the scene, the domain Turtle with published vocabularies, the rule and the shapes, through x3d_mcp sparql_scene / shacl_validate with data_ttl"
+  },
+  "scoring": "question and rule items: set match of key column against gold_rows (precision, recall); audit items: recall of gold_focus, false alarms counted; also tool calls and tokens per item",
+  "caveat": "we wrote these cases and planted the faults ourselves, so the set favours what the stack is built to see; it measures lift, not general truth",
+  "items": 45
+ },
+ "items": [
+  {
+   "case": "heritage",
+   "id": "H1",
+   "kind": "question",
+   "prompt": "Show everything whose only support is speculative",
+   "gold_rows": [
+    {
+     "o": "UndergroundLink",
+     "label": "All of it as one connected system",
+     "grade": "S"
+    },
+    {
+     "o": "HallOfRecords",
+     "label": "Hall of Records (Cayce readings)",
+     "grade": "L"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": false,
+    "both": true
+   }
+  },
+  {
+   "case": "heritage",
+   "id": "H2",
+   "kind": "question",
+   "prompt": "Where do the sources disagree about a dimension, and by how much?",
+   "gold_rows": [
+    {
+     "feature": "Osiris Shaft",
+     "accounts": "3",
+     "low": "25.0",
+     "high": "41.48",
+     "spread": "16.48"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "heritage",
+   "id": "H3",
+   "kind": "question",
+   "prompt": "What does the model draw against what the record measured?",
+   "gold_rows": [
+    {
+     "o": "KhufuKingsChamber",
+     "label": "King's Chamber, Great Pyramid",
+     "recorded": "10.47",
+     "drawn": "10.47"
+    },
+    {
+     "o": "OsirisChamberB",
+     "label": "Osiris Shaft, Chamber B with six side chambers",
+     "recorded": "6.8",
+     "drawn": "6.8"
+    },
+    {
+     "o": "OsirisShaftA",
+     "label": "Osiris Shaft, Shaft A",
+     "recorded": "9.62",
+     "drawn": "9.62"
+    },
+    {
+     "o": "OsirisShaftB",
+     "label": "Osiris Shaft, Shaft B",
+     "recorded": "13.25",
+     "drawn": "13.25"
+    },
+    {
+     "o": "OsirisShaftC",
+     "label": "Osiris Shaft, Shaft C",
+     "recorded": "7.5",
+     "drawn": "7.5"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": false,
+    "both": true
+   }
+  },
+  {
+   "case": "heritage",
+   "id": "INF",
+   "kind": "rule",
+   "prompt": "Everything inside Level 2, or inside the whole shaft",
+   "gold_rows": [
+    {
+     "o": "OsirisChamberA",
+     "label": "Osiris Shaft, Chamber A (size schematic)"
+    },
+    {
+     "o": "OsirisChamberB",
+     "label": "Osiris Shaft, Chamber B with six side chambers"
+    },
+    {
+     "o": "OsirisShaftA",
+     "label": "Osiris Shaft, Shaft A"
+    },
+    {
+     "o": "OsirisShaftB",
+     "label": "Osiris Shaft, Shaft B"
+    },
+    {
+     "o": "OsirisShaftC",
+     "label": "Osiris Shaft, Shaft C"
+    },
+    {
+     "o": "OsirisLevel3Water",
+     "label": "Osiris Shaft, flooded Level 3"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "heritage",
+   "id": "FAULTS",
+   "kind": "audit",
+   "prompt": "Something in this model breaks a rule. Find every problem and say which rule it breaks.",
+   "planted": "Shaft A is drawn 12 m tall against the documented 9.62 m, and the Hall of Records has lost its attribution.",
+   "gold_focus": [
+    "HallOfRecords",
+    "dimShaftA"
+   ],
+   "caught_by_checks": {
+    "domain_only": [
+     "HallOfRecords"
+    ],
+    "both": [
+     "HallOfRecords",
+     "dimShaftA"
+    ]
+   }
+  },
+  {
+   "case": "factory",
+   "id": "F1",
+   "kind": "question",
+   "prompt": "Which machines run hotter than their datasheet allows, in one unit?",
+   "gold_rows": [
+    {
+     "o": "Station3",
+     "asset": "Test station S-3",
+     "readK": "328.150000000000026252",
+     "limitK": "323.150"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "factory",
+   "id": "F2",
+   "kind": "question",
+   "prompt": "If the press station stops, what else stops?",
+   "gold_rows": [
+    {
+     "o": "Conveyor1",
+     "asset": "Conveyor C-1"
+    },
+    {
+     "o": "Station2",
+     "asset": "Screw station S-2"
+    },
+    {
+     "o": "Station3",
+     "asset": "Test station S-3"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "factory",
+   "id": "F3",
+   "kind": "question",
+   "prompt": "Which assets have no maintenance record?",
+   "gold_rows": [
+    {
+     "o": "Station2",
+     "asset": "Screw station S-2"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "factory",
+   "id": "INF",
+   "kind": "rule",
+   "prompt": "A failing sensor's whole line",
+   "gold_rows": [
+    {
+     "o": "Station2",
+     "asset": "Screw station S-2"
+    },
+    {
+     "o": "Station3",
+     "asset": "Test station S-3"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "factory",
+   "id": "FAULTS",
+   "kind": "audit",
+   "prompt": "Something in this model breaks a rule. Find every problem and say which rule it breaks.",
+   "planted": "Station 3 is moved 0.98 m outward, past the robot's 2.1 m reach, and a vibration reading is recorded in degrees Celsius.",
+   "gold_focus": [
+    "Robot1",
+    "VibSensor1_obs"
+   ],
+   "caught_by_checks": {
+    "domain_only": [
+     "VibSensor1_obs"
+    ],
+    "both": [
+     "Robot1",
+     "VibSensor1_obs"
+    ]
+   }
+  },
+  {
+   "case": "hospital",
+   "id": "P1",
+   "kind": "question",
+   "prompt": "Is everything today's procedure needs in OR 4 and in service?",
+   "gold_rows": [
+    {
+     "device": "Anaesthesia workstation",
+     "where": "Operating Room 4",
+     "o": "AnesthesiaMachine",
+     "ready": "false"
+    },
+    {
+     "device": "Defibrillator",
+     "where": "Equipment storage 2",
+     "o": null,
+     "ready": "false"
+    },
+    {
+     "device": "Mobile C-arm",
+     "where": "Operating Room 4",
+     "o": "CArm",
+     "ready": "true"
+    },
+    {
+     "device": "Operating table",
+     "where": "Operating Room 4",
+     "o": "ORTable",
+     "ready": "true"
+    },
+    {
+     "device": "Surgical light 1",
+     "where": "Operating Room 4",
+     "o": "SurgicalLight1",
+     "ready": "true"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "hospital",
+   "id": "P2",
+   "kind": "question",
+   "prompt": "Which devices are past their service date?",
+   "gold_rows": [
+    {
+     "o": "AnesthesiaMachine",
+     "device": "Anaesthesia workstation",
+     "due": "2026-11-10"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "hospital",
+   "id": "P3",
+   "kind": "question",
+   "prompt": "How do I bring the defibrillator from storage?",
+   "gold_rows": [
+    {
+     "from": "Equipment storage 2",
+     "via": "Corridor, floor 2",
+     "to": "Operating Room 4"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "hospital",
+   "id": "INF",
+   "kind": "rule",
+   "prompt": "Roll devices up to the floor and the building",
+   "gold_rows": [
+    {
+     "o": "ORTable",
+     "device": "Operating table"
+    },
+    {
+     "o": "AnesthesiaMachine",
+     "device": "Anaesthesia workstation"
+    },
+    {
+     "o": "SurgicalLight1",
+     "device": "Surgical light 1"
+    },
+    {
+     "o": "SurgicalLight2",
+     "device": "Surgical light 2"
+    },
+    {
+     "o": "CArm",
+     "device": "Mobile C-arm"
+    },
+    {
+     "o": "InstrumentTable",
+     "device": "Instrument table"
+    },
+    {
+     "o": "SupplyCart",
+     "device": "Supply cart"
+    },
+    {
+     "o": "ScrubSink",
+     "device": "Scrub sink"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "hospital",
+   "id": "FAULTS",
+   "kind": "audit",
+   "prompt": "Something in this model breaks a rule. Find every problem and say which rule it breaks.",
+   "planted": "A non-sterile supply cart is pushed inside the sterile field, and the C-arm's record says it is still in storage.",
+   "gold_focus": [
+    "CArm1",
+    "SupplyCart1"
+   ],
+   "caught_by_checks": {
+    "domain_only": [
+     "CArm1"
+    ],
+    "both": [
+     "CArm1",
+     "SupplyCart1"
+    ]
+   }
+  },
+  {
+   "case": "building",
+   "id": "B1",
+   "kind": "question",
+   "prompt": "Which empty rooms are being heated anyway?",
+   "gold_rows": [
+    {
+     "o": "Room302",
+     "room": "Room 302",
+     "temp": "23.6",
+     "setpoint": "21.0"
+    },
+    {
+     "o": "Room304",
+     "room": "Room 304",
+     "temp": "22.4",
+     "setpoint": "21.0"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "building",
+   "id": "B2",
+   "kind": "question",
+   "prompt": "If air handler 1 trips, what loses air?",
+   "gold_rows": [
+    {
+     "o": "Room301",
+     "thing": "Room 301"
+    },
+    {
+     "o": "Room302",
+     "thing": "Room 302"
+    },
+    {
+     "o": "Room303",
+     "thing": "Room 303"
+    },
+    {
+     "o": "VAV301",
+     "thing": "VAV box 301"
+    },
+    {
+     "o": "VAV302",
+     "thing": "VAV box 302"
+    },
+    {
+     "o": "VAV303",
+     "thing": "VAV box 303"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "building",
+   "id": "B3",
+   "kind": "question",
+   "prompt": "Which rooms are more than 2 K off setpoint?",
+   "gold_rows": [
+    {
+     "o": "Room302",
+     "room": "Room 302",
+     "temp": "23.6",
+     "setpoint": "21.0"
+    },
+    {
+     "o": "Room305",
+     "room": "Room 305",
+     "temp": "18.4",
+     "setpoint": "21.0"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "building",
+   "id": "INF",
+   "kind": "rule",
+   "prompt": "Which rooms does each air handler serve?",
+   "gold_rows": [
+    {
+     "o": "Room301",
+     "room": "Room 301",
+     "ahu": "Air handler 1"
+    },
+    {
+     "o": "Room302",
+     "room": "Room 302",
+     "ahu": "Air handler 1"
+    },
+    {
+     "o": "Room303",
+     "room": "Room 303",
+     "ahu": "Air handler 1"
+    },
+    {
+     "o": "Room304",
+     "room": "Room 304",
+     "ahu": "Air handler 2"
+    },
+    {
+     "o": "Room305",
+     "room": "Room 305",
+     "ahu": "Air handler 2"
+    },
+    {
+     "o": "Room306",
+     "room": "Room 306",
+     "ahu": "Air handler 2"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "building",
+   "id": "FAULTS",
+   "kind": "audit",
+   "prompt": "Something in this model breaks a rule. Find every problem and say which rule it breaks.",
+   "planted": "Room 303's temperature sensor is mounted in Room 304, and Room 306's temperature point has been deleted from the model.",
+   "gold_focus": [
+    "Room306",
+    "TS303"
+   ],
+   "caught_by_checks": {
+    "domain_only": [
+     "Room306"
+    ],
+    "both": [
+     "Room306",
+     "TS303"
+    ]
+   }
+  },
+  {
+   "case": "warehouse",
+   "id": "W1",
+   "kind": "question",
+   "prompt": "Where is every pallet holding lot L-2291?",
+   "gold_rows": [
+    {
+     "o": "P05",
+     "pallet": "Pallet P05",
+     "bin": "K1"
+    },
+    {
+     "o": "P06",
+     "pallet": "Pallet P06",
+     "bin": "K2"
+    },
+    {
+     "o": "P07",
+     "pallet": "Pallet P07",
+     "bin": "K3"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "warehouse",
+   "id": "W2",
+   "kind": "question",
+   "prompt": "Which cereal should be picked first (first expiry, first out)?",
+   "gold_rows": [
+    {
+     "o": "P03",
+     "pallet": "Pallet P03",
+     "lot": "L-0790",
+     "expires": "2027-01-15"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "warehouse",
+   "id": "W3",
+   "kind": "question",
+   "prompt": "Which bins are free for put-away?",
+   "gold_rows": [
+    {
+     "o": "BinA22",
+     "bin": "A22"
+    },
+    {
+     "o": "BinA23",
+     "bin": "A23"
+    },
+    {
+     "o": "BinB12",
+     "bin": "B12"
+    },
+    {
+     "o": "BinB13",
+     "bin": "B13"
+    },
+    {
+     "o": "BinB21",
+     "bin": "B21"
+    },
+    {
+     "o": "BinB22",
+     "bin": "B22"
+    },
+    {
+     "o": "BinB23",
+     "bin": "B23"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "warehouse",
+   "id": "INF",
+   "kind": "rule",
+   "prompt": "A recall reaches through pallets and cases",
+   "gold_rows": [
+    {
+     "o": "P05",
+     "pallet": "Pallet P05"
+    },
+    {
+     "o": "P06",
+     "pallet": "Pallet P06"
+    },
+    {
+     "o": "P07",
+     "pallet": "Pallet P07"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "warehouse",
+   "id": "FAULTS",
+   "kind": "audit",
+   "prompt": "Something in this model breaks a rule. Find every problem and say which rule it breaks.",
+   "planted": "The mixed pallet P07, holding one case of chilled yoghurt, is put away in ambient Rack B, and P03 is drawn one bin over from its recorded bin.",
+   "gold_focus": [
+    "P03",
+    "P07"
+   ],
+   "caught_by_checks": {
+    "domain_only": [],
+    "both": [
+     "P03",
+     "P07"
+    ]
+   }
+  },
+  {
+   "case": "city",
+   "id": "C1",
+   "kind": "question",
+   "prompt": "Whose noon shadow falls on the park at the winter solstice?",
+   "gold_rows": [
+    {
+     "o": "Tower5",
+     "building": "Tower 5",
+     "height": "36",
+     "shadow": "74.2716"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": false,
+    "both": true
+   }
+  },
+  {
+   "case": "city",
+   "id": "C2",
+   "kind": "question",
+   "prompt": "Which buildings stand in the flood zone?",
+   "gold_rows": [
+    {
+     "o": "Bldg3",
+     "building": "Building 3"
+    },
+    {
+     "o": "Bldg6",
+     "building": "Building 6"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": false,
+    "both": true
+   }
+  },
+  {
+   "case": "city",
+   "id": "C3",
+   "kind": "question",
+   "prompt": "Which buildings are within a 400 m walk of the new stop?",
+   "gold_rows": [
+    {
+     "o": "Bldg1",
+     "building": "Building 1"
+    },
+    {
+     "o": "Bldg2",
+     "building": "Building 2"
+    },
+    {
+     "o": "Bldg4",
+     "building": "Building 4"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": false,
+    "both": true
+   }
+  },
+  {
+   "case": "city",
+   "id": "INF",
+   "kind": "rule",
+   "prompt": "Buildings inherit their district from their parcel",
+   "gold_rows": [
+    {
+     "o": "Bldg1",
+     "building": "Building 1",
+     "district": "Commercial district C4-7"
+    },
+    {
+     "o": "Bldg2",
+     "building": "Building 2",
+     "district": "Residential district R6"
+    },
+    {
+     "o": "Bldg3",
+     "building": "Building 3",
+     "district": "Commercial district C4-7"
+    },
+    {
+     "o": "Bldg4",
+     "building": "Building 4",
+     "district": "Residential district R6"
+    },
+    {
+     "o": "Bldg6",
+     "building": "Building 6",
+     "district": "Residential district R6"
+    },
+    {
+     "o": "Tower5",
+     "building": "Tower 5",
+     "district": "Commercial district C4-7"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "city",
+   "id": "FAULTS",
+   "kind": "audit",
+   "prompt": "Something in this model breaks a rule. Find every problem and say which rule it breaks.",
+   "planted": "Tower 5 is drawn 48 m tall in a 36 m district, and Building 2 is drawn 8 m east, overhanging its parcel.",
+   "gold_focus": [
+    "Bldg2",
+    "Tower5"
+   ],
+   "caught_by_checks": {
+    "domain_only": [],
+    "both": [
+     "Bldg2",
+     "Tower5"
+    ]
+   }
+  },
+  {
+   "case": "concert",
+   "id": "M1",
+   "kind": "question",
+   "prompt": "Who is playing at 00:12:30?",
+   "gold_rows": [
+    {
+     "o": "PerfBass",
+     "who": "Bass",
+     "song": "3. Saltwater Clock"
+    },
+    {
+     "o": "BassAmp",
+     "who": "Bass rig",
+     "song": "3. Saltwater Clock"
+    },
+    {
+     "o": "DrumKit",
+     "who": "Drum kit",
+     "song": "3. Saltwater Clock"
+    },
+    {
+     "o": "PerfDrums",
+     "who": "Drums",
+     "song": "3. Saltwater Clock"
+    },
+    {
+     "o": "PerfGtr",
+     "who": "Electric guitar",
+     "song": "3. Saltwater Clock"
+    },
+    {
+     "o": "GuitarAmp",
+     "who": "Electric guitar rig",
+     "song": "3. Saltwater Clock"
+    },
+    {
+     "o": "PerfVox",
+     "who": "Lead vocal",
+     "song": "3. Saltwater Clock"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "concert",
+   "id": "M2",
+   "kind": "question",
+   "prompt": "What does the crew change between songs 3 and 4?",
+   "gold_rows": [
+    {
+     "o": "AcousticGtr",
+     "instrument": "Acoustic guitar",
+     "change": "bring on"
+    },
+    {
+     "o": "KeysRig",
+     "instrument": "Keyboard rig",
+     "change": "bring on"
+    },
+    {
+     "o": "DrumKit",
+     "instrument": "Drum kit",
+     "change": "take off"
+    },
+    {
+     "o": "GuitarAmp",
+     "instrument": "Electric guitar rig",
+     "change": "take off"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "concert",
+   "id": "M3",
+   "kind": "question",
+   "prompt": "Who do the followspots pick up in song 4?",
+   "gold_rows": [
+    {
+     "o": "PerfKeys",
+     "what": "Keys"
+    },
+    {
+     "o": "PerfVox",
+     "what": "Lead vocal"
+    },
+    {
+     "o": "Spot1",
+     "what": "Spot1"
+    },
+    {
+     "o": "Spot2",
+     "what": "Spot2"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": false,
+    "both": true
+   }
+  },
+  {
+   "case": "concert",
+   "id": "INF",
+   "kind": "rule",
+   "prompt": "Everything on stage in Set 2",
+   "gold_rows": [
+    {
+     "o": "AcousticGtr",
+     "what": "Acoustic guitar"
+    },
+    {
+     "o": "PerfBass",
+     "what": "Bass"
+    },
+    {
+     "o": "BassAmp",
+     "what": "Bass rig"
+    },
+    {
+     "o": "DrumKit",
+     "what": "Drum kit"
+    },
+    {
+     "o": "PerfDrums",
+     "what": "Drums"
+    },
+    {
+     "o": "PerfGtr",
+     "what": "Electric guitar"
+    },
+    {
+     "o": "GuitarAmp",
+     "what": "Electric guitar rig"
+    },
+    {
+     "o": "KeysRig",
+     "what": "Keyboard rig"
+    },
+    {
+     "o": "PerfKeys",
+     "what": "Keys"
+    },
+    {
+     "o": "PerfVox",
+     "what": "Lead vocal"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "concert",
+   "id": "FAULTS",
+   "kind": "audit",
+   "prompt": "Something in this model breaks a rule. Find every problem and say which rule it breaks.",
+   "planted": "The guitar amp's mic was kicked 1.65 m downstage, and the keys wedge was set on the bass side of the stage.",
+   "gold_focus": [
+    "GuitarAmp",
+    "Keys"
+   ],
+   "caught_by_checks": {
+    "domain_only": [],
+    "both": [
+     "GuitarAmp",
+     "Keys"
+    ]
+   }
+  },
+  {
+   "case": "firecode",
+   "id": "E1",
+   "kind": "question",
+   "prompt": "How many people can each room hold, by the code?",
+   "gold_rows": [
+    {
+     "o": "Room401",
+     "room": "Room 401",
+     "area": "186",
+     "occupants": "14"
+    },
+    {
+     "o": "Room402",
+     "room": "Room 402",
+     "area": "186",
+     "occupants": "14"
+    },
+    {
+     "o": "Room403",
+     "room": "Room 403",
+     "area": "186",
+     "occupants": "14"
+    },
+    {
+     "o": "Room404",
+     "room": "Room 404",
+     "area": "186",
+     "occupants": "14"
+    },
+    {
+     "o": "Room405",
+     "room": "Room 405",
+     "area": "186",
+     "occupants": "14"
+    },
+    {
+     "o": "Room406",
+     "room": "Room 406",
+     "area": "186",
+     "occupants": "14"
+    },
+    {
+     "o": "Room407",
+     "room": "Room 407",
+     "area": "750",
+     "occupants": "54"
+    },
+    {
+     "o": "Room408",
+     "room": "Room 408",
+     "area": "374",
+     "occupants": "27"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": false,
+    "both": true
+   }
+  },
+  {
+   "case": "firecode",
+   "id": "E2",
+   "kind": "question",
+   "prompt": "How far is each room from its nearest open exit?",
+   "gold_rows": [
+    {
+     "room": "Room 401",
+     "metres": "17"
+    },
+    {
+     "room": "Room 402",
+     "metres": "37"
+    },
+    {
+     "room": "Room 403",
+     "metres": "57"
+    },
+    {
+     "room": "Room 404",
+     "metres": "57"
+    },
+    {
+     "room": "Room 405",
+     "metres": "37"
+    },
+    {
+     "room": "Room 406",
+     "metres": "17"
+    },
+    {
+     "room": "Room 407",
+     "metres": "47"
+    },
+    {
+     "room": "Room 408",
+     "metres": "27"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": false,
+    "both": true
+   }
+  },
+  {
+   "case": "firecode",
+   "id": "E3",
+   "kind": "question",
+   "prompt": "Does every room over 49 people have two ways out?",
+   "gold_rows": [
+    {
+     "o": "Room407",
+     "room": "Room 407",
+     "doors": "2"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": false,
+    "both": true
+   }
+  },
+  {
+   "case": "firecode",
+   "id": "INF",
+   "kind": "rule",
+   "prompt": "Every space that can reach Exit stair A",
+   "gold_rows": [
+    {
+     "o": "Corridor4",
+     "space": "Corridor"
+    },
+    {
+     "o": "StairB",
+     "space": "Exit stair B"
+    },
+    {
+     "o": "Room401",
+     "space": "Room 401"
+    },
+    {
+     "o": "Room402",
+     "space": "Room 402"
+    },
+    {
+     "o": "Room403",
+     "space": "Room 403"
+    },
+    {
+     "o": "Room404",
+     "space": "Room 404"
+    },
+    {
+     "o": "Room405",
+     "space": "Room 405"
+    },
+    {
+     "o": "Room406",
+     "space": "Room 406"
+    },
+    {
+     "o": "Room407",
+     "space": "Room 407"
+    },
+    {
+     "o": "Room408",
+     "space": "Room 408"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "firecode",
+   "id": "FAULTS",
+   "kind": "audit",
+   "prompt": "Something in this model breaks a rule. Find every problem and say which rule it breaks.",
+   "planted": "Door 402 is drawn 0.76 m (30 in) wide, and the record says Exit stair B is locked.",
+   "gold_focus": [
+    "Door402",
+    "Room405",
+    "Room406",
+    "Room408"
+   ],
+   "caught_by_checks": {
+    "domain_only": [],
+    "both": [
+     "Door402",
+     "Room405",
+     "Room406",
+     "Room408"
+    ]
+   }
+  },
+  {
+   "case": "farm",
+   "id": "A1",
+   "kind": "question",
+   "prompt": "Which beds are thirsty, and how much water do they need?",
+   "gold_rows": [
+    {
+     "o": "CropA2",
+     "bed": "Bed A2",
+     "crop": "tomatoes",
+     "reading": "27",
+     "needs": "30",
+     "litres": "65"
+    },
+    {
+     "o": "CropB1",
+     "bed": "Bed B1",
+     "crop": "lettuces",
+     "reading": "22",
+     "needs": "28",
+     "litres": "130"
+    },
+    {
+     "o": "CropC3",
+     "bed": "Bed C3",
+     "crop": "basil",
+     "reading": "24",
+     "needs": "25",
+     "litres": "22"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "farm",
+   "id": "A2",
+   "kind": "question",
+   "prompt": "Where is powdery mildew likely, and which vent should open?",
+   "gold_rows": [
+    {
+     "o": "CropA1",
+     "what": "Bed A1",
+     "rh": "88"
+    },
+    {
+     "o": "CropA2",
+     "what": "Bed A2",
+     "rh": "88"
+    },
+    {
+     "o": "CropA3",
+     "what": "Bed A3",
+     "rh": "88"
+    },
+    {
+     "o": "VentA",
+     "what": "Roof vent over row A",
+     "rh": "88"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "farm",
+   "id": "A3",
+   "kind": "question",
+   "prompt": "Which valves should open now?",
+   "gold_rows": [
+    {
+     "o": "ValveA2",
+     "valve": "Valve A2",
+     "bed": "Bed A2"
+    },
+    {
+     "o": "ValveB1",
+     "valve": "Valve B1",
+     "bed": "Bed B1"
+    },
+    {
+     "o": "ValveC3",
+     "valve": "Valve C3",
+     "bed": "Bed C3"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "farm",
+   "id": "INF",
+   "kind": "rule",
+   "prompt": "All vegetable beds (and why basil is not one)",
+   "gold_rows": [
+    {
+     "o": "CropA1",
+     "bed": "Bed A1",
+     "crop": "tomatoes"
+    },
+    {
+     "o": "CropA2",
+     "bed": "Bed A2",
+     "crop": "tomatoes"
+    },
+    {
+     "o": "CropA3",
+     "bed": "Bed A3",
+     "crop": "cucumbers"
+    },
+    {
+     "o": "CropB1",
+     "bed": "Bed B1",
+     "crop": "lettuces"
+    },
+    {
+     "o": "CropB2",
+     "bed": "Bed B2",
+     "crop": "lettuces"
+    },
+    {
+     "o": "CropC1",
+     "bed": "Bed C1",
+     "crop": "tomatoes"
+    },
+    {
+     "o": "CropC2",
+     "bed": "Bed C2",
+     "crop": "lettuces"
+    }
+   ],
+   "answerable_from": {
+    "scene_only": false,
+    "domain_only": true,
+    "both": true
+   }
+  },
+  {
+   "case": "farm",
+   "id": "FAULTS",
+   "kind": "audit",
+   "prompt": "Something in this model breaks a rule. Find every problem and say which rule it breaks.",
+   "planted": "Bed B2's moisture probe is pushed into Bed B3, and Bed C2's valve was never entered in the irrigation record.",
+   "gold_focus": [
+    "BedC2",
+    "MoistB2_obs"
+   ],
+   "caught_by_checks": {
+    "domain_only": [
+     "BedC2"
+    ],
+    "both": [
+     "BedC2",
+     "MoistB2_obs"
+    ]
+   }
+  }
+ ]
+}

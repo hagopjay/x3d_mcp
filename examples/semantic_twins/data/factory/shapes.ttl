@@ -1,0 +1,53 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix x3do: <https://www.web3d.org/specifications/X3dOntology4.1#> .
+@prefix twin: <https://example.org/scen/twin#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix aas: <https://admin-shell.io/aas/3/2/> .
+@prefix shell: <https://admin-shell.io/aas/3/2/AssetAdministrationShell/> .
+@prefix ref: <https://admin-shell.io/aas/3/2/Referable/> .
+@prefix sm: <https://admin-shell.io/aas/3/2/Submodel/> .
+@prefix prop: <https://admin-shell.io/aas/3/2/Property/> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix qudt: <http://qudt.org/schema/qudt/> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix qk: <http://qudt.org/vocab/quantitykind/> .
+@prefix f: <https://example.org/scen/factory/record#> .
+@prefix sc: <https://example.org/scen/factory/scene.ttl#> .
+
+
+twin:S_F1 a sh:NodeShape ; sh:targetSubjectsOf twin:placesAt ;
+  sh:severity sh:Violation ;
+  sh:message "A pick or place point is beyond the robot's maximum reach in its Asset Administration Shell." ;
+  sh:sparql [ sh:select """
+    PREFIX shell: <https://admin-shell.io/aas/3/2/AssetAdministrationShell/>
+    PREFIX ref: <https://admin-shell.io/aas/3/2/Referable/>
+    PREFIX sm: <https://admin-shell.io/aas/3/2/Submodel/>
+    PREFIX prop: <https://admin-shell.io/aas/3/2/Property/>
+    PREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX twin: <https://example.org/scen/twin#>
+    SELECT $this ?value WHERE {
+      { $this twin:picksAt ?pt } UNION { $this twin:placesAt ?pt }
+      $this twin:depictedBy ?base ;
+            shell:submodels/sm:submodelElements ?p .
+      ?p ref:idShort "MaxReach" ; prop:value ?reach .
+      ?base x3do:translation ?bL . ?bL rdf:first ?bx ; rdf:rest/rdf:rest/rdf:first ?bz .
+      ?pt x3do:translation ?pL . ?pL rdf:first ?px ; rdf:rest/rdf:rest/rdf:first ?pz .
+      BIND(((?px - ?bx) * (?px - ?bx) + (?pz - ?bz) * (?pz - ?bz)) AS ?d2)
+      BIND(?pt AS ?value)
+      FILTER(?d2 > ?reach * ?reach)
+    }""" ] .
+
+twin:S_F2 a sh:NodeShape ; sh:targetClass sosa:Observation ;
+  sh:severity sh:Violation ;
+  sh:message "The result's unit does not measure the observed property (QUDT quantity kind mismatch)." ;
+  sh:sparql [ sh:select """
+    PREFIX sosa: <http://www.w3.org/ns/sosa/>
+    PREFIX qudt: <http://qudt.org/schema/qudt/>
+    SELECT $this ?value WHERE {
+      $this sosa:observedProperty ?qk ; sosa:hasResult ?r . ?r qudt:unit ?value .
+      FILTER NOT EXISTS { ?value qudt:hasQuantityKind ?qk }
+    }""" ] .

@@ -1,0 +1,271 @@
+{
+ "clean": {
+  "twin_triples": 1439,
+  "domain_triples": 180,
+  "questions": {
+   "M1": [
+    {
+     "o": "PerfBass",
+     "who": "Bass",
+     "song": "3. Saltwater Clock"
+    },
+    {
+     "o": "BassAmp",
+     "who": "Bass rig",
+     "song": "3. Saltwater Clock"
+    },
+    {
+     "o": "DrumKit",
+     "who": "Drum kit",
+     "song": "3. Saltwater Clock"
+    },
+    {
+     "o": "PerfDrums",
+     "who": "Drums",
+     "song": "3. Saltwater Clock"
+    },
+    {
+     "o": "PerfGtr",
+     "who": "Electric guitar",
+     "song": "3. Saltwater Clock"
+    },
+    {
+     "o": "GuitarAmp",
+     "who": "Electric guitar rig",
+     "song": "3. Saltwater Clock"
+    },
+    {
+     "o": "PerfVox",
+     "who": "Lead vocal",
+     "song": "3. Saltwater Clock"
+    }
+   ],
+   "M2": [
+    {
+     "o": "AcousticGtr",
+     "instrument": "Acoustic guitar",
+     "change": "bring on"
+    },
+    {
+     "o": "KeysRig",
+     "instrument": "Keyboard rig",
+     "change": "bring on"
+    },
+    {
+     "o": "DrumKit",
+     "instrument": "Drum kit",
+     "change": "take off"
+    },
+    {
+     "o": "GuitarAmp",
+     "instrument": "Electric guitar rig",
+     "change": "take off"
+    }
+   ],
+   "M3": [
+    {
+     "o": "PerfKeys",
+     "what": "Keys"
+    },
+    {
+     "o": "PerfVox",
+     "what": "Lead vocal"
+    },
+    {
+     "o": "Spot1",
+     "what": "Spot1"
+    },
+    {
+     "o": "Spot2",
+     "what": "Spot2"
+    }
+   ]
+  },
+  "inference": [
+   {
+    "o": "AcousticGtr",
+    "what": "Acoustic guitar"
+   },
+   {
+    "o": "PerfBass",
+    "what": "Bass"
+   },
+   {
+    "o": "BassAmp",
+    "what": "Bass rig"
+   },
+   {
+    "o": "DrumKit",
+    "what": "Drum kit"
+   },
+   {
+    "o": "PerfDrums",
+    "what": "Drums"
+   },
+   {
+    "o": "PerfGtr",
+    "what": "Electric guitar"
+   },
+   {
+    "o": "GuitarAmp",
+    "what": "Electric guitar rig"
+   },
+   {
+    "o": "KeysRig",
+    "what": "Keyboard rig"
+   },
+   {
+    "o": "PerfKeys",
+    "what": "Keys"
+   },
+   {
+    "o": "PerfVox",
+    "what": "Lead vocal"
+   }
+  ],
+  "shacl": [],
+  "shacl_seconds": 0.22,
+  "conforms": true
+ },
+ "fault": {
+  "twin_triples": 1439,
+  "domain_triples": 180,
+  "questions": {
+   "M1": [
+    {
+     "o": "PerfBass",
+     "who": "Bass",
+     "song": "3. Saltwater Clock"
+    },
+    {
+     "o": "BassAmp",
+     "who": "Bass rig",
+     "song": "3. Saltwater Clock"
+    },
+    {
+     "o": "DrumKit",
+     "who": "Drum kit",
+     "song": "3. Saltwater Clock"
+    },
+    {
+     "o": "PerfDrums",
+     "who": "Drums",
+     "song": "3. Saltwater Clock"
+    },
+    {
+     "o": "PerfGtr",
+     "who": "Electric guitar",
+     "song": "3. Saltwater Clock"
+    },
+    {
+     "o": "GuitarAmp",
+     "who": "Electric guitar rig",
+     "song": "3. Saltwater Clock"
+    },
+    {
+     "o": "PerfVox",
+     "who": "Lead vocal",
+     "song": "3. Saltwater Clock"
+    }
+   ],
+   "M2": [
+    {
+     "o": "AcousticGtr",
+     "instrument": "Acoustic guitar",
+     "change": "bring on"
+    },
+    {
+     "o": "KeysRig",
+     "instrument": "Keyboard rig",
+     "change": "bring on"
+    },
+    {
+     "o": "DrumKit",
+     "instrument": "Drum kit",
+     "change": "take off"
+    },
+    {
+     "o": "GuitarAmp",
+     "instrument": "Electric guitar rig",
+     "change": "take off"
+    }
+   ],
+   "M3": [
+    {
+     "o": "PerfKeys",
+     "what": "Keys"
+    },
+    {
+     "o": "PerfVox",
+     "what": "Lead vocal"
+    },
+    {
+     "o": "Spot1",
+     "what": "Spot1"
+    },
+    {
+     "o": "Spot2",
+     "what": "Spot2"
+    }
+   ]
+  },
+  "inference": [
+   {
+    "o": "AcousticGtr",
+    "what": "Acoustic guitar"
+   },
+   {
+    "o": "PerfBass",
+    "what": "Bass"
+   },
+   {
+    "o": "BassAmp",
+    "what": "Bass rig"
+   },
+   {
+    "o": "DrumKit",
+    "what": "Drum kit"
+   },
+   {
+    "o": "PerfDrums",
+    "what": "Drums"
+   },
+   {
+    "o": "PerfGtr",
+    "what": "Electric guitar"
+   },
+   {
+    "o": "GuitarAmp",
+    "what": "Electric guitar rig"
+   },
+   {
+    "o": "KeysRig",
+    "what": "Keyboard rig"
+   },
+   {
+    "o": "PerfKeys",
+    "what": "Keys"
+   },
+   {
+    "o": "PerfVox",
+    "what": "Lead vocal"
+   }
+  ],
+  "shacl": [
+   {
+    "focus": "GuitarAmp",
+    "value": "MicGtrAmp",
+    "shape": "S_M1",
+    "message": "An instrument on the setlist has no mic or DI within 1.0 m on the stage plot."
+   },
+   {
+    "focus": "Keys",
+    "value": "WedgeKeys",
+    "shape": "S_M2",
+    "message": "A performer's monitor wedge is more than 2.5 m away from where they stand."
+   }
+  ],
+  "shacl_seconds": 0.32,
+  "conforms": false
+ }
+}

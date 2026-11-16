@@ -1,0 +1,34 @@
+{
+ "title": "Hospital: Operating Room 4, ready or not",
+ "prefixes": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX sh: <http://www.w3.org/ns/shacl#>\nPREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>\nPREFIX twin: <https://example.org/scen/twin#>\nPREFIX dcterms: <http://purl.org/dc/terms/>\nPREFIX fhir: <http://hl7.org/fhir/>\nPREFIX bot: <https://w3id.org/bot#>\nPREFIX p: <https://example.org/scen/hospital/record#>\nPREFIX sc: <https://example.org/scen/hospital/scene.ttl#>\n",
+ "questions": [
+  {
+   "id": "P1",
+   "title": "Is everything today's procedure needs in OR 4 and in service?",
+   "why": "FHIR lists what the procedure uses and where each device is; the scene shows the room. Present and in service lights green; a device listed but elsewhere is named, so someone fetches it before the patient arrives.",
+   "lights": "o",
+   "sparql": "SELECT ?device ?where ?o ?ready WHERE {\n  p:Proc1 fhir:used/fhir:reference/fhir:l ?d ; fhir:location/fhir:l ?room .\n  ?d rdfs:label ?device ; fhir:location/fhir:l ?loc ; fhir:status/fhir:v ?st ; twin:nextServiceDue ?due .\n  ?loc rdfs:label ?where . p:today twin:date ?today .\n  OPTIONAL { ?d twin:depictedBy ?o }\n  BIND(?loc = ?room && ?st = \"active\" && ?due >= ?today AS ?ready)\n} ORDER BY ?ready ?device"
+  },
+  {
+   "id": "P2",
+   "title": "Which devices are past their service date?",
+   "why": "Core FHIR Device has no service-due field, so the record carries it as an extension, the usual practice. Joined to the scene, the overdue machine turns red where it stands.",
+   "lights": "o",
+   "sparql": "SELECT ?o ?device ?due WHERE {\n  ?d a fhir:Device ; rdfs:label ?device ; twin:nextServiceDue ?due ; twin:depictedBy ?o .\n  p:today twin:date ?today . FILTER(?due < ?today)\n}"
+  },
+  {
+   "id": "P3",
+   "title": "How do I bring the defibrillator from storage?",
+   "why": "BOT knows which spaces touch; the scene knows where OR 4 is. The adjacency path is the route a porter walks.",
+   "lights": null,
+   "sparql": "SELECT ?from ?via ?to WHERE {\n  p:Storage2 rdfs:label ?from . p:OR4 rdfs:label ?to .\n  ?mid bot:adjacentZone p:Storage2 ; rdfs:label ?via . p:OR4 bot:adjacentZone ?mid .\n}"
+  }
+ ],
+ "inference": {
+  "title": "Roll devices up to the floor and the building",
+  "why": "BOT says the building has storeys, storeys have spaces, spaces contain elements. A rule rolls every device up, so a facilities view of floor 2 lights the same machines a clinician sees in OR 4.",
+  "sparql": "SELECT ?o ?device WHERE {\n  p:Floor2 bot:hasSpace ?s . ?s bot:containsElement ?d . ?d rdfs:label ?device ; twin:depictedBy ?o .\n}",
+  "n3": "{ ?st bot:hasSpace ?s . ?s bot:containsElement ?e } => { ?st bot:containsElement ?e } ."
+ },
+ "fault_text": "A non-sterile supply cart is pushed inside the sterile field, and the C-arm's record says it is still in storage."
+}

@@ -1,0 +1,40 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix x3do: <https://www.web3d.org/specifications/X3dOntology4.1#> .
+@prefix twin: <https://example.org/scen/twin#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix agrovoc: <http://aims.fao.org/aos/agrovoc/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix qudt: <http://qudt.org/schema/qudt/> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix g: <https://example.org/scen/farm/record#> .
+@prefix sc: <https://example.org/scen/farm/scene.ttl#> .
+
+twin:S_A1 a sh:NodeShape ; sh:targetClass sosa:Observation ;
+  sh:severity sh:Violation ;
+  sh:message "The probe is drawn outside the bed its readings are filed under." ;
+  sh:sparql [ sh:select """
+    PREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX twin: <https://example.org/scen/twin#>
+    PREFIX sosa: <http://www.w3.org/ns/sosa/>
+    SELECT DISTINCT $this ?value WHERE {
+      $this sosa:madeBySensor ?s ; sosa:hasFeatureOfInterest ?b . ?s twin:depictedBy ?value . ?b twin:depictedBy ?bo .
+      { SELECT $this ?value ?valuex ?valuez WHERE { ?value x3do:translation ?valueL . ?valueL rdf:first ?valuex . ?valueL rdf:rest ?valueR . ?valueR rdf:rest ?valueR2 . ?valueR2 rdf:first ?valuez . } } { SELECT $this ?bo ?box ?boz WHERE { ?bo x3do:translation ?boL . ?boL rdf:first ?box . ?boL rdf:rest ?boR . ?boR rdf:rest ?boR2 . ?boR2 rdf:first ?boz . } } { SELECT $this ?bo ?bosx ?bosy ?bosz WHERE { ?bo x3do:hasChildren ?boH . ?boH x3do:hasGeometry ?boB . ?boB x3do:size ?boS . ?boS rdf:first ?bosx . ?boS rdf:rest ?boSR . ?boSR rdf:first ?bosy . ?boSR rdf:rest ?boSR2 . ?boSR2 rdf:first ?bosz . } }
+      FILTER(ABS(?valuex - ?box) > ?bosx / 2 || ABS(?valuez - ?boz) > ?bosz / 2 + 0.3)
+    }""" ] .
+
+twin:S_A2 a sh:NodeShape ; sh:targetSubjectsOf twin:crop ;
+  sh:severity sh:Violation ;
+  sh:message "A planted bed has no irrigation valve in the record." ;
+  sh:sparql [ sh:select """
+    PREFIX x3do: <https://www.web3d.org/specifications/X3dOntology4.1#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX twin: <https://example.org/scen/twin#>
+    SELECT DISTINCT $this WHERE {
+      $this twin:depictedBy ?o . FILTER NOT EXISTS { ?v twin:waters $this }
+    }""" ] .
+

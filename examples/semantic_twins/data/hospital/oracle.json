@@ -1,0 +1,193 @@
+{
+ "clean": {
+  "twin_triples": 704,
+  "domain_triples": 154,
+  "questions": {
+   "P1": [
+    {
+     "device": "Anaesthesia workstation",
+     "where": "Operating Room 4",
+     "o": "AnesthesiaMachine",
+     "ready": "false"
+    },
+    {
+     "device": "Defibrillator",
+     "where": "Equipment storage 2",
+     "o": null,
+     "ready": "false"
+    },
+    {
+     "device": "Mobile C-arm",
+     "where": "Operating Room 4",
+     "o": "CArm",
+     "ready": "true"
+    },
+    {
+     "device": "Operating table",
+     "where": "Operating Room 4",
+     "o": "ORTable",
+     "ready": "true"
+    },
+    {
+     "device": "Surgical light 1",
+     "where": "Operating Room 4",
+     "o": "SurgicalLight1",
+     "ready": "true"
+    }
+   ],
+   "P2": [
+    {
+     "o": "AnesthesiaMachine",
+     "device": "Anaesthesia workstation",
+     "due": "2026-11-10"
+    }
+   ],
+   "P3": [
+    {
+     "from": "Equipment storage 2",
+     "via": "Corridor, floor 2",
+     "to": "Operating Room 4"
+    }
+   ]
+  },
+  "inference": [
+   {
+    "o": "ORTable",
+    "device": "Operating table"
+   },
+   {
+    "o": "AnesthesiaMachine",
+    "device": "Anaesthesia workstation"
+   },
+   {
+    "o": "SurgicalLight1",
+    "device": "Surgical light 1"
+   },
+   {
+    "o": "SurgicalLight2",
+    "device": "Surgical light 2"
+   },
+   {
+    "o": "CArm",
+    "device": "Mobile C-arm"
+   },
+   {
+    "o": "InstrumentTable",
+    "device": "Instrument table"
+   },
+   {
+    "o": "SupplyCart",
+    "device": "Supply cart"
+   },
+   {
+    "o": "ScrubSink",
+    "device": "Scrub sink"
+   }
+  ],
+  "shacl": [],
+  "shacl_seconds": 0.15,
+  "conforms": true
+ },
+ "fault": {
+  "twin_triples": 704,
+  "domain_triples": 154,
+  "questions": {
+   "P1": [
+    {
+     "device": "Anaesthesia workstation",
+     "where": "Operating Room 4",
+     "o": "AnesthesiaMachine",
+     "ready": "false"
+    },
+    {
+     "device": "Defibrillator",
+     "where": "Equipment storage 2",
+     "o": null,
+     "ready": "false"
+    },
+    {
+     "device": "Mobile C-arm",
+     "where": "Equipment storage 2",
+     "o": "CArm",
+     "ready": "false"
+    },
+    {
+     "device": "Operating table",
+     "where": "Operating Room 4",
+     "o": "ORTable",
+     "ready": "true"
+    },
+    {
+     "device": "Surgical light 1",
+     "where": "Operating Room 4",
+     "o": "SurgicalLight1",
+     "ready": "true"
+    }
+   ],
+   "P2": [
+    {
+     "o": "AnesthesiaMachine",
+     "device": "Anaesthesia workstation",
+     "due": "2026-11-10"
+    }
+   ],
+   "P3": [
+    {
+     "from": "Equipment storage 2",
+     "via": "Corridor, floor 2",
+     "to": "Operating Room 4"
+    }
+   ]
+  },
+  "inference": [
+   {
+    "o": "ORTable",
+    "device": "Operating table"
+   },
+   {
+    "o": "AnesthesiaMachine",
+    "device": "Anaesthesia workstation"
+   },
+   {
+    "o": "SurgicalLight1",
+    "device": "Surgical light 1"
+   },
+   {
+    "o": "SurgicalLight2",
+    "device": "Surgical light 2"
+   },
+   {
+    "o": "InstrumentTable",
+    "device": "Instrument table"
+   },
+   {
+    "o": "SupplyCart",
+    "device": "Supply cart"
+   },
+   {
+    "o": "ScrubSink",
+    "device": "Scrub sink"
+   },
+   {
+    "o": "CArm",
+    "device": "Mobile C-arm"
+   }
+  ],
+  "shacl": [
+   {
+    "focus": "SupplyCart1",
+    "value": "1.57",
+    "shape": "S_P1",
+    "message": "A non-sterile device stands inside the sterile field (distance from the field's centre is below its radius)."
+   },
+   {
+    "focus": "CArm1",
+    "value": "Storage2",
+    "shape": "S_P2",
+    "message": "The record places this device in another room, but the scene draws it inside OR 4."
+   }
+  ],
+  "shacl_seconds": 0.23,
+  "conforms": false
+ }
+}

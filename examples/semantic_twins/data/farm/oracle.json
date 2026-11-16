@@ -1,0 +1,237 @@
+{
+ "clean": {
+  "twin_triples": 2189,
+  "domain_triples": 283,
+  "questions": {
+   "A1": [
+    {
+     "o": "CropA2",
+     "bed": "Bed A2",
+     "crop": "tomatoes",
+     "reading": "27",
+     "needs": "30",
+     "litres": "65"
+    },
+    {
+     "o": "CropB1",
+     "bed": "Bed B1",
+     "crop": "lettuces",
+     "reading": "22",
+     "needs": "28",
+     "litres": "130"
+    },
+    {
+     "o": "CropC3",
+     "bed": "Bed C3",
+     "crop": "basil",
+     "reading": "24",
+     "needs": "25",
+     "litres": "22"
+    }
+   ],
+   "A2": [
+    {
+     "o": "CropA1",
+     "what": "Bed A1",
+     "rh": "88"
+    },
+    {
+     "o": "CropA2",
+     "what": "Bed A2",
+     "rh": "88"
+    },
+    {
+     "o": "CropA3",
+     "what": "Bed A3",
+     "rh": "88"
+    },
+    {
+     "o": "VentA",
+     "what": "Roof vent over row A",
+     "rh": "88"
+    }
+   ],
+   "A3": [
+    {
+     "o": "ValveA2",
+     "valve": "Valve A2",
+     "bed": "Bed A2"
+    },
+    {
+     "o": "ValveB1",
+     "valve": "Valve B1",
+     "bed": "Bed B1"
+    },
+    {
+     "o": "ValveC3",
+     "valve": "Valve C3",
+     "bed": "Bed C3"
+    }
+   ]
+  },
+  "inference": [
+   {
+    "o": "CropA1",
+    "bed": "Bed A1",
+    "crop": "tomatoes"
+   },
+   {
+    "o": "CropA2",
+    "bed": "Bed A2",
+    "crop": "tomatoes"
+   },
+   {
+    "o": "CropA3",
+    "bed": "Bed A3",
+    "crop": "cucumbers"
+   },
+   {
+    "o": "CropB1",
+    "bed": "Bed B1",
+    "crop": "lettuces"
+   },
+   {
+    "o": "CropB2",
+    "bed": "Bed B2",
+    "crop": "lettuces"
+   },
+   {
+    "o": "CropC1",
+    "bed": "Bed C1",
+    "crop": "tomatoes"
+   },
+   {
+    "o": "CropC2",
+    "bed": "Bed C2",
+    "crop": "lettuces"
+   }
+  ],
+  "shacl": [],
+  "shacl_seconds": 0.38,
+  "conforms": true
+ },
+ "fault": {
+  "twin_triples": 2189,
+  "domain_triples": 279,
+  "questions": {
+   "A1": [
+    {
+     "o": "CropA2",
+     "bed": "Bed A2",
+     "crop": "tomatoes",
+     "reading": "27",
+     "needs": "30",
+     "litres": "65"
+    },
+    {
+     "o": "CropB1",
+     "bed": "Bed B1",
+     "crop": "lettuces",
+     "reading": "22",
+     "needs": "28",
+     "litres": "130"
+    },
+    {
+     "o": "CropC3",
+     "bed": "Bed C3",
+     "crop": "basil",
+     "reading": "24",
+     "needs": "25",
+     "litres": "22"
+    }
+   ],
+   "A2": [
+    {
+     "o": "CropA1",
+     "what": "Bed A1",
+     "rh": "88"
+    },
+    {
+     "o": "CropA2",
+     "what": "Bed A2",
+     "rh": "88"
+    },
+    {
+     "o": "CropA3",
+     "what": "Bed A3",
+     "rh": "88"
+    },
+    {
+     "o": "VentA",
+     "what": "Roof vent over row A",
+     "rh": "88"
+    }
+   ],
+   "A3": [
+    {
+     "o": "ValveA2",
+     "valve": "Valve A2",
+     "bed": "Bed A2"
+    },
+    {
+     "o": "ValveB1",
+     "valve": "Valve B1",
+     "bed": "Bed B1"
+    },
+    {
+     "o": "ValveC3",
+     "valve": "Valve C3",
+     "bed": "Bed C3"
+    }
+   ]
+  },
+  "inference": [
+   {
+    "o": "CropA1",
+    "bed": "Bed A1",
+    "crop": "tomatoes"
+   },
+   {
+    "o": "CropA2",
+    "bed": "Bed A2",
+    "crop": "tomatoes"
+   },
+   {
+    "o": "CropA3",
+    "bed": "Bed A3",
+    "crop": "cucumbers"
+   },
+   {
+    "o": "CropB1",
+    "bed": "Bed B1",
+    "crop": "lettuces"
+   },
+   {
+    "o": "CropB2",
+    "bed": "Bed B2",
+    "crop": "lettuces"
+   },
+   {
+    "o": "CropC1",
+    "bed": "Bed C1",
+    "crop": "tomatoes"
+   },
+   {
+    "o": "CropC2",
+    "bed": "Bed C2",
+    "crop": "lettuces"
+   }
+  ],
+  "shacl": [
+   {
+    "focus": "MoistB2_obs",
+    "value": "MoistB2",
+    "shape": "S_A1",
+    "message": "The probe is drawn outside the bed its readings are filed under."
+   },
+   {
+    "focus": "BedC2",
+    "value": "BedC2",
+    "shape": "S_A2",
+    "message": "A planted bed has no irrigation valve in the record."
+   }
+  ],
+  "shacl_seconds": 0.34,
+  "conforms": false
+ }
+}

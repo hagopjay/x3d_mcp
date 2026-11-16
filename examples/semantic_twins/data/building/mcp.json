@@ -1,0 +1,425 @@
+{
+ "server": "<checkout>/src/server.py",
+ "tools": 54,
+ "runs": {
+  "clean": [
+   {
+    "tool": "scene_to_rdf",
+    "args": {
+     "content": "<11,046 chars, sha256 7c10fed64baf308b>",
+     "return_mode": "summary"
+    },
+    "wall_ms": 93.9,
+    "reply_sha256": "c912e9174444e086d25b3e158a253b2320479332bb64ab29d641441b5800f9a0",
+    "reply": {
+     "ok": true,
+     "graph_id": "ec9921fedce6a8fa",
+     "triples": 1956,
+     "individuals": 190,
+     "base": "https://example.org/scen/building/scene.ttl#",
+     "warnings": []
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<987 chars, sha256 0847845ba36dd8e2>",
+     "graph_id": "ec9921fedce6a8fa",
+     "data_ttl": "<5,025 chars, sha256 facc3be4d2f6c361>",
+     "include_ontology": false
+    },
+    "wall_ms": 54.1,
+    "reply_sha256": "c66238a04dead503e1bf9ce18dee101b73ff2e7053133ea705ecb1ef7f45bfab",
+    "reply": {
+     "ok": true,
+     "total": 2,
+     "rows": [
+      {
+       "o": ":Room302",
+       "room": "Room 302",
+       "temp": "23.6",
+       "setpoint": "21.0"
+      },
+      {
+       "o": ":Room304",
+       "room": "Room 304",
+       "temp": "22.4",
+       "setpoint": "21.0"
+      }
+     ],
+     "error": null,
+     "ms": 51.8
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<758 chars, sha256 d8540c1c228e2f68>",
+     "graph_id": "ec9921fedce6a8fa",
+     "data_ttl": "<5,025 chars, sha256 facc3be4d2f6c361>",
+     "include_ontology": false
+    },
+    "wall_ms": 31.4,
+    "reply_sha256": "f1d8ea686c9ddc676fc06e2280fd86ac7785b2b5fb15c4a3c037d46abce42e53",
+    "reply": {
+     "ok": true,
+     "total": 6,
+     "rows": [
+      {
+       "o": ":Room301",
+       "thing": "Room 301"
+      },
+      {
+       "o": ":Room302",
+       "thing": "Room 302"
+      },
+      {
+       "o": ":Room303",
+       "thing": "Room 303"
+      },
+      {
+       "o": ":VAV301",
+       "thing": "VAV box 301"
+      },
+      {
+       "o": ":VAV302",
+       "thing": "VAV box 302"
+      },
+      {
+       "o": ":VAV303",
+       "thing": "VAV box 303"
+      }
+     ],
+     "error": null,
+     "ms": 29.0
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<919 chars, sha256 466675cf6c7bdb77>",
+     "graph_id": "ec9921fedce6a8fa",
+     "data_ttl": "<5,025 chars, sha256 facc3be4d2f6c361>",
+     "include_ontology": false
+    },
+    "wall_ms": 35.4,
+    "reply_sha256": "15cf5b163e26e5c175dbf71de37a1a23a6cb7724e8091050f7bf5f163c0bcf53",
+    "reply": {
+     "ok": true,
+     "total": 2,
+     "rows": [
+      {
+       "o": ":Room302",
+       "room": "Room 302",
+       "temp": "23.6",
+       "setpoint": "21.0"
+      },
+      {
+       "o": ":Room305",
+       "room": "Room 305",
+       "temp": "18.4",
+       "setpoint": "21.0"
+      }
+     ],
+     "error": null,
+     "ms": 33.0
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<732 chars, sha256 60e459819a0288ca>",
+     "graph_id": "ec9921fedce6a8fa",
+     "data_ttl": "<5,025 chars, sha256 facc3be4d2f6c361>",
+     "include_ontology": false
+    },
+    "wall_ms": 26.8,
+    "reply_sha256": "2e8797cce1d11c106f1eed5184dda7ea4e6dae1f608cbeda25488f8fcf1d9b62",
+    "reply": {
+     "ok": true,
+     "total": 6,
+     "rows": [
+      {
+       "o": ":Room301",
+       "room": "Room 301",
+       "ahu": "Air handler 1"
+      },
+      {
+       "o": ":Room302",
+       "room": "Room 302",
+       "ahu": "Air handler 1"
+      },
+      {
+       "o": ":Room303",
+       "room": "Room 303",
+       "ahu": "Air handler 1"
+      },
+      {
+       "o": ":Room304",
+       "room": "Room 304",
+       "ahu": "Air handler 2"
+      },
+      {
+       "o": ":Room305",
+       "room": "Room 305",
+       "ahu": "Air handler 2"
+      },
+      {
+       "o": ":Room306",
+       "room": "Room 306",
+       "ahu": "Air handler 2"
+      }
+     ],
+     "error": null,
+     "ms": 24.6
+    }
+   },
+   {
+    "tool": "shacl_validate",
+    "args": {
+     "graph_id": "ec9921fedce6a8fa",
+     "shapes": "none",
+     "extra_shapes_ttl": "<2,566 chars, sha256 9ac5fa22f63e57e2>",
+     "data_ttl": "<5,025 chars, sha256 facc3be4d2f6c361>",
+     "return_mode": "full"
+    },
+    "wall_ms": 239.0,
+    "reply_sha256": "1c2632b49a1479e5885d22904b1311f2e71069ca2db484cb83c9610a8381268c",
+    "reply": {
+     "ok": true,
+     "conforms": true,
+     "counts": {
+      "Violation": 0,
+      "Warning": 0,
+      "Info": 0
+     },
+     "results": [],
+     "error": null,
+     "ms": 236.4
+    }
+   }
+  ],
+  "fault": [
+   {
+    "tool": "scene_to_rdf",
+    "args": {
+     "content": "<11,047 chars, sha256 fe3c086ebc8f3881>",
+     "return_mode": "summary"
+    },
+    "wall_ms": 31.0,
+    "reply_sha256": "6e4f41a1c6f9c99d73f9911cd7f85b45c27e2fd2b693e06042e2452aa66fc7b7",
+    "reply": {
+     "ok": true,
+     "graph_id": "b1e0655c3ead7b6d",
+     "triples": 1956,
+     "individuals": 190,
+     "base": "https://example.org/scen/building/scene.ttl#",
+     "warnings": []
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<987 chars, sha256 0847845ba36dd8e2>",
+     "graph_id": "b1e0655c3ead7b6d",
+     "data_ttl": "<4,868 chars, sha256 a9518f4972888bf9>",
+     "include_ontology": false
+    },
+    "wall_ms": 52.4,
+    "reply_sha256": "57c09919b20ea23eff87b83390c1ca736c2a957f1845336fba0b9a13ce4f6c19",
+    "reply": {
+     "ok": true,
+     "total": 2,
+     "rows": [
+      {
+       "o": ":Room302",
+       "room": "Room 302",
+       "temp": "23.6",
+       "setpoint": "21.0"
+      },
+      {
+       "o": ":Room304",
+       "room": "Room 304",
+       "temp": "22.4",
+       "setpoint": "21.0"
+      }
+     ],
+     "error": null,
+     "ms": 50.0
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<758 chars, sha256 d8540c1c228e2f68>",
+     "graph_id": "b1e0655c3ead7b6d",
+     "data_ttl": "<4,868 chars, sha256 a9518f4972888bf9>",
+     "include_ontology": false
+    },
+    "wall_ms": 27.9,
+    "reply_sha256": "6c23c451a9746515eb5859d08ff78917bdf178369ccf0133ad01d8fb7f79ca23",
+    "reply": {
+     "ok": true,
+     "total": 6,
+     "rows": [
+      {
+       "o": ":Room301",
+       "thing": "Room 301"
+      },
+      {
+       "o": ":Room302",
+       "thing": "Room 302"
+      },
+      {
+       "o": ":Room303",
+       "thing": "Room 303"
+      },
+      {
+       "o": ":VAV301",
+       "thing": "VAV box 301"
+      },
+      {
+       "o": ":VAV302",
+       "thing": "VAV box 302"
+      },
+      {
+       "o": ":VAV303",
+       "thing": "VAV box 303"
+      }
+     ],
+     "error": null,
+     "ms": 25.4
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<919 chars, sha256 466675cf6c7bdb77>",
+     "graph_id": "b1e0655c3ead7b6d",
+     "data_ttl": "<4,868 chars, sha256 a9518f4972888bf9>",
+     "include_ontology": false
+    },
+    "wall_ms": 34.1,
+    "reply_sha256": "1d262b7da4e5d8dfd8903b1ae866a555470d3cd940c4538bbe3ee4a40d75eb9e",
+    "reply": {
+     "ok": true,
+     "total": 2,
+     "rows": [
+      {
+       "o": ":Room302",
+       "room": "Room 302",
+       "temp": "23.6",
+       "setpoint": "21.0"
+      },
+      {
+       "o": ":Room305",
+       "room": "Room 305",
+       "temp": "18.4",
+       "setpoint": "21.0"
+      }
+     ],
+     "error": null,
+     "ms": 31.7
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<732 chars, sha256 60e459819a0288ca>",
+     "graph_id": "b1e0655c3ead7b6d",
+     "data_ttl": "<4,868 chars, sha256 a9518f4972888bf9>",
+     "include_ontology": false
+    },
+    "wall_ms": 30.7,
+    "reply_sha256": "fb3009c16c8e6869da7e17a421994b818e81ded5b2318d24f1129446afe2ffd9",
+    "reply": {
+     "ok": true,
+     "total": 6,
+     "rows": [
+      {
+       "o": ":Room301",
+       "room": "Room 301",
+       "ahu": "Air handler 1"
+      },
+      {
+       "o": ":Room302",
+       "room": "Room 302",
+       "ahu": "Air handler 1"
+      },
+      {
+       "o": ":Room303",
+       "room": "Room 303",
+       "ahu": "Air handler 1"
+      },
+      {
+       "o": ":Room304",
+       "room": "Room 304",
+       "ahu": "Air handler 2"
+      },
+      {
+       "o": ":Room305",
+       "room": "Room 305",
+       "ahu": "Air handler 2"
+      },
+      {
+       "o": ":Room306",
+       "room": "Room 306",
+       "ahu": "Air handler 2"
+      }
+     ],
+     "error": null,
+     "ms": 28.2
+    }
+   },
+   {
+    "tool": "shacl_validate",
+    "args": {
+     "graph_id": "b1e0655c3ead7b6d",
+     "shapes": "none",
+     "extra_shapes_ttl": "<2,566 chars, sha256 9ac5fa22f63e57e2>",
+     "data_ttl": "<4,868 chars, sha256 a9518f4972888bf9>",
+     "return_mode": "full"
+    },
+    "wall_ms": 395.9,
+    "reply_sha256": "3a53812b5d48d7872b0419f9ea62f5c46fa8a5ba2b592cd8c210979d9a04ddcc",
+    "reply": {
+     "ok": true,
+     "conforms": false,
+     "counts": {
+      "Violation": 2,
+      "Warning": 0,
+      "Info": 0
+     },
+     "results": [
+      {
+       "focus": "https://example.org/scen/building/record#TS303",
+       "def": null,
+       "node_type": null,
+       "path": "",
+       "value": ":TempSensor303",
+       "severity": "Violation",
+       "message": "This temperature sensor is drawn outside the room it is recorded for, so the room is controlled by its neighbour's air.",
+       "shape": "https://example.org/scen/twin#S_B1",
+       "check_id": "//example.org/scen/twin#S_B1",
+       "fix_hint": null
+      },
+      {
+       "focus": "https://example.org/scen/building/record#Room306",
+       "def": null,
+       "node_type": null,
+       "path": "",
+       "value": "https://example.org/scen/building/record#Room306",
+       "severity": "Violation",
+       "message": "This room is drawn and served, but the model has no temperature sensor for it.",
+       "shape": "https://example.org/scen/twin#S_B2",
+       "check_id": "//example.org/scen/twin#S_B2",
+       "fix_hint": null
+      }
+     ],
+     "error": null,
+     "ms": 393.0
+    }
+   }
+  ]
+ }
+}

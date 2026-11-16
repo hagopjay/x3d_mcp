@@ -1,0 +1,380 @@
+{
+ "heritage": {
+  "twin_triples": 806,
+  "domain_triples": 264,
+  "questions": [
+   {
+    "id": "H1",
+    "text": "",
+    "gold": 2,
+    "scene_only": false,
+    "domain_only": false,
+    "scene_rows": 0,
+    "domain_rows": 0
+   },
+   {
+    "id": "H2",
+    "text": "",
+    "gold": 1,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 1
+   },
+   {
+    "id": "H3",
+    "text": "",
+    "gold": 5,
+    "scene_only": false,
+    "domain_only": false,
+    "scene_rows": 0,
+    "domain_rows": 0
+   },
+   {
+    "id": "INF",
+    "text": "",
+    "gold": 6,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 6
+   }
+  ]
+ },
+ "factory": {
+  "twin_triples": 918,
+  "domain_triples": 135,
+  "questions": [
+   {
+    "id": "F1",
+    "text": "",
+    "gold": 1,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 1
+   },
+   {
+    "id": "F2",
+    "text": "",
+    "gold": 3,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 3
+   },
+   {
+    "id": "F3",
+    "text": "",
+    "gold": 1,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 1
+   },
+   {
+    "id": "INF",
+    "text": "",
+    "gold": 2,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 2
+   }
+  ]
+ },
+ "hospital": {
+  "twin_triples": 704,
+  "domain_triples": 154,
+  "questions": [
+   {
+    "id": "P1",
+    "text": "",
+    "gold": 5,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 5
+   },
+   {
+    "id": "P2",
+    "text": "",
+    "gold": 1,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 1
+   },
+   {
+    "id": "P3",
+    "text": "",
+    "gold": 1,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 1
+   },
+   {
+    "id": "INF",
+    "text": "",
+    "gold": 8,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 8
+   }
+  ]
+ },
+ "building": {
+  "twin_triples": 1956,
+  "domain_triples": 161,
+  "questions": [
+   {
+    "id": "B1",
+    "text": "",
+    "gold": 2,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 2
+   },
+   {
+    "id": "B2",
+    "text": "",
+    "gold": 6,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 6
+   },
+   {
+    "id": "B3",
+    "text": "",
+    "gold": 2,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 2
+   },
+   {
+    "id": "INF",
+    "text": "",
+    "gold": 6,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 6
+   }
+  ]
+ },
+ "warehouse": {
+  "twin_triples": 1619,
+  "domain_triples": 199,
+  "questions": [
+   {
+    "id": "W1",
+    "text": "",
+    "gold": 3,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 3
+   },
+   {
+    "id": "W2",
+    "text": "",
+    "gold": 1,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 1
+   },
+   {
+    "id": "W3",
+    "text": "",
+    "gold": 7,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 7
+   },
+   {
+    "id": "INF",
+    "text": "",
+    "gold": 3,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 3
+   }
+  ]
+ },
+ "city": {
+  "twin_triples": 978,
+  "domain_triples": 124,
+  "questions": [
+   {
+    "id": "C1",
+    "text": "",
+    "gold": 1,
+    "scene_only": false,
+    "domain_only": false,
+    "scene_rows": 0,
+    "domain_rows": 0
+   },
+   {
+    "id": "C2",
+    "text": "",
+    "gold": 2,
+    "scene_only": false,
+    "domain_only": false,
+    "scene_rows": 0,
+    "domain_rows": 0
+   },
+   {
+    "id": "C3",
+    "text": "",
+    "gold": 3,
+    "scene_only": false,
+    "domain_only": false,
+    "scene_rows": 0,
+    "domain_rows": 0
+   },
+   {
+    "id": "INF",
+    "text": "",
+    "gold": 6,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 6
+   }
+  ]
+ },
+ "concert": {
+  "twin_triples": 1439,
+  "domain_triples": 180,
+  "questions": [
+   {
+    "id": "M1",
+    "text": "",
+    "gold": 7,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 7
+   },
+   {
+    "id": "M2",
+    "text": "",
+    "gold": 4,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 4
+   },
+   {
+    "id": "M3",
+    "text": "",
+    "gold": 4,
+    "scene_only": false,
+    "domain_only": false,
+    "scene_rows": 0,
+    "domain_rows": 2
+   },
+   {
+    "id": "INF",
+    "text": "",
+    "gold": 10,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 10
+   }
+  ]
+ },
+ "firecode": {
+  "twin_triples": 1292,
+  "domain_triples": 157,
+  "questions": [
+   {
+    "id": "E1",
+    "text": "",
+    "gold": 8,
+    "scene_only": false,
+    "domain_only": false,
+    "scene_rows": 0,
+    "domain_rows": 0
+   },
+   {
+    "id": "E2",
+    "text": "",
+    "gold": 8,
+    "scene_only": false,
+    "domain_only": false,
+    "scene_rows": 0,
+    "domain_rows": 0
+   },
+   {
+    "id": "E3",
+    "text": "",
+    "gold": 1,
+    "scene_only": false,
+    "domain_only": false,
+    "scene_rows": 0,
+    "domain_rows": 0
+   },
+   {
+    "id": "INF",
+    "text": "",
+    "gold": 10,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 10
+   }
+  ]
+ },
+ "farm": {
+  "twin_triples": 2189,
+  "domain_triples": 283,
+  "questions": [
+   {
+    "id": "A1",
+    "text": "",
+    "gold": 3,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 3
+   },
+   {
+    "id": "A2",
+    "text": "",
+    "gold": 4,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 4
+   },
+   {
+    "id": "A3",
+    "text": "",
+    "gold": 3,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 3
+   },
+   {
+    "id": "INF",
+    "text": "",
+    "gold": 7,
+    "scene_only": false,
+    "domain_only": true,
+    "scene_rows": 0,
+    "domain_rows": 7
+   }
+  ]
+ }
+}

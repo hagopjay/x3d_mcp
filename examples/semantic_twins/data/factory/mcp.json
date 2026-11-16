@@ -1,0 +1,329 @@
+{
+ "server": "<checkout>/src/server.py",
+ "tools": 54,
+ "runs": {
+  "clean": [
+   {
+    "tool": "scene_to_rdf",
+    "args": {
+     "content": "<5,541 chars, sha256 c9d0229e951e41ee>",
+     "return_mode": "summary"
+    },
+    "wall_ms": 92.5,
+    "reply_sha256": "c39d7a5d26f39f45bc82e2d54c4dfd2bf81de203064987ac0b1abbb3674adb80",
+    "reply": {
+     "ok": true,
+     "graph_id": "3e4637e59d6cb101",
+     "triples": 918,
+     "individuals": 89,
+     "base": "https://example.org/scen/factory/scene.ttl#",
+     "warnings": []
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<1,502 chars, sha256 d24aef984a8eecf5>",
+     "graph_id": "3e4637e59d6cb101",
+     "data_ttl": "<5,254 chars, sha256 01abe6d39908d0dc>",
+     "include_ontology": false
+    },
+    "wall_ms": 53.2,
+    "reply_sha256": "3ee58bf1bd5f266ab72beb158d5d05634f4819f3a02724f9b2a944406ba457f8",
+    "reply": {
+     "ok": true,
+     "total": 1,
+     "rows": [
+      {
+       "o": ":Station3",
+       "asset": "Test station S-3",
+       "readK": "328.150000000000026252",
+       "limitK": "323.150"
+      }
+     ],
+     "error": null,
+     "ms": 50.8
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<1,031 chars, sha256 269976858a4821b1>",
+     "graph_id": "3e4637e59d6cb101",
+     "data_ttl": "<5,254 chars, sha256 01abe6d39908d0dc>",
+     "include_ontology": false
+    },
+    "wall_ms": 26.8,
+    "reply_sha256": "699e622b53d2cb394f3dfbdb330e6546045cd804a68404e01d81dac4a5f8b703",
+    "reply": {
+     "ok": true,
+     "total": 3,
+     "rows": [
+      {
+       "o": ":Conveyor1",
+       "asset": "Conveyor C-1"
+      },
+      {
+       "o": ":Station2",
+       "asset": "Screw station S-2"
+      },
+      {
+       "o": ":Station3",
+       "asset": "Test station S-3"
+      }
+     ],
+     "error": null,
+     "ms": 24.3
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<1,105 chars, sha256 695c6ac0b6cef099>",
+     "graph_id": "3e4637e59d6cb101",
+     "data_ttl": "<5,254 chars, sha256 01abe6d39908d0dc>",
+     "include_ontology": false
+    },
+    "wall_ms": 30.0,
+    "reply_sha256": "72ac3423b32ee7732a58b2c63ce45fe1a817965780e7e4267552d0836dabbe6c",
+    "reply": {
+     "ok": true,
+     "total": 1,
+     "rows": [
+      {
+       "o": ":Station2",
+       "asset": "Screw station S-2"
+      }
+     ],
+     "error": null,
+     "ms": 27.3
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<1,067 chars, sha256 6bc57eefa621afd4>",
+     "graph_id": "3e4637e59d6cb101",
+     "data_ttl": "<5,254 chars, sha256 01abe6d39908d0dc>",
+     "include_ontology": false
+    },
+    "wall_ms": 26.7,
+    "reply_sha256": "f7c0c00725431a45e71b4c30af9d7bf765605534ffcfaa1303b90f0ff788dd91",
+    "reply": {
+     "ok": true,
+     "total": 2,
+     "rows": [
+      {
+       "o": ":Station2",
+       "asset": "Screw station S-2"
+      },
+      {
+       "o": ":Station3",
+       "asset": "Test station S-3"
+      }
+     ],
+     "error": null,
+     "ms": 23.7
+    }
+   },
+   {
+    "tool": "shacl_validate",
+    "args": {
+     "graph_id": "3e4637e59d6cb101",
+     "shapes": "none",
+     "extra_shapes_ttl": "<2,729 chars, sha256 d46281c7d109da61>",
+     "data_ttl": "<5,254 chars, sha256 01abe6d39908d0dc>",
+     "return_mode": "full"
+    },
+    "wall_ms": 106.6,
+    "reply_sha256": "34446e0c9d81fa755d58659f875b17b0bf7a18e779221c568a915e6c8f9ef75e",
+    "reply": {
+     "ok": true,
+     "conforms": true,
+     "counts": {
+      "Violation": 0,
+      "Warning": 0,
+      "Info": 0
+     },
+     "results": [],
+     "error": null,
+     "ms": 103.7
+    }
+   }
+  ],
+  "fault": [
+   {
+    "tool": "scene_to_rdf",
+    "args": {
+     "content": "<5,541 chars, sha256 c151ca24f9a6958d>",
+     "return_mode": "summary"
+    },
+    "wall_ms": 19.1,
+    "reply_sha256": "c8d0821f097df69e29ba4e7c22f9986c73a9c7ae05737ca4870eec3d38912b17",
+    "reply": {
+     "ok": true,
+     "graph_id": "dd11ee75eee3a09a",
+     "triples": 918,
+     "individuals": 89,
+     "base": "https://example.org/scen/factory/scene.ttl#",
+     "warnings": []
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<1,502 chars, sha256 d24aef984a8eecf5>",
+     "graph_id": "dd11ee75eee3a09a",
+     "data_ttl": "<5,245 chars, sha256 779a392897426a82>",
+     "include_ontology": false
+    },
+    "wall_ms": 53.2,
+    "reply_sha256": "ddc8fc2674cb127c960d2a708cce7aadc9584568499b718c64db8063720e0070",
+    "reply": {
+     "ok": true,
+     "total": 1,
+     "rows": [
+      {
+       "o": ":Station3",
+       "asset": "Test station S-3",
+       "readK": "328.150000000000026252",
+       "limitK": "323.150"
+      }
+     ],
+     "error": null,
+     "ms": 50.8
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<1,031 chars, sha256 269976858a4821b1>",
+     "graph_id": "dd11ee75eee3a09a",
+     "data_ttl": "<5,245 chars, sha256 779a392897426a82>",
+     "include_ontology": false
+    },
+    "wall_ms": 23.9,
+    "reply_sha256": "442ffca01cfaccf479594ddf0e91799cf5f3ee2fb7d94672d212fb0f4d126a5b",
+    "reply": {
+     "ok": true,
+     "total": 3,
+     "rows": [
+      {
+       "o": ":Conveyor1",
+       "asset": "Conveyor C-1"
+      },
+      {
+       "o": ":Station2",
+       "asset": "Screw station S-2"
+      },
+      {
+       "o": ":Station3",
+       "asset": "Test station S-3"
+      }
+     ],
+     "error": null,
+     "ms": 21.4
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<1,105 chars, sha256 695c6ac0b6cef099>",
+     "graph_id": "dd11ee75eee3a09a",
+     "data_ttl": "<5,245 chars, sha256 779a392897426a82>",
+     "include_ontology": false
+    },
+    "wall_ms": 27.1,
+    "reply_sha256": "1540f0c53995bc183dd13ee45aab075cec2d0725e96b4fa6d084f2d1d087d7f3",
+    "reply": {
+     "ok": true,
+     "total": 1,
+     "rows": [
+      {
+       "o": ":Station2",
+       "asset": "Screw station S-2"
+      }
+     ],
+     "error": null,
+     "ms": 24.7
+    }
+   },
+   {
+    "tool": "sparql_scene",
+    "args": {
+     "sparql": "<1,067 chars, sha256 6bc57eefa621afd4>",
+     "graph_id": "dd11ee75eee3a09a",
+     "data_ttl": "<5,245 chars, sha256 779a392897426a82>",
+     "include_ontology": false
+    },
+    "wall_ms": 22.0,
+    "reply_sha256": "3d3de01ed4151d9966a8968e10acbb3f7902ad773942ab4693f973e12a810e82",
+    "reply": {
+     "ok": true,
+     "total": 2,
+     "rows": [
+      {
+       "o": ":Station2",
+       "asset": "Screw station S-2"
+      },
+      {
+       "o": ":Station3",
+       "asset": "Test station S-3"
+      }
+     ],
+     "error": null,
+     "ms": 19.7
+    }
+   },
+   {
+    "tool": "shacl_validate",
+    "args": {
+     "graph_id": "dd11ee75eee3a09a",
+     "shapes": "none",
+     "extra_shapes_ttl": "<2,729 chars, sha256 d46281c7d109da61>",
+     "data_ttl": "<5,245 chars, sha256 779a392897426a82>",
+     "return_mode": "full"
+    },
+    "wall_ms": 210.3,
+    "reply_sha256": "ab58c29ddecd8c86b590c1baa8fb61a1fe9448541fb5225b43c3e44bbcb6899f",
+    "reply": {
+     "ok": true,
+     "conforms": false,
+     "counts": {
+      "Violation": 2,
+      "Warning": 0,
+      "Info": 0
+     },
+     "results": [
+      {
+       "focus": "https://example.org/scen/factory/record#Robot1",
+       "def": null,
+       "node_type": null,
+       "path": "",
+       "value": ":PlacePoint",
+       "severity": "Violation",
+       "message": "A pick or place point is beyond the robot's maximum reach in its Asset Administration Shell.",
+       "shape": "https://example.org/scen/twin#S_F1",
+       "check_id": "//example.org/scen/twin#S_F1",
+       "fix_hint": null
+      },
+      {
+       "focus": "https://example.org/scen/factory/record#VibSensor1_obs",
+       "def": null,
+       "node_type": null,
+       "path": "",
+       "value": "http://qudt.org/vocab/unit/DEG_C",
+       "severity": "Violation",
+       "message": "The result's unit does not measure the observed property (QUDT quantity kind mismatch).",
+       "shape": "https://example.org/scen/twin#S_F2",
+       "check_id": "//example.org/scen/twin#S_F2",
+       "fix_hint": null
+      }
+     ],
+     "error": null,
+     "ms": 207.7
+    }
+   }
+  ]
+ }
+}

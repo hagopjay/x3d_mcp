@@ -1,0 +1,161 @@
+{
+ "clean": {
+  "twin_triples": 978,
+  "domain_triples": 124,
+  "questions": {
+   "C1": [
+    {
+     "o": "Tower5",
+     "building": "Tower 5",
+     "height": "36",
+     "shadow": "74.2716"
+    }
+   ],
+   "C2": [
+    {
+     "o": "Bldg3",
+     "building": "Building 3"
+    },
+    {
+     "o": "Bldg6",
+     "building": "Building 6"
+    }
+   ],
+   "C3": [
+    {
+     "o": "Bldg1",
+     "building": "Building 1"
+    },
+    {
+     "o": "Bldg2",
+     "building": "Building 2"
+    },
+    {
+     "o": "Bldg4",
+     "building": "Building 4"
+    }
+   ]
+  },
+  "inference": [
+   {
+    "o": "Bldg1",
+    "building": "Building 1",
+    "district": "Commercial district C4-7"
+   },
+   {
+    "o": "Bldg2",
+    "building": "Building 2",
+    "district": "Residential district R6"
+   },
+   {
+    "o": "Bldg3",
+    "building": "Building 3",
+    "district": "Commercial district C4-7"
+   },
+   {
+    "o": "Bldg4",
+    "building": "Building 4",
+    "district": "Residential district R6"
+   },
+   {
+    "o": "Bldg6",
+    "building": "Building 6",
+    "district": "Residential district R6"
+   },
+   {
+    "o": "Tower5",
+    "building": "Tower 5",
+    "district": "Commercial district C4-7"
+   }
+  ],
+  "shacl": [],
+  "shacl_seconds": 0.44,
+  "conforms": true
+ },
+ "fault": {
+  "twin_triples": 978,
+  "domain_triples": 124,
+  "questions": {
+   "C1": [
+    {
+     "o": "Tower5",
+     "building": "Tower 5",
+     "height": "48",
+     "shadow": "99.0288"
+    }
+   ],
+   "C2": [
+    {
+     "o": "Bldg3",
+     "building": "Building 3"
+    },
+    {
+     "o": "Bldg6",
+     "building": "Building 6"
+    }
+   ],
+   "C3": [
+    {
+     "o": "Bldg1",
+     "building": "Building 1"
+    },
+    {
+     "o": "Bldg2",
+     "building": "Building 2"
+    },
+    {
+     "o": "Bldg4",
+     "building": "Building 4"
+    }
+   ]
+  },
+  "inference": [
+   {
+    "o": "Bldg1",
+    "building": "Building 1",
+    "district": "Commercial district C4-7"
+   },
+   {
+    "o": "Bldg2",
+    "building": "Building 2",
+    "district": "Residential district R6"
+   },
+   {
+    "o": "Bldg3",
+    "building": "Building 3",
+    "district": "Commercial district C4-7"
+   },
+   {
+    "o": "Bldg4",
+    "building": "Building 4",
+    "district": "Residential district R6"
+   },
+   {
+    "o": "Bldg6",
+    "building": "Building 6",
+    "district": "Residential district R6"
+   },
+   {
+    "o": "Tower5",
+    "building": "Tower 5",
+    "district": "Commercial district C4-7"
+   }
+  ],
+  "shacl": [
+   {
+    "focus": "Tower5",
+    "value": "48",
+    "shape": "S_C1",
+    "message": "The drawn building is taller than its zoning district allows."
+   },
+   {
+    "focus": "Bldg2",
+    "value": "Parcel2",
+    "shape": "S_C2",
+    "message": "The drawn building does not fit inside its parcel."
+   }
+  ],
+  "shacl_seconds": 0.26,
+  "conforms": false
+ }
+}

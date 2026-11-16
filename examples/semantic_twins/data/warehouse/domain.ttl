@@ -1,0 +1,62 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix x3do: <https://www.web3d.org/specifications/X3dOntology4.1#> .
+@prefix twin: <https://example.org/scen/twin#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix gs1: <https://ref.gs1.org/voc/> .
+@prefix w: <https://example.org/scen/warehouse/record#> .
+@prefix sc: <https://example.org/scen/warehouse/scene.ttl#> .
+
+w:DC1 a gs1:Place ; rdfs:label "Distribution centre 1" ; gs1:globalLocationNumber "9506000000019" .
+w:ColdRoom a gs1:Place ; rdfs:label "Cold room (2 to 8 °C)" ; twin:depictedBy sc:ColdRoom ; twin:minC 2 ; twin:maxC 8 .
+w:Yoghurt a gs1:Product ; gs1:gtin "09506000134352" ; gs1:productName "Strawberry yoghurt 500 g"@en ; rdfs:label "Strawberry yoghurt 500 g" ; gs1:consumerHandlingStorage "Keep refrigerated, 2 to 8 C"@en ; twin:storeMinC 2 ; twin:storeMaxC 8 .
+w:Juice a gs1:Product ; gs1:gtin "09506000134369" ; gs1:productName "Orange juice 1 l"@en ; rdfs:label "Orange juice 1 l" ; gs1:consumerHandlingStorage "Keep refrigerated, 2 to 8 C"@en ; twin:storeMinC 2 ; twin:storeMaxC 8 .
+w:Cereal a gs1:Product ; gs1:gtin "09506000134376" ; gs1:productName "Oat cereal 750 g"@en ; rdfs:label "Oat cereal 750 g" ; gs1:consumerHandlingStorage "Store in a cool, dry place"@en .
+w:Tomatoes a gs1:Product ; gs1:gtin "09506000134383" ; gs1:productName "Chopped tomatoes 400 g"@en ; rdfs:label "Chopped tomatoes 400 g" ; gs1:consumerHandlingStorage "Store in a cool, dry place"@en .
+w:lot_L2291 a twin:Lot ; rdfs:label "L-2291" ; twin:ofProduct w:Yoghurt ; gs1:hasBatchLotNumber "L-2291" ; gs1:expirationDate "2026-11-20"^^xsd:date .
+w:lot_L2304 a twin:Lot ; rdfs:label "L-2304" ; twin:ofProduct w:Yoghurt ; gs1:hasBatchLotNumber "L-2304" ; gs1:expirationDate "2026-11-28"^^xsd:date .
+w:lot_L1180 a twin:Lot ; rdfs:label "L-1180" ; twin:ofProduct w:Juice ; gs1:hasBatchLotNumber "L-1180" ; gs1:expirationDate "2026-11-19"^^xsd:date .
+w:lot_L0815 a twin:Lot ; rdfs:label "L-0815" ; twin:ofProduct w:Cereal ; gs1:hasBatchLotNumber "L-0815" ; gs1:expirationDate "2027-03-01"^^xsd:date .
+w:lot_L0790 a twin:Lot ; rdfs:label "L-0790" ; twin:ofProduct w:Cereal ; gs1:hasBatchLotNumber "L-0790" ; gs1:expirationDate "2027-01-15"^^xsd:date .
+w:lot_L0402 a twin:Lot ; rdfs:label "L-0402" ; twin:ofProduct w:Tomatoes ; gs1:hasBatchLotNumber "L-0402" ; gs1:expirationDate "2028-06-01"^^xsd:date .
+w:lot_L0419 a twin:Lot ; rdfs:label "L-0419" ; twin:ofProduct w:Tomatoes ; gs1:hasBatchLotNumber "L-0419" ; gs1:expirationDate "2028-07-01"^^xsd:date .
+w:BinA11 a gs1:Place ; rdfs:label "A11" ; twin:depictedBy sc:BinA11 .
+w:BinA21 a gs1:Place ; rdfs:label "A21" ; twin:depictedBy sc:BinA21 .
+w:BinA12 a gs1:Place ; rdfs:label "A12" ; twin:depictedBy sc:BinA12 .
+w:BinA22 a gs1:Place ; rdfs:label "A22" ; twin:depictedBy sc:BinA22 .
+w:BinA13 a gs1:Place ; rdfs:label "A13" ; twin:depictedBy sc:BinA13 .
+w:BinA23 a gs1:Place ; rdfs:label "A23" ; twin:depictedBy sc:BinA23 .
+w:BinB11 a gs1:Place ; rdfs:label "B11" ; twin:depictedBy sc:BinB11 .
+w:BinB21 a gs1:Place ; rdfs:label "B21" ; twin:depictedBy sc:BinB21 .
+w:BinB12 a gs1:Place ; rdfs:label "B12" ; twin:depictedBy sc:BinB12 .
+w:BinB22 a gs1:Place ; rdfs:label "B22" ; twin:depictedBy sc:BinB22 .
+w:BinB13 a gs1:Place ; rdfs:label "B13" ; twin:depictedBy sc:BinB13 .
+w:BinB23 a gs1:Place ; rdfs:label "B23" ; twin:depictedBy sc:BinB23 .
+w:BinK1 a gs1:Place ; rdfs:label "K1" ; twin:depictedBy sc:BinK1 .
+w:BinK2 a gs1:Place ; rdfs:label "K2" ; twin:depictedBy sc:BinK2 .
+w:BinK3 a gs1:Place ; rdfs:label "K3" ; twin:depictedBy sc:BinK3 .
+w:BinK4 a gs1:Place ; rdfs:label "K4" ; twin:depictedBy sc:BinK4 .
+w:P01 a twin:Pallet ; rdfs:label "Pallet P01" ; twin:depictedBy sc:P01 ; twin:storedIn w:BinA11 ; twin:contains w:C011 .
+w:C011 a twin:Case ; rdfs:label "Case C011" ; twin:contains w:lot_L0815 .
+w:P02 a twin:Pallet ; rdfs:label "Pallet P02" ; twin:depictedBy sc:P02 ; twin:storedIn w:BinA12 ; twin:contains w:C021 .
+w:C021 a twin:Case ; rdfs:label "Case C021" ; twin:contains w:lot_L0402 .
+w:P03 a twin:Pallet ; rdfs:label "Pallet P03" ; twin:depictedBy sc:P03 ; twin:storedIn w:BinA13 ; twin:contains w:C031 .
+w:C031 a twin:Case ; rdfs:label "Case C031" ; twin:contains w:lot_L0790 .
+w:P04 a twin:Pallet ; rdfs:label "Pallet P04" ; twin:depictedBy sc:P04 ; twin:storedIn w:BinB11 ; twin:contains w:C041, w:C042 .
+w:C041 a twin:Case ; rdfs:label "Case C041" ; twin:contains w:lot_L0402 .
+w:C042 a twin:Case ; rdfs:label "Case C042" ; twin:contains w:lot_L0815 .
+w:P05 a twin:Pallet ; rdfs:label "Pallet P05" ; twin:depictedBy sc:P05 ; twin:storedIn w:BinK1 ; twin:contains w:C051 .
+w:C051 a twin:Case ; rdfs:label "Case C051" ; twin:contains w:lot_L2291 .
+w:P06 a twin:Pallet ; rdfs:label "Pallet P06" ; twin:depictedBy sc:P06 ; twin:storedIn w:BinK2 ; twin:contains w:C061 .
+w:C061 a twin:Case ; rdfs:label "Case C061" ; twin:contains w:lot_L2291 .
+w:P07 a twin:Pallet ; rdfs:label "Pallet P07" ; twin:depictedBy sc:P07 ; twin:storedIn w:BinK3 ; twin:contains w:C071, w:C072 .
+w:C071 a twin:Case ; rdfs:label "Case C071" ; twin:contains w:lot_L1180 .
+w:C072 a twin:Case ; rdfs:label "Case C072" ; twin:contains w:lot_L2291 .
+w:P08 a twin:Pallet ; rdfs:label "Pallet P08" ; twin:depictedBy sc:P08 ; twin:storedIn w:BinK4 ; twin:contains w:C081 .
+w:C081 a twin:Case ; rdfs:label "Case C081" ; twin:contains w:lot_L2304 .
+w:P09 a twin:Pallet ; rdfs:label "Pallet P09" ; twin:depictedBy sc:P09 ; twin:storedIn w:BinA21 ; twin:contains w:C091 .
+w:C091 a twin:Case ; rdfs:label "Case C091" ; twin:contains w:lot_L0419 .
+w:Recall2291 a twin:Recall ; rdfs:label "Recall of lot L-2291 (supplier notice, 16 Nov 2026)" ; twin:recalls w:lot_L2291 .
+w:today twin:date "2026-11-16"^^xsd:date .
