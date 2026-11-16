@@ -43,6 +43,7 @@ sys.stdout = sys.stderr
 from tools import (
     workflow, granular, convert, query, validate_tool, render, scene_ops, animate,
     claims as claim_tools, prompts, semantics, semantic_web, scene_brief as brief_tools,
+    scene_evidence as evidence_tools,
 )
 from tools import transfer as blob_tools
 from tools import splats as splat_tools
@@ -96,6 +97,10 @@ or defaulted containerField makes a conforming viewer silently drop or misfile t
 SMALL ANSWERS ABOUT A BIG SCENE: `scene_brief(content|path|blob_id, budget_bytes=...)` returns a trust-tiered \
 description of a scene in a size you set (nodes, bounds, camera, lights, ROUTE counts, validator verdicts) and \
 never contains text the scene's author wrote; it is a slice, not a proof, so still validate and render.
+
+EVIDENCE FOR VALUES: `scene_evidence(content|path|blob_id, claims=[{field, value, quote}], sources=[{id, text}])` checks that each quote is in \
+its source, that the value is in the quote and that the scene holds that value; it returns verdicts, offsets and handles, never \
+the quotes. "verified" means the quote contains the value, not that it is the right place.
 
 When unsure, the answer is describe_node + validate_semantic -- not recall."""
 
@@ -151,6 +156,7 @@ semantics.register(mcp)
 semantic_web.register(mcp)
 claim_tools.register(mcp)
 brief_tools.register(mcp)
+evidence_tools.register(mcp)
 
 if _SPLATS:
     splat_tools.register(mcp)

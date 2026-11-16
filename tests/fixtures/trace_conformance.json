@@ -1,0 +1,2584 @@
+{
+ "generated_by": "make_trace_conformance.py (python3 -I) from gaik_conformance_vectors.json plus rows evaluated with GAIK value_status",
+ "gaik_licence": "MIT, Copyright (c) 2026 GAIK - GenAI for knowledge mgt (LICENSE:1-3). Vectors derived from tests/README: keep attribution if copied verbatim.",
+ "columns": "value, quote, gaik_expected, x3dtrace_expected, reason (non-empty whenever the two expectations differ)",
+ "value_status": [
+  {
+   "id": "vs-000",
+   "value": 3000,
+   "quote": "Quantity: 3.000 kg",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:32",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-001",
+   "value": 3000,
+   "quote": "Quantity: 3,000 kg",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:33",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-002",
+   "value": 3.0,
+   "quote": "Quantity: 3,000 kg",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:34",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-003",
+   "value": 27578.55,
+   "quote": "TOTAL: $27,578.55",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:35",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-004",
+   "value": 1234.5,
+   "quote": "Total: 1.234,50 EUR",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:36",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-005",
+   "value": 2000,
+   "quote": "Quantity: 200 pcs",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:37",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-006",
+   "value": 125,
+   "quote": "Rate: 12.5 %",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:39",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-007",
+   "value": 12.5,
+   "quote": "Rate: 12.5 %",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:40",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-008",
+   "value": 15,
+   "quote": "Weight 1,5 kg",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:41",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-009",
+   "value": 10,
+   "quote": "Price 0.10",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:42",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-010",
+   "value": 125,
+   "quote": "Share 0.125",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:43",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-011",
+   "value": 2757855,
+   "quote": "TOTAL: $27,578.55",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:44",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-012",
+   "value": 1234567,
+   "quote": "Population: 1.234.567",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:45",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-013",
+   "value": 1234567,
+   "quote": "Population: 1,234,567",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:46",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-014",
+   "value": 1234567.5,
+   "quote": "Total: 1,234,567.50",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:47",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-015",
+   "value": 100000,
+   "quote": "Rs 1,00,000",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:48",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-016",
+   "value": 1234,
+   "quote": "Total: 1 234 EUR",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:49",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-017",
+   "value": -1014.5,
+   "quote": "Discount (5%) - EUR 1,014.50",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:50",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-018",
+   "value": -1014.5,
+   "quote": "Discount (5%) EUR 1,014.50",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:51",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-019",
+   "value": -1014.5,
+   "quote": "Discount (5%) - EUR 1,015.50",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:52",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-020",
+   "value": "010",
+   "quote": "010 6061-T6 Aluminium Alloy Round Bar",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:53",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-021",
+   "value": 6061,
+   "quote": "010 6061-T6 Aluminium Alloy Round Bar",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:54",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-022",
+   "value": "7200-4453-21",
+   "quote": "PURCHASE NO: 7200445321",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:55",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-023",
+   "value": "7200-4453-22",
+   "quote": "PURCHASE NO: 7200445321",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:56",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-024",
+   "value": "7200-4453",
+   "quote": "PURCHASE NO: 7200445321",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:57",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-025",
+   "value": "4453-21",
+   "quote": "PURCHASE NO: 7200445321",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:58",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-026",
+   "value": "7200445321",
+   "quote": "PO 7200 4453 21",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:59",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-027",
+   "value": "2025-10-12",
+   "quote": "PO Date: October 12, 2025",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:60",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-028",
+   "value": "2025-04-11",
+   "quote": "11.04.2025",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:61",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-029",
+   "value": "2025-04-12",
+   "quote": "11.04.2025",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:62",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-030",
+   "value": "PO-2025-15903",
+   "quote": "PO Number: PO-2025-15903",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:63",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-031",
+   "value": "Acme Ltd",
+   "quote": "Supplier Name: Precision Steel",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:64",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-032",
+   "value": true,
+   "quote": "[x] Eligible",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:65",
+   "gaik_expected": "unchecked",
+   "x3dtrace_expected": "unchecked",
+   "reason": ""
+  },
+  {
+   "id": "vs-033",
+   "value": "approved_with_remarks",
+   "quote": "[X] Approved with remarks",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:66",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-034",
+   "value": "not_ok",
+   "quote": "Waste sorted and removed [ ] [X] [ ]",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:67",
+   "gaik_expected": "unchecked",
+   "x3dtrace_expected": "mismatch",
+   "reason": "code_values_unchecked is off by default (GAIK parity switch); see row vs-034b"
+  },
+  {
+   "id": "vs-034b",
+   "value": "not_ok",
+   "quote": "Waste sorted and removed [ ] [X] [ ]",
+   "mode": "prose",
+   "sem": null,
+   "policy": {
+    "code_values_unchecked": true
+   },
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:67",
+   "gaik_expected": "unchecked",
+   "x3dtrace_expected": "unchecked",
+   "reason": ""
+  },
+  {
+   "id": "vs-035",
+   "value": null,
+   "quote": "anything",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:68",
+   "gaik_expected": "unchecked",
+   "x3dtrace_expected": "unchecked",
+   "reason": ""
+  },
+  {
+   "id": "vs-036",
+   "value": {
+    "$decimal": "426.7"
+   },
+   "quote": "maksoi 340 euroa",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:69",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-037",
+   "value": {
+    "$decimal": "340"
+   },
+   "quote": "maksoi 340 euroa",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:70",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-038",
+   "value": "Tapaturma Ä",
+   "quote": "tapaturma ä sattui",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:71",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-039",
+   "value": "7200-4453-21",
+   "quote": "PURCHASE NO: 7200445321",
+   "mode": "prose",
+   "sem": null,
+   "policy": {
+    "match_reformatted_identifiers": false
+   },
+   "origin": "gaik-test",
+   "source": "implementation_layer/unit_tests/test_source_tracing.py:80",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-040",
+   "value": 2721.55,
+   "quote": "010 6061-T6 Aluminium Alloy Round Bar 6,000 LB LB",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-readme",
+   "source": "implementation_layer/src/gaik/software_components/source_tracing/README.md:195",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-041",
+   "value": "2026-02-15",
+   "quote": "DATE: 02/15/2026",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-readme",
+   "source": "implementation_layer/src/gaik/software_components/source_tracing/README.md:193",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-042",
+   "value": "alumiiniseoksinen pyörötanko",
+   "quote": "010 6061-T6 Aluminium Alloy Round Bar",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-readme",
+   "source": "implementation_layer/src/gaik/software_components/source_tracing/README.md:196",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-043",
+   "value": 4.2,
+   "quote": "4.200",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-readme",
+   "source": "implementation_layer/src/gaik/software_components/source_tracing/README.md:305-307",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-044",
+   "value": 4200,
+   "quote": "4.200",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "gaik-readme",
+   "source": "implementation_layer/src/gaik/software_components/source_tracing/README.md:305-307",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-045",
+   "value": 5,
+   "quote": "-5",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "mismatch",
+   "reason": "sign is part of the number token: 5 is not -5"
+  },
+  {
+   "id": "vs-046",
+   "value": 1.5,
+   "quote": "-1.5",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "mismatch",
+   "reason": "sign is part of the number token"
+  },
+  {
+   "id": "vs-047",
+   "value": -5,
+   "quote": "date 2025-04-11 total 5",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "mismatch",
+   "reason": "a minus sign elsewhere in the quote does not license a negative value"
+  },
+  {
+   "id": "vs-048",
+   "value": -5,
+   "quote": "5",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-049",
+   "value": "1 2 3",
+   "quote": "3 2 1",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "mismatch",
+   "reason": "vectors are compared per component in order, never read as dates"
+  },
+  {
+   "id": "vs-050",
+   "value": "10 20 30",
+   "quote": "30 20 10",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "mismatch",
+   "reason": "vectors are compared per component in order, never read as dates"
+  },
+  {
+   "id": "vs-051",
+   "value": "0 0 1",
+   "quote": "1 0 0",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-052",
+   "value": 123,
+   "quote": "scale 1 2 3",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "mismatch",
+   "reason": "no whitespace-concatenation reading: 1 2 3 is not 123"
+  },
+  {
+   "id": "vs-053",
+   "value": 12,
+   "quote": "1 2",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "mismatch",
+   "reason": "no whitespace-concatenation reading"
+  },
+  {
+   "id": "vs-054",
+   "value": 512,
+   "quote": "5\n12",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "mismatch",
+   "reason": "no whitespace-concatenation reading (newline is not a thousands separator)"
+  },
+  {
+   "id": "vs-055",
+   "value": "007",
+   "quote": "Part 7",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "mismatch",
+   "reason": "a numeric string with a leading zero is an identifier: 007 is not 7"
+  },
+  {
+   "id": "vs-056",
+   "value": 1e-05,
+   "quote": "1e-5",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "exponent notation is one number token"
+  },
+  {
+   "id": "vs-057",
+   "value": 1000000.0,
+   "quote": "1e6",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "exponent notation is one number token"
+  },
+  {
+   "id": "vs-058",
+   "value": 1.5708,
+   "quote": "90",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-059",
+   "value": 3.14159265,
+   "quote": "3.14159",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "round_to_printed: a value with more decimals than the quote matches the rounded display"
+  },
+  {
+   "id": "vs-060",
+   "value": 1.0000001,
+   "quote": "1.0",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-061",
+   "value": true,
+   "quote": "true",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "unchecked",
+   "x3dtrace_expected": "unchecked",
+   "reason": ""
+  },
+  {
+   "id": "vs-062",
+   "value": "true",
+   "quote": "solid='true'",
+   "mode": "x3d",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-063",
+   "value": "steel",
+   "quote": "Aluminium",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "unchecked",
+   "x3dtrace_expected": "mismatch",
+   "reason": "code_values_unchecked is off by default; a wrong lower-case word is a mismatch"
+  },
+  {
+   "id": "vs-064",
+   "value": "Steel",
+   "quote": "Aluminium",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-065",
+   "value": "2025-03-11",
+   "quote": "marble 11 2025",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "mismatch",
+   "reason": "month names are whole English words (marble is not March)"
+  },
+  {
+   "id": "vs-066",
+   "value": "2025-11-11",
+   "quote": "marraskuu 11. 2025",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "mismatch",
+   "reason": "the month must be evidenced apart from the day (parts are consumed once each)"
+  },
+  {
+   "id": "vs-067",
+   "value": "2025-04-11",
+   "quote": "11. huhtikuuta 2025",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "vs-068",
+   "value": "2025-04-11",
+   "quote": "2025-11-04",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-069",
+   "value": "2025-04-11",
+   "quote": "Order 4 of 11 in 2025",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-070",
+   "value": "2025-02-30",
+   "quote": "30.02.2025",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "vs-071",
+   "value": "A & B",
+   "quote": "title=\"A &amp; B\"",
+   "mode": "x3d",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "x3d mode decodes XML entities: &amp; is &"
+  },
+  {
+   "id": "vs-072",
+   "value": "Kärki",
+   "quote": "Kärki",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "words are NFC-normalised"
+  },
+  {
+   "id": "vs-073",
+   "value": "Strasse",
+   "quote": "Straße",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "words are casefolded (ss == ss)"
+  },
+  {
+   "id": "vs-074",
+   "value": "1.2.3",
+   "quote": "v1.2.3",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "probe",
+   "source": "probe (python3 -I run on build copy)",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "mismatch",
+   "reason": "whole-token rule: v1 is one token, 1.2.3 is not in the quote"
+  },
+  {
+   "id": "x-deg-1",
+   "value": 1.5708,
+   "quote": "90 degrees",
+   "mode": "prose",
+   "sem": "angle",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "typed conversion: 90 degrees is 1.5708 rad (evidence in the quote)"
+  },
+  {
+   "id": "x-deg-2",
+   "value": 1.5708,
+   "quote": "90°",
+   "mode": "prose",
+   "sem": "angle",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "typed conversion: degree sign"
+  },
+  {
+   "id": "x-deg-3",
+   "value": 90,
+   "quote": "90 degrees",
+   "mode": "prose",
+   "sem": "angle",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "mismatch",
+   "reason": "angle written in degrees where radians are expected"
+  },
+  {
+   "id": "x-deg-4",
+   "value": 1.5708,
+   "quote": "90",
+   "mode": "prose",
+   "sem": "angle",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "x-pct-1",
+   "value": 0.5,
+   "quote": "50 %",
+   "mode": "prose",
+   "sem": "fraction",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "typed conversion: 50 % is 0.5"
+  },
+  {
+   "id": "x-pct-2",
+   "value": 0.5,
+   "quote": "50 percent",
+   "mode": "prose",
+   "sem": "fraction",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "typed conversion: percent word"
+  },
+  {
+   "id": "x-pct-3",
+   "value": 0.5,
+   "quote": "50",
+   "mode": "prose",
+   "sem": "fraction",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "x-ft-1",
+   "value": 0.6096,
+   "quote": "2 ft",
+   "mode": "prose",
+   "sem": "length",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "typed conversion: 2 ft is 0.6096 m"
+  },
+  {
+   "id": "x-ft-2",
+   "value": 2,
+   "quote": "2 ft",
+   "mode": "prose",
+   "sem": "length",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "mismatch",
+   "reason": "length in feet written into a metre scene"
+  },
+  {
+   "id": "x-ft-3",
+   "value": 2,
+   "quote": "2 m",
+   "mode": "prose",
+   "sem": "length",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "x-ft-4",
+   "value": 0.6096,
+   "quote": "2 m",
+   "mode": "prose",
+   "sem": "length",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "x-ft-5",
+   "value": 3.2808,
+   "quote": "1 m",
+   "mode": "prose",
+   "sem": "length",
+   "policy": {
+    "length_scale": 0.3048
+   },
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "feet scene: 1 m is 3.2808 scene units"
+  },
+  {
+   "id": "x-nw-1",
+   "value": 4,
+   "quote": "four",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "number word"
+  },
+  {
+   "id": "x-nw-2",
+   "value": 4,
+   "quote": "Four cubes",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "number words are casefolded"
+  },
+  {
+   "id": "x-nw-3",
+   "value": 5,
+   "quote": "four",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "x-nw-4",
+   "value": 0.5,
+   "quote": "half",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "number word"
+  },
+  {
+   "id": "x-nw-5",
+   "value": 4,
+   "quote": "four",
+   "mode": "prose",
+   "sem": null,
+   "policy": {
+    "conversions": []
+   },
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "x-rot-1",
+   "value": "0 0 1 1.5708",
+   "quote": "rotate about z by 90 degrees",
+   "mode": "prose",
+   "sem": "rotation",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "axis letter plus angle becomes an SFRotation"
+  },
+  {
+   "id": "x-rot-2",
+   "value": "0 1 0 1.5708",
+   "quote": "90 degrees around y",
+   "mode": "prose",
+   "sem": "rotation",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "axis letter plus angle"
+  },
+  {
+   "id": "x-rot-3",
+   "value": "0 -1 0 1.5708",
+   "quote": "90 degrees around y",
+   "mode": "prose",
+   "sem": "rotation",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "x-rot-4",
+   "value": "0 1 0 -1.5708",
+   "quote": "90 degrees around y",
+   "mode": "prose",
+   "sem": "rotation",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "x-rot-5",
+   "value": "0 -1 0 -1.5708",
+   "quote": "90 degrees around y",
+   "mode": "prose",
+   "sem": "rotation",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "(-axis, -angle) is the same rotation"
+  },
+  {
+   "id": "x-rot-6",
+   "value": "0 1 0 1.5708",
+   "quote": "around y",
+   "mode": "prose",
+   "sem": "rotation",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "unchecked",
+   "reason": "no number in the quote: nothing to compare"
+  },
+  {
+   "id": "x-rot-7",
+   "value": "0 1 0 90",
+   "quote": "rotate 90 degrees about y",
+   "mode": "prose",
+   "sem": "rotation",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "x-bc-1",
+   "value": "2 2 2",
+   "quote": "a 2 m cube",
+   "mode": "prose",
+   "sem": "length",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "x-bc-2",
+   "value": "2 3 4",
+   "quote": "a 2 m cube",
+   "mode": "prose",
+   "sem": "length",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "x-bc-3",
+   "value": "2 2 2",
+   "quote": "a 2 m cube",
+   "mode": "prose",
+   "sem": "length",
+   "policy": {
+    "conversions": []
+   },
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "mismatch",
+   "reason": "broadcast is a typed conversion; off in the strict profile"
+  },
+  {
+   "id": "x-col-1",
+   "value": "1 0 0",
+   "quote": "red",
+   "mode": "prose",
+   "sem": "color",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "colour name, exact RGB"
+  },
+  {
+   "id": "x-col-2",
+   "value": "0.8 0.1 0.1",
+   "quote": "red",
+   "mode": "prose",
+   "sem": "color",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "near",
+   "reason": "colour name, same hue class only"
+  },
+  {
+   "id": "x-col-3",
+   "value": "0 1 0",
+   "quote": "red",
+   "mode": "prose",
+   "sem": "color",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "x-col-4",
+   "value": "1 0 0",
+   "quote": "#ff0000",
+   "mode": "prose",
+   "sem": "color",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "hex colour"
+  },
+  {
+   "id": "x-col-5",
+   "value": "0.8 0.2 0.1",
+   "quote": "204 51 26",
+   "mode": "prose",
+   "sem": "color",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "rgb 0-255"
+  },
+  {
+   "id": "x-col-6",
+   "value": "0.8 0.2 0.1",
+   "quote": "rgb(204, 51, 26)",
+   "mode": "prose",
+   "sem": "color",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "rgb 0-255"
+  },
+  {
+   "id": "x-col-7",
+   "value": "1 0 0",
+   "quote": "red",
+   "mode": "prose",
+   "sem": "color",
+   "policy": {
+    "conversions": []
+   },
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "unchecked",
+   "reason": "conversions off: nothing to compare"
+  },
+  {
+   "id": "x-vec-1",
+   "value": "0 2 0",
+   "quote": "2 m above",
+   "mode": "prose",
+   "sem": "length",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "near",
+   "reason": "zero-fill: only the non-zero component is quoted"
+  },
+  {
+   "id": "x-vec-2",
+   "value": "0 2 0",
+   "quote": "translation=\"2 0 0\"",
+   "mode": "x3d",
+   "sem": "length",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "x-vec-3",
+   "value": "1 2 3",
+   "quote": "1 2 3",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "x-vec-4",
+   "value": [
+    0,
+    -1,
+    0
+   ],
+   "quote": "translation=\"0 -1 0\"",
+   "mode": "x3d",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "unchecked",
+   "x3dtrace_expected": "match",
+   "reason": "list value"
+  },
+  {
+   "id": "x-vec-5",
+   "value": "0 1 0",
+   "quote": "translation=\"0 -1 0\"",
+   "mode": "x3d",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "mismatch",
+   "reason": "sign kept per component"
+  },
+  {
+   "id": "x-vec-6",
+   "value": "0 0 1.5708",
+   "quote": "rotation=\"0 1 0 1.5708\"",
+   "mode": "x3d",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "x-vec-7",
+   "value": "1 3",
+   "quote": "1 2 3",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "x-vec-8",
+   "value": "2 2 2",
+   "quote": "a 2 ft cube",
+   "mode": "prose",
+   "sem": "length",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "mismatch",
+   "reason": "feet written into a metre scene (vector)"
+  },
+  {
+   "id": "x-vec-9",
+   "value": "0.6096 0.6096 0.6096",
+   "quote": "a 2 ft cube",
+   "mode": "prose",
+   "sem": "length",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "typed conversion per component plus broadcast"
+  },
+  {
+   "id": "x-num-1",
+   "value": 0.5,
+   "quote": "x=\"0 5\"",
+   "mode": "x3d",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "x-num-2",
+   "value": 1e-05,
+   "quote": "transparency=\"1e-05\"",
+   "mode": "x3d",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "exponent"
+  },
+  {
+   "id": "x-num-3",
+   "value": 0.30000001,
+   "quote": "0.3",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "x-num-4",
+   "value": 1e+308,
+   "quote": "1e308",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "huge but finite"
+  },
+  {
+   "id": "x-num-5",
+   "value": {
+    "$float": "nan"
+   },
+   "quote": "nan",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "mismatch",
+   "reason": ""
+  },
+  {
+   "id": "x-num-6",
+   "value": 2,
+   "quote": "radius 2 in the middle",
+   "mode": "prose",
+   "sem": "length",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "x-num-7",
+   "value": 120,
+   "quote": "2 minutes",
+   "mode": "prose",
+   "sem": "time",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "match",
+   "reason": "time unit"
+  },
+  {
+   "id": "x-num-8",
+   "value": 2,
+   "quote": "2 minutes",
+   "mode": "prose",
+   "sem": "time",
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "mismatch",
+   "reason": "minutes written where seconds are expected"
+  },
+  {
+   "id": "x-num-9",
+   "value": 0.04,
+   "quote": "transparency 0.0",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "mismatch",
+   "x3dtrace_expected": "near",
+   "reason": "a value more precise than its quote is at best 'near'"
+  },
+  {
+   "id": "x-id-1",
+   "value": "Ball",
+   "quote": "DEF=\"Ball\"",
+   "mode": "x3d",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "x-id-2",
+   "value": "ball",
+   "quote": "DEF=\"Ball\"",
+   "mode": "x3d",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "mismatch",
+   "reason": "identifiers are case-sensitive"
+  },
+  {
+   "id": "x-id-3",
+   "value": "Ball",
+   "quote": "DEF=\"ball\"",
+   "mode": "x3d",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "mismatch",
+   "reason": "identifiers are case-sensitive"
+  },
+  {
+   "id": "x-id-4",
+   "value": "my_node",
+   "quote": "DEF=\"my_node\"",
+   "mode": "x3d",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "x-id-5",
+   "value": "my_node",
+   "quote": "DEF=\"my\"",
+   "mode": "x3d",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "unchecked",
+   "x3dtrace_expected": "mismatch",
+   "reason": "whole token"
+  },
+  {
+   "id": "x-ent-1",
+   "value": "A &amp; B",
+   "quote": "name=\"A &amp; B\"",
+   "mode": "x3d",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  },
+  {
+   "id": "x-set-1",
+   "value": "ok",
+   "quote": "Everything is OK",
+   "mode": "prose",
+   "sem": null,
+   "policy": {},
+   "origin": "x3dtrace",
+   "source": "x3dtrace tests",
+   "gaik_expected": "match",
+   "x3dtrace_expected": "match",
+   "reason": ""
+  }
+ ],
+ "tokens": [
+  {
+   "text": "Hello, World!",
+   "mode": "prose",
+   "gaik_expected": [
+    "hello",
+    "world"
+   ],
+   "x3dtrace_expected": [
+    "hello",
+    "world"
+   ],
+   "reason": ""
+  },
+  {
+   "text": "approved_with_remarks",
+   "mode": "prose",
+   "gaik_expected": [
+    "approved",
+    "with",
+    "remarks"
+   ],
+   "x3dtrace_expected": [
+    "approved",
+    "with",
+    "remarks"
+   ],
+   "reason": ""
+  },
+  {
+   "text": "-1.5",
+   "mode": "x3d",
+   "gaik_expected": [
+    "1",
+    "5"
+   ],
+   "x3dtrace_expected": [
+    "-1.5"
+   ],
+   "reason": "sign and decimal point stay in the number token"
+  },
+  {
+   "text": "0 1 2 -1",
+   "mode": "x3d",
+   "gaik_expected": [
+    "0",
+    "1",
+    "2",
+    "1"
+   ],
+   "x3dtrace_expected": [
+    "0",
+    "1",
+    "2",
+    "-1"
+   ],
+   "reason": "sign kept: coordIndex terminators"
+  },
+  {
+   "text": "1.234,50",
+   "mode": "prose",
+   "gaik_expected": [
+    "1",
+    "234",
+    "50"
+   ],
+   "x3dtrace_expected": [
+    "1.234,50"
+   ],
+   "reason": "one number token (read both ways at compare time)"
+  },
+  {
+   "text": "PO-2025-15903",
+   "mode": "prose",
+   "gaik_expected": [
+    "po",
+    "2025",
+    "15903"
+   ],
+   "x3dtrace_expected": [
+    "po",
+    "2025",
+    "15903"
+   ],
+   "reason": ""
+  },
+  {
+   "text": "Kärki",
+   "mode": "prose",
+   "gaik_expected": [
+    "kärki"
+   ],
+   "x3dtrace_expected": [
+    "kärki"
+   ],
+   "reason": ""
+  },
+  {
+   "text": "Kärki",
+   "mode": "prose",
+   "gaik_expected": [
+    "ka",
+    "rki"
+   ],
+   "x3dtrace_expected": [
+    "kärki"
+   ],
+   "reason": "NFC normalised"
+  },
+  {
+   "text": "<Box size=\"2 2 2\"/>",
+   "mode": "prose",
+   "gaik_expected": [
+    "box",
+    "size",
+    "2",
+    "2",
+    "2"
+   ],
+   "x3dtrace_expected": [
+    "box",
+    "size",
+    "2",
+    "2",
+    "2"
+   ],
+   "reason": ""
+  },
+  {
+   "text": "A &amp; B",
+   "mode": "x3d",
+   "gaik_expected": [
+    "a",
+    "amp",
+    "b"
+   ],
+   "x3dtrace_expected": [
+    "A",
+    "B"
+   ],
+   "reason": "x3d mode decodes entities (case kept)"
+  },
+  {
+   "text": "$27,578.55",
+   "mode": "prose",
+   "gaik_expected": [
+    "27",
+    "578",
+    "55"
+   ],
+   "x3dtrace_expected": [
+    "27,578.55"
+   ],
+   "reason": "one number token"
+  },
+  {
+   "text": "東京都新宿区",
+   "mode": "prose",
+   "gaik_expected": [
+    "東京都新宿区"
+   ],
+   "x3dtrace_expected": [
+    "東京都新宿区"
+   ],
+   "reason": ""
+  },
+  {
+   "text": "A &amp; B",
+   "mode": "prose",
+   "gaik_expected": [
+    "a",
+    "amp",
+    "b"
+   ],
+   "x3dtrace_expected": [
+    "a",
+    "amp",
+    "b"
+   ],
+   "reason": ""
+  },
+  {
+   "text": "<Box size=\"2 2 2\"/>",
+   "mode": "x3d",
+   "gaik_expected": [
+    "box",
+    "size",
+    "2",
+    "2",
+    "2"
+   ],
+   "x3dtrace_expected": [
+    "Box",
+    "size",
+    "2",
+    "2",
+    "2"
+   ],
+   "reason": "x3d identifiers are case-sensitive"
+  },
+  {
+   "text": "Straße",
+   "mode": "prose",
+   "gaik_expected": [
+    "straße"
+   ],
+   "x3dtrace_expected": [
+    "strasse"
+   ],
+   "reason": "casefold, not lower"
+  },
+  {
+   "text": "ﬁnal",
+   "mode": "prose",
+   "gaik_expected": [
+    "ﬁnal"
+   ],
+   "x3dtrace_expected": [
+    "final"
+   ],
+   "reason": "casefold expands the ligature"
+  },
+  {
+   "text": "alu­minium",
+   "mode": "prose",
+   "gaik_expected": [
+    "alu",
+    "minium"
+   ],
+   "x3dtrace_expected": [
+    "aluminium"
+   ],
+   "reason": "soft hyphen removed"
+  },
+  {
+   "text": "1e-05 a_b",
+   "mode": "x3d",
+   "gaik_expected": [
+    "1e",
+    "05",
+    "a",
+    "b"
+   ],
+   "x3dtrace_expected": [
+    "1e-05",
+    "a_b"
+   ],
+   "reason": "exponent kept; underscore is a name character"
+  },
+  {
+   "text": "0.5",
+   "mode": "x3d",
+   "gaik_expected": [
+    "0",
+    "5"
+   ],
+   "x3dtrace_expected": [
+    "0.5"
+   ],
+   "reason": "0.5 is one token, not '0 5'"
+  }
+ ],
+ "number_readings": [
+  {
+   "text": "Quantity: 3.000 kg",
+   "gaik_expected": [
+    3.0,
+    3000.0
+   ],
+   "x3dtrace_expected": [
+    3.0,
+    3000.0
+   ],
+   "reason": ""
+  },
+  {
+   "text": "Total: 1.234,50 EUR",
+   "gaik_expected": [
+    1234.5
+   ],
+   "x3dtrace_expected": [
+    1234.5
+   ],
+   "reason": ""
+  },
+  {
+   "text": "Rs 1,00,000",
+   "gaik_expected": [
+    100000.0
+   ],
+   "x3dtrace_expected": [
+    100000.0
+   ],
+   "reason": ""
+  },
+  {
+   "text": "1 234",
+   "gaik_expected": [
+    1.0,
+    234.0,
+    1234.0
+   ],
+   "x3dtrace_expected": [
+    1.0,
+    234.0,
+    1234.0
+   ],
+   "reason": ""
+  },
+  {
+   "text": "010 6061-T6",
+   "gaik_expected": [
+    6.0,
+    10.0,
+    6061.0,
+    106061.0
+   ],
+   "x3dtrace_expected": [
+    10.0,
+    6061.0
+   ],
+   "reason": "no whitespace concatenation; T6 is a word"
+  },
+  {
+   "text": "1.2.3",
+   "gaik_expected": [
+    123.0
+   ],
+   "x3dtrace_expected": [
+    123.0
+   ],
+   "reason": ""
+  },
+  {
+   "text": "12'345.60",
+   "gaik_expected": [
+    12345.6
+   ],
+   "x3dtrace_expected": [
+    12345.6
+   ],
+   "reason": ""
+  },
+  {
+   "text": "1’234,5",
+   "gaik_expected": [
+    1234.5
+   ],
+   "x3dtrace_expected": [
+    1234.5
+   ],
+   "reason": ""
+  },
+  {
+   "text": "0,5",
+   "gaik_expected": [
+    0.5
+   ],
+   "x3dtrace_expected": [
+    0.5
+   ],
+   "reason": ""
+  },
+  {
+   "text": "0.000",
+   "gaik_expected": [
+    0.0
+   ],
+   "x3dtrace_expected": [
+    0.0
+   ],
+   "reason": ""
+  },
+  {
+   "text": "1e-5",
+   "gaik_expected": [
+    1.0,
+    5.0
+   ],
+   "x3dtrace_expected": [
+    1e-05
+   ],
+   "reason": "exponent is one number"
+  },
+  {
+   "text": "-1.5",
+   "gaik_expected": [
+    1.5
+   ],
+   "x3dtrace_expected": [
+    -1.5
+   ],
+   "reason": "sign kept"
+  },
+  {
+   "text": "5\n12",
+   "gaik_expected": [
+    5.0,
+    12.0,
+    512.0
+   ],
+   "x3dtrace_expected": [
+    5.0,
+    12.0
+   ],
+   "reason": "a newline is not a thousands separator"
+  }
+ ],
+ "date_parts": [
+  {
+   "text": "2025-04-11",
+   "gaik_expected": [
+    2025,
+    4,
+    11
+   ],
+   "x3dtrace_expected": [
+    2025,
+    4,
+    11
+   ],
+   "reason": ""
+  },
+  {
+   "text": "11.04.2025",
+   "gaik_expected": [
+    11,
+    4,
+    2025
+   ],
+   "x3dtrace_expected": [
+    11,
+    4,
+    2025
+   ],
+   "reason": ""
+  },
+  {
+   "text": "04/11/2025",
+   "gaik_expected": [
+    4,
+    11,
+    2025
+   ],
+   "x3dtrace_expected": [
+    4,
+    11,
+    2025
+   ],
+   "reason": ""
+  },
+  {
+   "text": "7200-4453-21",
+   "gaik_expected": null,
+   "x3dtrace_expected": null,
+   "reason": ""
+  },
+  {
+   "text": "1 2 3",
+   "gaik_expected": [
+    1,
+    2,
+    3
+   ],
+   "x3dtrace_expected": [
+    1,
+    2,
+    3
+   ],
+   "reason": ""
+  },
+  {
+   "text": "10 20 30",
+   "gaik_expected": [
+    10,
+    20,
+    30
+   ],
+   "x3dtrace_expected": [
+    10,
+    20,
+    30
+   ],
+   "reason": ""
+  },
+  {
+   "text": "0 0 0",
+   "gaik_expected": null,
+   "x3dtrace_expected": null,
+   "reason": ""
+  },
+  {
+   "text": "2025.13.40",
+   "gaik_expected": null,
+   "x3dtrace_expected": null,
+   "reason": ""
+  },
+  {
+   "text": "2025-04-11T1",
+   "gaik_expected": null,
+   "x3dtrace_expected": null,
+   "reason": ""
+  },
+  {
+   "text": "31.12.99",
+   "gaik_expected": [
+    31,
+    12,
+    99
+   ],
+   "x3dtrace_expected": null,
+   "reason": "a dotted triple with no four-digit year is a version (16.7.0, 5.8.4), not a date: every permutation of a version would verify"
+  },
+  {
+   "text": "1-2-3",
+   "gaik_expected": [
+    1,
+    2,
+    3
+   ],
+   "x3dtrace_expected": [
+    1,
+    2,
+    3
+   ],
+   "reason": ""
+  }
+ ],
+ "verdict_of": [
+  {
+   "status": "no_text_layer",
+   "value_status": "match",
+   "value": 1,
+   "quote": "1",
+   "occurrences": 1,
+   "policy": {},
+   "verdict": "unchecked",
+   "gaik_expected": "unchecked",
+   "x3dtrace_expected": "unchecked",
+   "reason": ""
+  },
+  {
+   "status": "not_found",
+   "value_status": "match",
+   "value": 1,
+   "quote": "1",
+   "occurrences": 0,
+   "policy": {},
+   "verdict": "check",
+   "gaik_expected": "check",
+   "x3dtrace_expected": "check",
+   "reason": ""
+  },
+  {
+   "status": "found",
+   "value_status": "match",
+   "value": 1,
+   "quote": "1",
+   "occurrences": 1,
+   "policy": {},
+   "verdict": "verified",
+   "gaik_expected": "verified",
+   "x3dtrace_expected": "verified",
+   "reason": ""
+  },
+  {
+   "status": "moved",
+   "value_status": "match",
+   "value": 1,
+   "quote": "1",
+   "occurrences": 1,
+   "policy": {},
+   "verdict": "verified",
+   "gaik_expected": "verified",
+   "x3dtrace_expected": "verified",
+   "reason": ""
+  },
+  {
+   "status": "found",
+   "value_status": "match",
+   "value": 1,
+   "quote": "1",
+   "occurrences": 2,
+   "policy": {
+    "ambiguous_quote_is_check": true
+   },
+   "verdict": "check",
+   "gaik_expected": "check",
+   "x3dtrace_expected": "check",
+   "reason": ""
+  },
+  {
+   "status": "found",
+   "value_status": "match",
+   "value": 1,
+   "quote": "1",
+   "occurrences": 1,
+   "policy": {
+    "ambiguous_quote_is_check": true
+   },
+   "verdict": "verified",
+   "gaik_expected": "verified",
+   "x3dtrace_expected": "verified",
+   "reason": ""
+  },
+  {
+   "status": "found",
+   "value_status": "mismatch",
+   "value": 5,
+   "quote": "4",
+   "occurrences": 1,
+   "policy": {},
+   "verdict": "check",
+   "gaik_expected": "check",
+   "x3dtrace_expected": "check",
+   "reason": ""
+  },
+  {
+   "status": "found",
+   "value_status": "mismatch",
+   "value": 5,
+   "quote": "four",
+   "occurrences": 1,
+   "policy": {},
+   "verdict": "unchecked",
+   "gaik_expected": "unchecked",
+   "x3dtrace_expected": "check",
+   "reason": "verdict_of has no digit test; the number-in-words rule lives in check_claims"
+  },
+  {
+   "status": "found",
+   "value_status": "mismatch",
+   "value": "2025-04-11",
+   "quote": "12.04.2025",
+   "occurrences": 1,
+   "policy": {},
+   "verdict": "check",
+   "gaik_expected": "check",
+   "x3dtrace_expected": "check",
+   "reason": ""
+  },
+  {
+   "status": "found",
+   "value_status": "mismatch",
+   "value": "2025-04-11",
+   "quote": "twelfth april",
+   "occurrences": 1,
+   "policy": {},
+   "verdict": "unchecked",
+   "gaik_expected": "unchecked",
+   "x3dtrace_expected": "check",
+   "reason": "verdict_of has no digit test; the number-in-words rule lives in check_claims"
+  },
+  {
+   "status": "found",
+   "value_status": "mismatch",
+   "value": "x",
+   "quote": "y",
+   "occurrences": 1,
+   "policy": {},
+   "verdict": "reworded",
+   "gaik_expected": "reworded",
+   "x3dtrace_expected": "reworded",
+   "reason": ""
+  },
+  {
+   "status": "found",
+   "value_status": "mismatch",
+   "value": "x",
+   "quote": "y",
+   "occurrences": 1,
+   "policy": {
+    "reworded_is_problem": true
+   },
+   "verdict": "check",
+   "gaik_expected": "check",
+   "x3dtrace_expected": "check",
+   "reason": ""
+  },
+  {
+   "status": "found",
+   "value_status": "unchecked",
+   "value": null,
+   "quote": "y",
+   "occurrences": 1,
+   "policy": {},
+   "verdict": "unchecked",
+   "gaik_expected": "unchecked",
+   "x3dtrace_expected": "unchecked",
+   "reason": ""
+  },
+  {
+   "status": "found",
+   "value_status": "unchecked",
+   "value": [
+    "a"
+   ],
+   "quote": "y",
+   "occurrences": 1,
+   "policy": {},
+   "verdict": "unchecked",
+   "gaik_expected": "unchecked",
+   "x3dtrace_expected": "unchecked",
+   "reason": ""
+  },
+  {
+   "status": "not_found",
+   "value_status": "unchecked",
+   "value": null,
+   "quote": "y",
+   "occurrences": 0,
+   "policy": {},
+   "verdict": "check",
+   "gaik_expected": "check",
+   "x3dtrace_expected": "check",
+   "reason": ""
+  },
+  {
+   "status": "found",
+   "value_status": "match",
+   "value": 1,
+   "quote": "1",
+   "occurrences": 1,
+   "policy": {
+    "min_quote_words": 2
+   },
+   "verdict": "check",
+   "gaik_expected": "check",
+   "x3dtrace_expected": "check",
+   "reason": ""
+  },
+  {
+   "status": "found",
+   "value_status": "match",
+   "value": 1,
+   "quote": "one two",
+   "occurrences": 1,
+   "policy": {
+    "min_quote_words": 2
+   },
+   "verdict": "verified",
+   "gaik_expected": "verified",
+   "x3dtrace_expected": "verified",
+   "reason": ""
+  }
+ ],
+ "check_text_scenario": {
+  "source_text": "Tapaturma 15.3.2025 klo 14.30. Virtanen sai lievän ruhjeen käteen. Sairauslomalla kaksi päivää.",
+  "source": "implementation_layer/unit_tests/test_source_tracing.py:237-268",
+  "entries": [
+   {
+    "field": "date",
+    "value": "2025-03-15",
+    "quote": "Tapaturma 15.3.2025"
+   },
+   {
+    "field": "time",
+    "value": "15.30",
+    "quote": "klo 14.30"
+   },
+   {
+    "field": "injury",
+    "value": "Minor bruise",
+    "quote": "lievän ruhjeen käteen"
+   },
+   {
+    "field": "cause",
+    "value": "Slipped",
+    "quote": "kaatui liukkaalla"
+   },
+   {
+    "field": "people",
+    "value": [
+     "Virtanen"
+    ],
+    "quote": "Virtanen"
+   },
+   {
+    "field": "days",
+    "value": 2,
+    "quote": "sairauslomalla kaksi päivää"
+   },
+   {
+    "field": "cost",
+    "value": {
+     "$decimal": "426.7"
+    },
+    "quote": "maksoi 340 euroa"
+   }
+  ],
+  "expected_verdicts": {
+   "date": "verified",
+   "time": "check",
+   "injury": "reworded",
+   "cause": "check",
+   "people": "unchecked",
+   "days": "unchecked",
+   "cost": "check"
+  }
+ }
+}
