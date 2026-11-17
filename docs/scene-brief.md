@@ -45,7 +45,11 @@ Every facet carries `tier`:
 * **Field and event names the author invented.** A Script's own fields print as `?`.
 * **Any number that is not a finite number.** A slot that holds text becomes `null` (`input.declared_invalid` names a bad `version` or `profile`), and words found where a number or boolean belongs are counted under `untrusted.text_surface.slot_text`.
 
-Handles are `n<k>`: the 1-based document-order index of an element of the Scene. They are stable for one `input.sha256` and shift if you insert a node.
+Handles are `n<k>`: the 1-based document-order index of an element of the Scene. They are stable for one `input.sha256_full` and shift if you insert a node. Record the **full 64-hex digest plus the handle** for an immutable source locator. `input.sha256` remains its historical 16-hex prefix, a display label only (the new full field adds 64 bytes, so the answer's fixed part grew by that much). The abbreviated example above and the measurement table below describe the original edition; current answers include the additional identity fields.
+
+The digest identifies the UTF-8 encoding of the XML string supplied to this pure function. If an input wrapper decoded another file encoding or serialized an in-memory scene first, it identifies that supplied representation, not the original external file octets.
+
+Counts mode reduces direct author-text exposure. It is not a general proof of prompt-injection resistance. Quoted mode deliberately returns untrusted strings; keeping them in a labelled JSON field does not make a language model immune to their content. A brief or model opinion never mints a Loom acceptance witness.
 
 ## The budget
 
@@ -69,12 +73,16 @@ A brief is a slice, not a proof. Two rules if you use it to feed a model that cl
 ## Limits
 
 * `bounds` is the box of the authored pose: no routes, animation or scripts are applied, and `Text`, `Inline`, `ProtoInstance`, `Extrusion`, `ElevationGrid` and anything with an unparsable value are counted under `unbounded` with a reason, never guessed. An author's own `bboxSize` is ignored.
+* The enhanced bounds path applies `CADPart` transforms, rejects fractional `Switch.whichChoice` values, and normalizes very large finite rotation axes without squaring overflow. Derived numeric overflow is reported under `unbounded.numeric-overflow`. If the aggregate size cannot be represented by finite binary64 values, `aggregate-numeric-overflow` is reported and the aggregate coordinates are omitted. JSON serialization also refuses nonfinite numbers as a final guard.
+* Displayed bounds endpoints are rounded **outward** to 0.001 scene units, so quantization does not shrink a conservative envelope. Size and centre are derived from those displayed endpoints; a centre can shift by up to 0.0005 scene units. This is neither a dynamic swept volume nor a complete scene box when coverage is incomplete. The bounds walk considers the authored selected Switch child and first LOD level only.
 * The XSD check pays the schema compile on the first call of a process (about 1.5 to 1.9 s); later calls are milliseconds. Leave `validators` out of `facets` to avoid both.
 * Documents over libxml2's default depth limit (256) or with a start tag over 10 MB are refused as `not-well-formed`; a DOCTYPE is read but its entities are not expanded and nothing is fetched.
 * The text surface lists attribute names it does not know under `other_attr` and counts them; it does not decide whether a string is an instruction. Pattern linting belongs to the caller, and is a pre-filter at best.
 * No model is called anywhere in this tool.
 
 ## Measured
+
+The table is the supplied baseline measurement, not a rerun of the enhanced implementation. It does not measure Jev or any other model.
 
 | scene | input bytes | brief bytes (all facets) | brief without `validators` | `validate_semantic` full report | warm ms (all / without `validators`) |
 |---|---|---|---|---|---|
@@ -91,5 +99,13 @@ Default settings (`budget_bytes=4096`, `max_items=8`, `text="counts"`), warm med
 What the table says: the brief is flat in scene size (1.6 to 2.8 KB from a 1.6 KB scene to a 1.1 MB one) while the full semantic report grows with the scene (301 KB for 105 KB, 3.0 MB for 1.1 MB). For a scene smaller than about 2 to 3 KB the brief is larger than the scene itself, so send small scenes whole. The time is dominated by the validators (31 ms of 94 ms, 344 ms of 1,053 ms without them on the synthetic scenes); the other facets are a single pass over the tree.
 
 ## Tests
+
+The attachment is a **partial repository overlay**, not an installable copy of x3d_mcp. `tests/test_scene_brief_standalone.py` adds 16 offline core regressions and runs with Python, lxml and pytest:
+
+```sh
+python3 -m pytest tests/test_scene_brief_standalone.py -q
+```
+
+Its small, explicitly labelled vocabulary fixture exercises numeric geometry, budgeting and identity contracts. It does **not** validate X3DUOM, MCP transport, XSD or semantic integration. The original integration test module skips with a host-checkout reason when `tools.granular` is missing. Run it in a complete compatible x3d_mcp checkout for the original host-dependent coverage.
 
 `tests/test_scene_brief.py` (50 tests): the registration, determinism and the hash, agreement across `content`, `path`, `blob_id` and `current_scene`, the budget as a hard cap at five budgets on two scenes, flatness in scene size, analytic bounds cases, the closed-set output of the validator facets, a sweep that fails if any string of 12 or more characters (or containing whitespace) from the hostile fixture appears in a default answer, a monkeypatched validator whose messages carry a canary that must not appear, quoted-mode escaping, hostile XML (entity expansion, external entity, a 1 MB attribute, 5,000-deep nesting), and the return modes. The fixture's adversarial strings are inert test data: see `tests/fixtures/scene_brief/README.md`.

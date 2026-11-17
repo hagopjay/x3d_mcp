@@ -37,7 +37,8 @@ def register(mcp: FastMCP):
         comments) never appears in a facet; it is counted and digested under `untrusted`, and quoted there only when
         text="quoted". Validator messages are not forwarded: XSD errors become a fixed `kind`, semantic findings keep
         their check id. Handles `n<k>` are the 1-based document-order index of an element of the Scene (stable for one
-        input sha256, shifted by an insertion).
+        input.sha256_full, shifted by an insertion). The legacy input.sha256 is a 16-hex display prefix;
+        use input.sha256_full plus the handle when recording source identity.
 
         Do not give the `validators` facet to a judge you are scoring against these same validators: ask for the other
         facets (facets="census,bounds,camera,lights,materials,routes,text").
