@@ -19,9 +19,13 @@
 python3 -m pytest tests/test_scene_brief_standalone.py tests/test_scene_brief.py -q
 ```
 
-**16 standalone regressions pass; 1 host-dependent test module is skipped.** The skipped module contains the supplied original 50 integration tests and requires a complete compatible x3d_mcp checkout. The archive is an overlay: `tools.granular`, transfer machinery, validators and the production X3DUOM loader are absent. The core and tool modules compile successfully.
+In the x3d_mcp repository the 50 integration tests (`tests/test_scene_brief.py`) and the 16 standalone regressions run together: 68 pass, plus two budget-floor tests added with the merge. (The reviewed archive was a partial overlay without `tools.granular`, so its integration module was skipped there; that is how a floor regression went unseen. See the next section.)
 
-The standalone tests use a deliberately small vocabulary fixture and lxml. They verify the new numeric, budgeting and identity behavior. They do not certify X3DUOM conformance, schema validity, semantic validity, MCP transport or runtime rendering. The supplied benchmark table remains historical; it was not rerun.
+The standalone tests use a deliberately small vocabulary fixture and lxml. They verify the new numeric, budgeting and identity behavior. They do not certify X3DUOM conformance, schema validity, semantic validity, MCP transport or runtime rendering. The measured table in `scene-brief.md` is historical; it was not rerun.
+
+## The 1,024-byte floor
+
+The full `sha256_full` digest adds about 84 bytes to the fixed part of every answer. The best fit found over a grid of heavy scenes at the floor was 1,018 bytes, and an independent review found a scene that no longer fitted. The ladder therefore ends with a named last resort: `input.sha256_full` is dropped (`budget.dropped`), the 16-hex `sha256` stays, and the floor holds. A budget above the floor keeps the full digest.
 
 ## Loom boundary
 

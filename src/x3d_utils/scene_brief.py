@@ -212,8 +212,10 @@ def _outward_box(lo, hi):
     # 400 decimal digits cover all finite binary64 values, including their fractional part at this precision.
     with localcontext() as ctx:
         ctx.prec = 400
-        low = [min(x, float(Decimal.from_float(x).quantize(quantum, rounding=ROUND_FLOOR))) for x in lo]
-        high = [max(x, float(Decimal.from_float(x).quantize(quantum, rounding=ROUND_CEILING))) for x in hi]
+        # Quantize the shortest decimal that names the double (0.1, not its 55-digit binary expansion), so a value that sits a hair above a grid
+        # point is not widened by a whole quantum; the min/max against the double itself keeps the box conservative.
+        low = [min(x, float(Decimal(repr(x)).quantize(quantum, rounding=ROUND_FLOOR))) for x in lo]
+        high = [max(x, float(Decimal(repr(x)).quantize(quantum, rounding=ROUND_CEILING))) for x in hi]
     size = [high[i] - low[i] for i in range(3)]
     center = [low[i] / 2 + high[i] / 2 for i in range(3)]
     if not all(math.isfinite(x) for x in low + high + size + center):
@@ -573,6 +575,17 @@ def _fit(body: dict, budget: int, max_items: int, clamped: bool = False) -> dict
         body["budget"]["est_tokens"] = -(-used // 4)
         if _used(body) == used:
             break
+    if _used(body) > budget and "sha256_full" in body.get("input", {}):
+        # Last resort, so the documented 1,024-byte floor stays satisfiable: the 64-hex digest is the only fixed-size field added after the
+        # floor was set. The 16-hex `sha256` stays, and the drop is named.
+        body["input"].pop("sha256_full")
+        dropped.append("input.sha256_full")
+        for _ in range(6):
+            used = _used(body)
+            body["budget"]["used"] = used
+            body["budget"]["est_tokens"] = -(-used // 4)
+            if _used(body) == used:
+                break
     if _used(body) > budget:
         raise BriefError("budget-too-small", min_bytes=_used(body))
     return body

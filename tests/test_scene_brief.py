@@ -160,6 +160,34 @@ def test_the_documented_floor_still_holds_with_the_full_input_digest(n):
         assert len(sb.render(b).encode()) <= sb.MIN_BUDGET and b["input"]["sha256_full"].startswith(b["input"]["sha256"])
 
 
+def test_the_full_digest_is_the_last_thing_the_ladder_gives_up_and_says_so(monkeypatch):
+    monkeypatch.setattr(sb, "MIN_BUDGET", 64)
+    text = blocks(3)
+    full = dropped = None
+    for budget in range(2000, 63, -1):
+        try:
+            b = sb.scene_brief(text, budget_bytes=budget)
+        except sb.BriefError:
+            break
+        if "sha256_full" in b["input"]:
+            full = (budget, b)
+        else:
+            dropped = (budget, b)
+    assert full and dropped, "a budget exists where only the digest has to go"
+    budget, b = dropped
+    assert "input.sha256_full" in b["budget"]["dropped"] and len(sb.render(b).encode()) <= budget
+    assert len(b["input"]["sha256"]) == 16 and json.loads(sb.render(b))["ok"] is True
+    assert dropped[0] < full[0], "the digest is kept at every budget where it fits"
+    assert "input.sha256_full" not in full[1]["budget"]["dropped"]
+
+
+def test_bounds_endpoints_are_not_widened_by_a_whole_quantum_for_short_decimals():
+    b = bounds('<Transform translation="0.1 0.2 1.1"><Shape><Box size="0 0 0"/></Shape></Transform>')
+    assert b["min"] == [0.1, 0.2, 1.1] and b["max"] == [0.1, 0.2, 1.1]
+    b = bounds('<Shape><Box size="0.0004 0.0004 0.0004"/></Shape>')
+    assert b["min"][0] <= -0.0002 and b["min"][0] >= -0.001 and b["max"][0] >= 0.0002 and b["max"][0] <= 0.001      # still outward
+
+
 def test_a_budget_below_the_floor_is_clamped_and_says_so():
     b = sb.scene_brief(INJECTION, budget_bytes=10)
     assert b["budget"]["bytes"] == sb.MIN_BUDGET == 1024 and b["budget"]["clamped"] is True
