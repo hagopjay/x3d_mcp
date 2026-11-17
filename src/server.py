@@ -43,7 +43,7 @@ sys.stdout = sys.stderr
 from tools import (
     workflow, granular, convert, query, validate_tool, render, scene_ops, animate,
     claims as claim_tools, prompts, semantics, semantic_web, scene_brief as brief_tools,
-    scene_evidence as evidence_tools,
+    scene_evidence as evidence_tools, source_tools,
 )
 from tools import transfer as blob_tools
 from tools import splats as splat_tools
@@ -102,6 +102,8 @@ EVIDENCE FOR VALUES: `scene_evidence(content|path|blob_id, claims=[{field, value
 its source, that the value is in the quote and that the scene holds that value; it returns verdicts, offsets and handles, never \
 the quotes. "verified" means the quote contains the value, not that it is the right place.
 
+REPAIRS YOU CAN REVIEW: `source_witness_audit` locates DEF/USE/ROUTE faults by byte span in the exact source; `patch_x3d_attribute(def_name, attribute, new_value, expected_sha256)` changes one value and keeps every other byte, refusing a stale hash or an ambiguous DEF. Before turning SHACL inference on, `shacl_counterfactual` shows which violations inference hides (not repairs) and which results it adds.
+
 When unsure, the answer is describe_node + validate_semantic -- not recall."""
 
 # Only when the blob store is on: tells the model how to keep big documents out of its context.
@@ -157,6 +159,7 @@ semantic_web.register(mcp)
 claim_tools.register(mcp)
 brief_tools.register(mcp)
 evidence_tools.register(mcp)
+source_tools.register(mcp)
 
 if _SPLATS:
     splat_tools.register(mcp)
