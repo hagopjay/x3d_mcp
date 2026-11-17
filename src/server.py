@@ -76,7 +76,8 @@ semantic_audit, convert_to_x3dom). They encode the known-good tool order so you 
 MEANING, NOT ONLY SYNTAX (the semantic_audit prompt runs this): `scene_to_rdf` turns a scene into RDF \
 (X3D Ontology 4.1 terms, the Consortium X3dToTurtle conventions) and returns a `graph_id`; \
 `sparql_scene(graph_id=..., sparql=...)` answers questions about it (which Shapes lack an Appearance, \
-what a ROUTE chain drives, every geometry via `a/rdfs:subClassOf*`); `shacl_validate(graph_id=...)` \
+what a ROUTE chain drives, every geometry via `a/rdfs:subClassOf*`; pass `result_format="typed"` when \
+datatypes, unbound values or blank nodes matter, and use ORDER BY when order does); `shacl_validate(graph_id=...)` \
 checks it against shapes and names each offending node, its DEF, the check and a fix; then \
 `validate_x3d` + `validate_semantic` for schema and order (RDF keeps no document order); record what \
 you verified with `claim_append`, passing the `instrument` object these tools return. `rdf_infer` shows \

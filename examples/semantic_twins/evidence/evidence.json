@@ -1,0 +1,1718 @@
+{
+ "states": {
+  "computed here": 162,
+  "explained difference": 13,
+  "hash checked": 1,
+  "not packaged": 2,
+  "recorded": 60
+ },
+ "by_case": {
+  "heritage": {
+   "computed here": 18,
+   "explained difference": 3,
+   "recorded": 5
+  },
+  "factory": {
+   "computed here": 18,
+   "recorded": 8
+  },
+  "hospital": {
+   "computed here": 18,
+   "recorded": 8
+  },
+  "building": {
+   "computed here": 18,
+   "recorded": 8
+  },
+  "warehouse": {
+   "computed here": 18,
+   "recorded": 8
+  },
+  "city": {
+   "computed here": 18,
+   "recorded": 8
+  },
+  "concert": {
+   "computed here": 18,
+   "explained difference": 4,
+   "recorded": 4
+  },
+  "firecode": {
+   "computed here": 18,
+   "explained difference": 6,
+   "recorded": 2
+  },
+  "farm": {
+   "computed here": 18,
+   "recorded": 8
+  }
+ },
+ "claims": [
+  {
+   "case": null,
+   "id": "files",
+   "claim": "75 packaged files match the manifest",
+   "state": "hash checked",
+   "detail": "75 files, sha256 each"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/clean/H1/oracle",
+   "claim": "Oracle answer to H1 (clean)",
+   "state": "computed here",
+   "detail": "2 rows, rdflib"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/clean/H1/server",
+   "claim": "x3d_mcp sparql_scene answers H1 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "2 rows, same order as the oracle"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/clean/H1/recorded",
+   "claim": "Recorded MCP run of H1 (clean)",
+   "state": "explained difference",
+   "detail": "same rows, sorted: the server of 16 Nov re-sorted every answer and dropped ORDER BY (Evidence Edition F03); today's server keeps it"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/clean/H2/oracle",
+   "claim": "Oracle answer to H2 (clean)",
+   "state": "computed here",
+   "detail": "1 rows, rdflib"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/clean/H2/server",
+   "claim": "x3d_mcp sparql_scene answers H2 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "1 rows"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/clean/H2/recorded",
+   "claim": "Recorded MCP run of H2 (clean)",
+   "state": "recorded",
+   "detail": "1 rows, as the oracle"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/clean/H3/oracle",
+   "claim": "Oracle answer to H3 (clean)",
+   "state": "computed here",
+   "detail": "5 rows, rdflib"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/clean/H3/server",
+   "claim": "x3d_mcp sparql_scene answers H3 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "5 rows, same order as the oracle"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/clean/H3/recorded",
+   "claim": "Recorded MCP run of H3 (clean)",
+   "state": "explained difference",
+   "detail": "same rows, sorted: the server of 16 Nov re-sorted every answer and dropped ORDER BY (Evidence Edition F03); today's server keeps it"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/clean/INF/oracle",
+   "claim": "Oracle answer to INF (clean)",
+   "state": "computed here",
+   "detail": "6 rows, rdflib"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/clean/INF/server",
+   "claim": "x3d_mcp sparql_scene answers INF (clean) like the oracle",
+   "state": "computed here",
+   "detail": "6 rows, same order as the oracle"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/clean/INF/recorded",
+   "claim": "Recorded MCP run of INF (clean)",
+   "state": "recorded",
+   "detail": "6 rows, as the oracle"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/clean/shacl",
+   "claim": "The clean variant conforms",
+   "state": "computed here",
+   "detail": "0 results, pyshacl"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/fault/H1/oracle",
+   "claim": "Oracle answer to H1 (fault)",
+   "state": "computed here",
+   "detail": "1 rows, rdflib"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/fault/H1/server",
+   "claim": "x3d_mcp sparql_scene answers H1 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "1 rows, same order as the oracle"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/fault/H1/recorded",
+   "claim": "Recorded MCP run of H1 (fault)",
+   "state": "recorded",
+   "detail": "1 rows, as the oracle"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/fault/H2/oracle",
+   "claim": "Oracle answer to H2 (fault)",
+   "state": "computed here",
+   "detail": "1 rows, rdflib"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/fault/H2/server",
+   "claim": "x3d_mcp sparql_scene answers H2 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "1 rows"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/fault/H2/recorded",
+   "claim": "Recorded MCP run of H2 (fault)",
+   "state": "recorded",
+   "detail": "1 rows, as the oracle"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/fault/H3/oracle",
+   "claim": "Oracle answer to H3 (fault)",
+   "state": "computed here",
+   "detail": "5 rows, rdflib"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/fault/H3/server",
+   "claim": "x3d_mcp sparql_scene answers H3 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "5 rows, same order as the oracle"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/fault/H3/recorded",
+   "claim": "Recorded MCP run of H3 (fault)",
+   "state": "explained difference",
+   "detail": "same rows, sorted: the server of 16 Nov re-sorted every answer and dropped ORDER BY (Evidence Edition F03); today's server keeps it"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/fault/INF/oracle",
+   "claim": "Oracle answer to INF (fault)",
+   "state": "computed here",
+   "detail": "6 rows, rdflib"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/fault/INF/server",
+   "claim": "x3d_mcp sparql_scene answers INF (fault) like the oracle",
+   "state": "computed here",
+   "detail": "6 rows, same order as the oracle"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/fault/INF/recorded",
+   "claim": "Recorded MCP run of INF (fault)",
+   "state": "recorded",
+   "detail": "6 rows, as the oracle"
+  },
+  {
+   "case": "heritage",
+   "id": "heritage/fault/shacl",
+   "claim": "The fault variant fails, and every planted fault is caught",
+   "state": "computed here",
+   "detail": "2 results, pyshacl"
+  },
+  {
+   "case": "factory",
+   "id": "factory/clean/F1/oracle",
+   "claim": "Oracle answer to F1 (clean)",
+   "state": "computed here",
+   "detail": "1 rows, rdflib"
+  },
+  {
+   "case": "factory",
+   "id": "factory/clean/F1/server",
+   "claim": "x3d_mcp sparql_scene answers F1 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "1 rows"
+  },
+  {
+   "case": "factory",
+   "id": "factory/clean/F1/recorded",
+   "claim": "Recorded MCP run of F1 (clean)",
+   "state": "recorded",
+   "detail": "1 rows, as the oracle"
+  },
+  {
+   "case": "factory",
+   "id": "factory/clean/F2/oracle",
+   "claim": "Oracle answer to F2 (clean)",
+   "state": "computed here",
+   "detail": "3 rows, rdflib"
+  },
+  {
+   "case": "factory",
+   "id": "factory/clean/F2/server",
+   "claim": "x3d_mcp sparql_scene answers F2 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "3 rows"
+  },
+  {
+   "case": "factory",
+   "id": "factory/clean/F2/recorded",
+   "claim": "Recorded MCP run of F2 (clean)",
+   "state": "recorded",
+   "detail": "3 rows, as the oracle"
+  },
+  {
+   "case": "factory",
+   "id": "factory/clean/F3/oracle",
+   "claim": "Oracle answer to F3 (clean)",
+   "state": "computed here",
+   "detail": "1 rows, rdflib"
+  },
+  {
+   "case": "factory",
+   "id": "factory/clean/F3/server",
+   "claim": "x3d_mcp sparql_scene answers F3 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "1 rows"
+  },
+  {
+   "case": "factory",
+   "id": "factory/clean/F3/recorded",
+   "claim": "Recorded MCP run of F3 (clean)",
+   "state": "recorded",
+   "detail": "1 rows, as the oracle"
+  },
+  {
+   "case": "factory",
+   "id": "factory/clean/INF/oracle",
+   "claim": "Oracle answer to INF (clean)",
+   "state": "computed here",
+   "detail": "2 rows, rdflib"
+  },
+  {
+   "case": "factory",
+   "id": "factory/clean/INF/server",
+   "claim": "x3d_mcp sparql_scene answers INF (clean) like the oracle",
+   "state": "computed here",
+   "detail": "2 rows"
+  },
+  {
+   "case": "factory",
+   "id": "factory/clean/INF/recorded",
+   "claim": "Recorded MCP run of INF (clean)",
+   "state": "recorded",
+   "detail": "2 rows, as the oracle"
+  },
+  {
+   "case": "factory",
+   "id": "factory/clean/shacl",
+   "claim": "The clean variant conforms",
+   "state": "computed here",
+   "detail": "0 results, pyshacl"
+  },
+  {
+   "case": "factory",
+   "id": "factory/fault/F1/oracle",
+   "claim": "Oracle answer to F1 (fault)",
+   "state": "computed here",
+   "detail": "1 rows, rdflib"
+  },
+  {
+   "case": "factory",
+   "id": "factory/fault/F1/server",
+   "claim": "x3d_mcp sparql_scene answers F1 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "1 rows"
+  },
+  {
+   "case": "factory",
+   "id": "factory/fault/F1/recorded",
+   "claim": "Recorded MCP run of F1 (fault)",
+   "state": "recorded",
+   "detail": "1 rows, as the oracle"
+  },
+  {
+   "case": "factory",
+   "id": "factory/fault/F2/oracle",
+   "claim": "Oracle answer to F2 (fault)",
+   "state": "computed here",
+   "detail": "3 rows, rdflib"
+  },
+  {
+   "case": "factory",
+   "id": "factory/fault/F2/server",
+   "claim": "x3d_mcp sparql_scene answers F2 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "3 rows"
+  },
+  {
+   "case": "factory",
+   "id": "factory/fault/F2/recorded",
+   "claim": "Recorded MCP run of F2 (fault)",
+   "state": "recorded",
+   "detail": "3 rows, as the oracle"
+  },
+  {
+   "case": "factory",
+   "id": "factory/fault/F3/oracle",
+   "claim": "Oracle answer to F3 (fault)",
+   "state": "computed here",
+   "detail": "1 rows, rdflib"
+  },
+  {
+   "case": "factory",
+   "id": "factory/fault/F3/server",
+   "claim": "x3d_mcp sparql_scene answers F3 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "1 rows"
+  },
+  {
+   "case": "factory",
+   "id": "factory/fault/F3/recorded",
+   "claim": "Recorded MCP run of F3 (fault)",
+   "state": "recorded",
+   "detail": "1 rows, as the oracle"
+  },
+  {
+   "case": "factory",
+   "id": "factory/fault/INF/oracle",
+   "claim": "Oracle answer to INF (fault)",
+   "state": "computed here",
+   "detail": "2 rows, rdflib"
+  },
+  {
+   "case": "factory",
+   "id": "factory/fault/INF/server",
+   "claim": "x3d_mcp sparql_scene answers INF (fault) like the oracle",
+   "state": "computed here",
+   "detail": "2 rows"
+  },
+  {
+   "case": "factory",
+   "id": "factory/fault/INF/recorded",
+   "claim": "Recorded MCP run of INF (fault)",
+   "state": "recorded",
+   "detail": "2 rows, as the oracle"
+  },
+  {
+   "case": "factory",
+   "id": "factory/fault/shacl",
+   "claim": "The fault variant fails, and every planted fault is caught",
+   "state": "computed here",
+   "detail": "2 results, pyshacl"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/clean/P1/oracle",
+   "claim": "Oracle answer to P1 (clean)",
+   "state": "computed here",
+   "detail": "5 rows, rdflib"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/clean/P1/server",
+   "claim": "x3d_mcp sparql_scene answers P1 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "5 rows, same order as the oracle"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/clean/P1/recorded",
+   "claim": "Recorded MCP run of P1 (clean)",
+   "state": "recorded",
+   "detail": "5 rows, as the oracle"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/clean/P2/oracle",
+   "claim": "Oracle answer to P2 (clean)",
+   "state": "computed here",
+   "detail": "1 rows, rdflib"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/clean/P2/server",
+   "claim": "x3d_mcp sparql_scene answers P2 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "1 rows"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/clean/P2/recorded",
+   "claim": "Recorded MCP run of P2 (clean)",
+   "state": "recorded",
+   "detail": "1 rows, as the oracle"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/clean/P3/oracle",
+   "claim": "Oracle answer to P3 (clean)",
+   "state": "computed here",
+   "detail": "1 rows, rdflib"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/clean/P3/server",
+   "claim": "x3d_mcp sparql_scene answers P3 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "1 rows"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/clean/P3/recorded",
+   "claim": "Recorded MCP run of P3 (clean)",
+   "state": "recorded",
+   "detail": "1 rows, as the oracle"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/clean/INF/oracle",
+   "claim": "Oracle answer to INF (clean)",
+   "state": "computed here",
+   "detail": "8 rows, rdflib"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/clean/INF/server",
+   "claim": "x3d_mcp sparql_scene answers INF (clean) like the oracle",
+   "state": "computed here",
+   "detail": "8 rows, same rows; no ORDER BY, so order is not part of the answer"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/clean/INF/recorded",
+   "claim": "Recorded MCP run of INF (clean)",
+   "state": "recorded",
+   "detail": "8 rows, as the oracle (order not asked for)"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/clean/shacl",
+   "claim": "The clean variant conforms",
+   "state": "computed here",
+   "detail": "0 results, pyshacl"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/fault/P1/oracle",
+   "claim": "Oracle answer to P1 (fault)",
+   "state": "computed here",
+   "detail": "5 rows, rdflib"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/fault/P1/server",
+   "claim": "x3d_mcp sparql_scene answers P1 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "5 rows, same order as the oracle"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/fault/P1/recorded",
+   "claim": "Recorded MCP run of P1 (fault)",
+   "state": "recorded",
+   "detail": "5 rows, as the oracle"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/fault/P2/oracle",
+   "claim": "Oracle answer to P2 (fault)",
+   "state": "computed here",
+   "detail": "1 rows, rdflib"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/fault/P2/server",
+   "claim": "x3d_mcp sparql_scene answers P2 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "1 rows"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/fault/P2/recorded",
+   "claim": "Recorded MCP run of P2 (fault)",
+   "state": "recorded",
+   "detail": "1 rows, as the oracle"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/fault/P3/oracle",
+   "claim": "Oracle answer to P3 (fault)",
+   "state": "computed here",
+   "detail": "1 rows, rdflib"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/fault/P3/server",
+   "claim": "x3d_mcp sparql_scene answers P3 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "1 rows"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/fault/P3/recorded",
+   "claim": "Recorded MCP run of P3 (fault)",
+   "state": "recorded",
+   "detail": "1 rows, as the oracle"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/fault/INF/oracle",
+   "claim": "Oracle answer to INF (fault)",
+   "state": "computed here",
+   "detail": "8 rows, rdflib"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/fault/INF/server",
+   "claim": "x3d_mcp sparql_scene answers INF (fault) like the oracle",
+   "state": "computed here",
+   "detail": "8 rows, same rows; no ORDER BY, so order is not part of the answer"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/fault/INF/recorded",
+   "claim": "Recorded MCP run of INF (fault)",
+   "state": "recorded",
+   "detail": "8 rows, as the oracle (order not asked for)"
+  },
+  {
+   "case": "hospital",
+   "id": "hospital/fault/shacl",
+   "claim": "The fault variant fails, and every planted fault is caught",
+   "state": "computed here",
+   "detail": "2 results, pyshacl"
+  },
+  {
+   "case": "building",
+   "id": "building/clean/B1/oracle",
+   "claim": "Oracle answer to B1 (clean)",
+   "state": "computed here",
+   "detail": "2 rows, rdflib"
+  },
+  {
+   "case": "building",
+   "id": "building/clean/B1/server",
+   "claim": "x3d_mcp sparql_scene answers B1 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "2 rows, same order as the oracle"
+  },
+  {
+   "case": "building",
+   "id": "building/clean/B1/recorded",
+   "claim": "Recorded MCP run of B1 (clean)",
+   "state": "recorded",
+   "detail": "2 rows, as the oracle"
+  },
+  {
+   "case": "building",
+   "id": "building/clean/B2/oracle",
+   "claim": "Oracle answer to B2 (clean)",
+   "state": "computed here",
+   "detail": "6 rows, rdflib"
+  },
+  {
+   "case": "building",
+   "id": "building/clean/B2/server",
+   "claim": "x3d_mcp sparql_scene answers B2 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "6 rows, same order as the oracle"
+  },
+  {
+   "case": "building",
+   "id": "building/clean/B2/recorded",
+   "claim": "Recorded MCP run of B2 (clean)",
+   "state": "recorded",
+   "detail": "6 rows, as the oracle"
+  },
+  {
+   "case": "building",
+   "id": "building/clean/B3/oracle",
+   "claim": "Oracle answer to B3 (clean)",
+   "state": "computed here",
+   "detail": "2 rows, rdflib"
+  },
+  {
+   "case": "building",
+   "id": "building/clean/B3/server",
+   "claim": "x3d_mcp sparql_scene answers B3 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "2 rows, same order as the oracle"
+  },
+  {
+   "case": "building",
+   "id": "building/clean/B3/recorded",
+   "claim": "Recorded MCP run of B3 (clean)",
+   "state": "recorded",
+   "detail": "2 rows, as the oracle"
+  },
+  {
+   "case": "building",
+   "id": "building/clean/INF/oracle",
+   "claim": "Oracle answer to INF (clean)",
+   "state": "computed here",
+   "detail": "6 rows, rdflib"
+  },
+  {
+   "case": "building",
+   "id": "building/clean/INF/server",
+   "claim": "x3d_mcp sparql_scene answers INF (clean) like the oracle",
+   "state": "computed here",
+   "detail": "6 rows, same order as the oracle"
+  },
+  {
+   "case": "building",
+   "id": "building/clean/INF/recorded",
+   "claim": "Recorded MCP run of INF (clean)",
+   "state": "recorded",
+   "detail": "6 rows, as the oracle"
+  },
+  {
+   "case": "building",
+   "id": "building/clean/shacl",
+   "claim": "The clean variant conforms",
+   "state": "computed here",
+   "detail": "0 results, pyshacl"
+  },
+  {
+   "case": "building",
+   "id": "building/fault/B1/oracle",
+   "claim": "Oracle answer to B1 (fault)",
+   "state": "computed here",
+   "detail": "2 rows, rdflib"
+  },
+  {
+   "case": "building",
+   "id": "building/fault/B1/server",
+   "claim": "x3d_mcp sparql_scene answers B1 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "2 rows, same order as the oracle"
+  },
+  {
+   "case": "building",
+   "id": "building/fault/B1/recorded",
+   "claim": "Recorded MCP run of B1 (fault)",
+   "state": "recorded",
+   "detail": "2 rows, as the oracle"
+  },
+  {
+   "case": "building",
+   "id": "building/fault/B2/oracle",
+   "claim": "Oracle answer to B2 (fault)",
+   "state": "computed here",
+   "detail": "6 rows, rdflib"
+  },
+  {
+   "case": "building",
+   "id": "building/fault/B2/server",
+   "claim": "x3d_mcp sparql_scene answers B2 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "6 rows, same order as the oracle"
+  },
+  {
+   "case": "building",
+   "id": "building/fault/B2/recorded",
+   "claim": "Recorded MCP run of B2 (fault)",
+   "state": "recorded",
+   "detail": "6 rows, as the oracle"
+  },
+  {
+   "case": "building",
+   "id": "building/fault/B3/oracle",
+   "claim": "Oracle answer to B3 (fault)",
+   "state": "computed here",
+   "detail": "2 rows, rdflib"
+  },
+  {
+   "case": "building",
+   "id": "building/fault/B3/server",
+   "claim": "x3d_mcp sparql_scene answers B3 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "2 rows, same order as the oracle"
+  },
+  {
+   "case": "building",
+   "id": "building/fault/B3/recorded",
+   "claim": "Recorded MCP run of B3 (fault)",
+   "state": "recorded",
+   "detail": "2 rows, as the oracle"
+  },
+  {
+   "case": "building",
+   "id": "building/fault/INF/oracle",
+   "claim": "Oracle answer to INF (fault)",
+   "state": "computed here",
+   "detail": "6 rows, rdflib"
+  },
+  {
+   "case": "building",
+   "id": "building/fault/INF/server",
+   "claim": "x3d_mcp sparql_scene answers INF (fault) like the oracle",
+   "state": "computed here",
+   "detail": "6 rows, same order as the oracle"
+  },
+  {
+   "case": "building",
+   "id": "building/fault/INF/recorded",
+   "claim": "Recorded MCP run of INF (fault)",
+   "state": "recorded",
+   "detail": "6 rows, as the oracle"
+  },
+  {
+   "case": "building",
+   "id": "building/fault/shacl",
+   "claim": "The fault variant fails, and every planted fault is caught",
+   "state": "computed here",
+   "detail": "2 results, pyshacl"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/clean/W1/oracle",
+   "claim": "Oracle answer to W1 (clean)",
+   "state": "computed here",
+   "detail": "3 rows, rdflib"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/clean/W1/server",
+   "claim": "x3d_mcp sparql_scene answers W1 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "3 rows, same order as the oracle"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/clean/W1/recorded",
+   "claim": "Recorded MCP run of W1 (clean)",
+   "state": "recorded",
+   "detail": "3 rows, as the oracle"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/clean/W2/oracle",
+   "claim": "Oracle answer to W2 (clean)",
+   "state": "computed here",
+   "detail": "1 rows, rdflib"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/clean/W2/server",
+   "claim": "x3d_mcp sparql_scene answers W2 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "1 rows, same order as the oracle"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/clean/W2/recorded",
+   "claim": "Recorded MCP run of W2 (clean)",
+   "state": "recorded",
+   "detail": "1 rows, as the oracle"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/clean/W3/oracle",
+   "claim": "Oracle answer to W3 (clean)",
+   "state": "computed here",
+   "detail": "7 rows, rdflib"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/clean/W3/server",
+   "claim": "x3d_mcp sparql_scene answers W3 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "7 rows, same order as the oracle"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/clean/W3/recorded",
+   "claim": "Recorded MCP run of W3 (clean)",
+   "state": "recorded",
+   "detail": "7 rows, as the oracle"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/clean/INF/oracle",
+   "claim": "Oracle answer to INF (clean)",
+   "state": "computed here",
+   "detail": "3 rows, rdflib"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/clean/INF/server",
+   "claim": "x3d_mcp sparql_scene answers INF (clean) like the oracle",
+   "state": "computed here",
+   "detail": "3 rows, same order as the oracle"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/clean/INF/recorded",
+   "claim": "Recorded MCP run of INF (clean)",
+   "state": "recorded",
+   "detail": "3 rows, as the oracle"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/clean/shacl",
+   "claim": "The clean variant conforms",
+   "state": "computed here",
+   "detail": "0 results, pyshacl"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/fault/W1/oracle",
+   "claim": "Oracle answer to W1 (fault)",
+   "state": "computed here",
+   "detail": "3 rows, rdflib"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/fault/W1/server",
+   "claim": "x3d_mcp sparql_scene answers W1 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "3 rows, same order as the oracle"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/fault/W1/recorded",
+   "claim": "Recorded MCP run of W1 (fault)",
+   "state": "recorded",
+   "detail": "3 rows, as the oracle"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/fault/W2/oracle",
+   "claim": "Oracle answer to W2 (fault)",
+   "state": "computed here",
+   "detail": "1 rows, rdflib"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/fault/W2/server",
+   "claim": "x3d_mcp sparql_scene answers W2 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "1 rows, same order as the oracle"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/fault/W2/recorded",
+   "claim": "Recorded MCP run of W2 (fault)",
+   "state": "recorded",
+   "detail": "1 rows, as the oracle"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/fault/W3/oracle",
+   "claim": "Oracle answer to W3 (fault)",
+   "state": "computed here",
+   "detail": "7 rows, rdflib"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/fault/W3/server",
+   "claim": "x3d_mcp sparql_scene answers W3 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "7 rows, same order as the oracle"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/fault/W3/recorded",
+   "claim": "Recorded MCP run of W3 (fault)",
+   "state": "recorded",
+   "detail": "7 rows, as the oracle"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/fault/INF/oracle",
+   "claim": "Oracle answer to INF (fault)",
+   "state": "computed here",
+   "detail": "3 rows, rdflib"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/fault/INF/server",
+   "claim": "x3d_mcp sparql_scene answers INF (fault) like the oracle",
+   "state": "computed here",
+   "detail": "3 rows, same order as the oracle"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/fault/INF/recorded",
+   "claim": "Recorded MCP run of INF (fault)",
+   "state": "recorded",
+   "detail": "3 rows, as the oracle"
+  },
+  {
+   "case": "warehouse",
+   "id": "warehouse/fault/shacl",
+   "claim": "The fault variant fails, and every planted fault is caught",
+   "state": "computed here",
+   "detail": "3 results, pyshacl"
+  },
+  {
+   "case": "city",
+   "id": "city/clean/C1/oracle",
+   "claim": "Oracle answer to C1 (clean)",
+   "state": "computed here",
+   "detail": "1 rows, rdflib"
+  },
+  {
+   "case": "city",
+   "id": "city/clean/C1/server",
+   "claim": "x3d_mcp sparql_scene answers C1 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "1 rows, same order as the oracle"
+  },
+  {
+   "case": "city",
+   "id": "city/clean/C1/recorded",
+   "claim": "Recorded MCP run of C1 (clean)",
+   "state": "recorded",
+   "detail": "1 rows, as the oracle"
+  },
+  {
+   "case": "city",
+   "id": "city/clean/C2/oracle",
+   "claim": "Oracle answer to C2 (clean)",
+   "state": "computed here",
+   "detail": "2 rows, rdflib"
+  },
+  {
+   "case": "city",
+   "id": "city/clean/C2/server",
+   "claim": "x3d_mcp sparql_scene answers C2 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "2 rows, same order as the oracle"
+  },
+  {
+   "case": "city",
+   "id": "city/clean/C2/recorded",
+   "claim": "Recorded MCP run of C2 (clean)",
+   "state": "recorded",
+   "detail": "2 rows, as the oracle"
+  },
+  {
+   "case": "city",
+   "id": "city/clean/C3/oracle",
+   "claim": "Oracle answer to C3 (clean)",
+   "state": "computed here",
+   "detail": "3 rows, rdflib"
+  },
+  {
+   "case": "city",
+   "id": "city/clean/C3/server",
+   "claim": "x3d_mcp sparql_scene answers C3 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "3 rows, same order as the oracle"
+  },
+  {
+   "case": "city",
+   "id": "city/clean/C3/recorded",
+   "claim": "Recorded MCP run of C3 (clean)",
+   "state": "recorded",
+   "detail": "3 rows, as the oracle"
+  },
+  {
+   "case": "city",
+   "id": "city/clean/INF/oracle",
+   "claim": "Oracle answer to INF (clean)",
+   "state": "computed here",
+   "detail": "6 rows, rdflib"
+  },
+  {
+   "case": "city",
+   "id": "city/clean/INF/server",
+   "claim": "x3d_mcp sparql_scene answers INF (clean) like the oracle",
+   "state": "computed here",
+   "detail": "6 rows, same order as the oracle"
+  },
+  {
+   "case": "city",
+   "id": "city/clean/INF/recorded",
+   "claim": "Recorded MCP run of INF (clean)",
+   "state": "recorded",
+   "detail": "6 rows, as the oracle"
+  },
+  {
+   "case": "city",
+   "id": "city/clean/shacl",
+   "claim": "The clean variant conforms",
+   "state": "computed here",
+   "detail": "0 results, pyshacl"
+  },
+  {
+   "case": "city",
+   "id": "city/fault/C1/oracle",
+   "claim": "Oracle answer to C1 (fault)",
+   "state": "computed here",
+   "detail": "1 rows, rdflib"
+  },
+  {
+   "case": "city",
+   "id": "city/fault/C1/server",
+   "claim": "x3d_mcp sparql_scene answers C1 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "1 rows, same order as the oracle"
+  },
+  {
+   "case": "city",
+   "id": "city/fault/C1/recorded",
+   "claim": "Recorded MCP run of C1 (fault)",
+   "state": "recorded",
+   "detail": "1 rows, as the oracle"
+  },
+  {
+   "case": "city",
+   "id": "city/fault/C2/oracle",
+   "claim": "Oracle answer to C2 (fault)",
+   "state": "computed here",
+   "detail": "2 rows, rdflib"
+  },
+  {
+   "case": "city",
+   "id": "city/fault/C2/server",
+   "claim": "x3d_mcp sparql_scene answers C2 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "2 rows, same order as the oracle"
+  },
+  {
+   "case": "city",
+   "id": "city/fault/C2/recorded",
+   "claim": "Recorded MCP run of C2 (fault)",
+   "state": "recorded",
+   "detail": "2 rows, as the oracle"
+  },
+  {
+   "case": "city",
+   "id": "city/fault/C3/oracle",
+   "claim": "Oracle answer to C3 (fault)",
+   "state": "computed here",
+   "detail": "3 rows, rdflib"
+  },
+  {
+   "case": "city",
+   "id": "city/fault/C3/server",
+   "claim": "x3d_mcp sparql_scene answers C3 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "3 rows, same order as the oracle"
+  },
+  {
+   "case": "city",
+   "id": "city/fault/C3/recorded",
+   "claim": "Recorded MCP run of C3 (fault)",
+   "state": "recorded",
+   "detail": "3 rows, as the oracle"
+  },
+  {
+   "case": "city",
+   "id": "city/fault/INF/oracle",
+   "claim": "Oracle answer to INF (fault)",
+   "state": "computed here",
+   "detail": "6 rows, rdflib"
+  },
+  {
+   "case": "city",
+   "id": "city/fault/INF/server",
+   "claim": "x3d_mcp sparql_scene answers INF (fault) like the oracle",
+   "state": "computed here",
+   "detail": "6 rows, same order as the oracle"
+  },
+  {
+   "case": "city",
+   "id": "city/fault/INF/recorded",
+   "claim": "Recorded MCP run of INF (fault)",
+   "state": "recorded",
+   "detail": "6 rows, as the oracle"
+  },
+  {
+   "case": "city",
+   "id": "city/fault/shacl",
+   "claim": "The fault variant fails, and every planted fault is caught",
+   "state": "computed here",
+   "detail": "2 results, pyshacl"
+  },
+  {
+   "case": "concert",
+   "id": "concert/clean/M1/oracle",
+   "claim": "Oracle answer to M1 (clean)",
+   "state": "computed here",
+   "detail": "7 rows, rdflib"
+  },
+  {
+   "case": "concert",
+   "id": "concert/clean/M1/server",
+   "claim": "x3d_mcp sparql_scene answers M1 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "7 rows, same order as the oracle"
+  },
+  {
+   "case": "concert",
+   "id": "concert/clean/M1/recorded",
+   "claim": "Recorded MCP run of M1 (clean)",
+   "state": "explained difference",
+   "detail": "same rows, sorted: the server of 16 Nov re-sorted every answer and dropped ORDER BY (Evidence Edition F03); today's server keeps it"
+  },
+  {
+   "case": "concert",
+   "id": "concert/clean/M2/oracle",
+   "claim": "Oracle answer to M2 (clean)",
+   "state": "computed here",
+   "detail": "4 rows, rdflib"
+  },
+  {
+   "case": "concert",
+   "id": "concert/clean/M2/server",
+   "claim": "x3d_mcp sparql_scene answers M2 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "4 rows, same order as the oracle"
+  },
+  {
+   "case": "concert",
+   "id": "concert/clean/M2/recorded",
+   "claim": "Recorded MCP run of M2 (clean)",
+   "state": "recorded",
+   "detail": "4 rows, as the oracle"
+  },
+  {
+   "case": "concert",
+   "id": "concert/clean/M3/oracle",
+   "claim": "Oracle answer to M3 (clean)",
+   "state": "computed here",
+   "detail": "4 rows, rdflib"
+  },
+  {
+   "case": "concert",
+   "id": "concert/clean/M3/server",
+   "claim": "x3d_mcp sparql_scene answers M3 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "4 rows, same order as the oracle"
+  },
+  {
+   "case": "concert",
+   "id": "concert/clean/M3/recorded",
+   "claim": "Recorded MCP run of M3 (clean)",
+   "state": "recorded",
+   "detail": "4 rows, as the oracle"
+  },
+  {
+   "case": "concert",
+   "id": "concert/clean/INF/oracle",
+   "claim": "Oracle answer to INF (clean)",
+   "state": "computed here",
+   "detail": "10 rows, rdflib"
+  },
+  {
+   "case": "concert",
+   "id": "concert/clean/INF/server",
+   "claim": "x3d_mcp sparql_scene answers INF (clean) like the oracle",
+   "state": "computed here",
+   "detail": "10 rows, same order as the oracle"
+  },
+  {
+   "case": "concert",
+   "id": "concert/clean/INF/recorded",
+   "claim": "Recorded MCP run of INF (clean)",
+   "state": "explained difference",
+   "detail": "same rows, sorted: the server of 16 Nov re-sorted every answer and dropped ORDER BY (Evidence Edition F03); today's server keeps it"
+  },
+  {
+   "case": "concert",
+   "id": "concert/clean/shacl",
+   "claim": "The clean variant conforms",
+   "state": "computed here",
+   "detail": "0 results, pyshacl"
+  },
+  {
+   "case": "concert",
+   "id": "concert/fault/M1/oracle",
+   "claim": "Oracle answer to M1 (fault)",
+   "state": "computed here",
+   "detail": "7 rows, rdflib"
+  },
+  {
+   "case": "concert",
+   "id": "concert/fault/M1/server",
+   "claim": "x3d_mcp sparql_scene answers M1 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "7 rows, same order as the oracle"
+  },
+  {
+   "case": "concert",
+   "id": "concert/fault/M1/recorded",
+   "claim": "Recorded MCP run of M1 (fault)",
+   "state": "explained difference",
+   "detail": "same rows, sorted: the server of 16 Nov re-sorted every answer and dropped ORDER BY (Evidence Edition F03); today's server keeps it"
+  },
+  {
+   "case": "concert",
+   "id": "concert/fault/M2/oracle",
+   "claim": "Oracle answer to M2 (fault)",
+   "state": "computed here",
+   "detail": "4 rows, rdflib"
+  },
+  {
+   "case": "concert",
+   "id": "concert/fault/M2/server",
+   "claim": "x3d_mcp sparql_scene answers M2 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "4 rows, same order as the oracle"
+  },
+  {
+   "case": "concert",
+   "id": "concert/fault/M2/recorded",
+   "claim": "Recorded MCP run of M2 (fault)",
+   "state": "recorded",
+   "detail": "4 rows, as the oracle"
+  },
+  {
+   "case": "concert",
+   "id": "concert/fault/M3/oracle",
+   "claim": "Oracle answer to M3 (fault)",
+   "state": "computed here",
+   "detail": "4 rows, rdflib"
+  },
+  {
+   "case": "concert",
+   "id": "concert/fault/M3/server",
+   "claim": "x3d_mcp sparql_scene answers M3 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "4 rows, same order as the oracle"
+  },
+  {
+   "case": "concert",
+   "id": "concert/fault/M3/recorded",
+   "claim": "Recorded MCP run of M3 (fault)",
+   "state": "recorded",
+   "detail": "4 rows, as the oracle"
+  },
+  {
+   "case": "concert",
+   "id": "concert/fault/INF/oracle",
+   "claim": "Oracle answer to INF (fault)",
+   "state": "computed here",
+   "detail": "10 rows, rdflib"
+  },
+  {
+   "case": "concert",
+   "id": "concert/fault/INF/server",
+   "claim": "x3d_mcp sparql_scene answers INF (fault) like the oracle",
+   "state": "computed here",
+   "detail": "10 rows, same order as the oracle"
+  },
+  {
+   "case": "concert",
+   "id": "concert/fault/INF/recorded",
+   "claim": "Recorded MCP run of INF (fault)",
+   "state": "explained difference",
+   "detail": "same rows, sorted: the server of 16 Nov re-sorted every answer and dropped ORDER BY (Evidence Edition F03); today's server keeps it"
+  },
+  {
+   "case": "concert",
+   "id": "concert/fault/shacl",
+   "claim": "The fault variant fails, and every planted fault is caught",
+   "state": "computed here",
+   "detail": "2 results, pyshacl"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/clean/E1/oracle",
+   "claim": "Oracle answer to E1 (clean)",
+   "state": "computed here",
+   "detail": "8 rows, rdflib"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/clean/E1/server",
+   "claim": "x3d_mcp sparql_scene answers E1 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "8 rows, same order as the oracle"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/clean/E1/recorded",
+   "claim": "Recorded MCP run of E1 (clean)",
+   "state": "explained difference",
+   "detail": "same rows, sorted: the server of 16 Nov re-sorted every answer and dropped ORDER BY (Evidence Edition F03); today's server keeps it"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/clean/E2/oracle",
+   "claim": "Oracle answer to E2 (clean)",
+   "state": "computed here",
+   "detail": "8 rows, rdflib"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/clean/E2/server",
+   "claim": "x3d_mcp sparql_scene answers E2 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "8 rows, same order as the oracle"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/clean/E2/recorded",
+   "claim": "Recorded MCP run of E2 (clean)",
+   "state": "explained difference",
+   "detail": "same rows, sorted: the server of 16 Nov re-sorted every answer and dropped ORDER BY (Evidence Edition F03); today's server keeps it"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/clean/E3/oracle",
+   "claim": "Oracle answer to E3 (clean)",
+   "state": "computed here",
+   "detail": "1 rows, rdflib"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/clean/E3/server",
+   "claim": "x3d_mcp sparql_scene answers E3 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "1 rows"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/clean/E3/recorded",
+   "claim": "Recorded MCP run of E3 (clean)",
+   "state": "recorded",
+   "detail": "1 rows, as the oracle"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/clean/INF/oracle",
+   "claim": "Oracle answer to INF (clean)",
+   "state": "computed here",
+   "detail": "10 rows, rdflib"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/clean/INF/server",
+   "claim": "x3d_mcp sparql_scene answers INF (clean) like the oracle",
+   "state": "computed here",
+   "detail": "10 rows, same order as the oracle"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/clean/INF/recorded",
+   "claim": "Recorded MCP run of INF (clean)",
+   "state": "explained difference",
+   "detail": "same rows, sorted: the server of 16 Nov re-sorted every answer and dropped ORDER BY (Evidence Edition F03); today's server keeps it"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/clean/shacl",
+   "claim": "The clean variant conforms",
+   "state": "computed here",
+   "detail": "0 results, pyshacl"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/fault/E1/oracle",
+   "claim": "Oracle answer to E1 (fault)",
+   "state": "computed here",
+   "detail": "8 rows, rdflib"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/fault/E1/server",
+   "claim": "x3d_mcp sparql_scene answers E1 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "8 rows, same order as the oracle"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/fault/E1/recorded",
+   "claim": "Recorded MCP run of E1 (fault)",
+   "state": "explained difference",
+   "detail": "same rows, sorted: the server of 16 Nov re-sorted every answer and dropped ORDER BY (Evidence Edition F03); today's server keeps it"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/fault/E2/oracle",
+   "claim": "Oracle answer to E2 (fault)",
+   "state": "computed here",
+   "detail": "8 rows, rdflib"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/fault/E2/server",
+   "claim": "x3d_mcp sparql_scene answers E2 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "8 rows, same order as the oracle"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/fault/E2/recorded",
+   "claim": "Recorded MCP run of E2 (fault)",
+   "state": "explained difference",
+   "detail": "same rows, sorted: the server of 16 Nov re-sorted every answer and dropped ORDER BY (Evidence Edition F03); today's server keeps it"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/fault/E3/oracle",
+   "claim": "Oracle answer to E3 (fault)",
+   "state": "computed here",
+   "detail": "1 rows, rdflib"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/fault/E3/server",
+   "claim": "x3d_mcp sparql_scene answers E3 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "1 rows"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/fault/E3/recorded",
+   "claim": "Recorded MCP run of E3 (fault)",
+   "state": "recorded",
+   "detail": "1 rows, as the oracle"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/fault/INF/oracle",
+   "claim": "Oracle answer to INF (fault)",
+   "state": "computed here",
+   "detail": "10 rows, rdflib"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/fault/INF/server",
+   "claim": "x3d_mcp sparql_scene answers INF (fault) like the oracle",
+   "state": "computed here",
+   "detail": "10 rows, same order as the oracle"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/fault/INF/recorded",
+   "claim": "Recorded MCP run of INF (fault)",
+   "state": "explained difference",
+   "detail": "same rows, sorted: the server of 16 Nov re-sorted every answer and dropped ORDER BY (Evidence Edition F03); today's server keeps it"
+  },
+  {
+   "case": "firecode",
+   "id": "firecode/fault/shacl",
+   "claim": "The fault variant fails, and every planted fault is caught",
+   "state": "computed here",
+   "detail": "4 results, pyshacl"
+  },
+  {
+   "case": "farm",
+   "id": "farm/clean/A1/oracle",
+   "claim": "Oracle answer to A1 (clean)",
+   "state": "computed here",
+   "detail": "3 rows, rdflib"
+  },
+  {
+   "case": "farm",
+   "id": "farm/clean/A1/server",
+   "claim": "x3d_mcp sparql_scene answers A1 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "3 rows, same order as the oracle"
+  },
+  {
+   "case": "farm",
+   "id": "farm/clean/A1/recorded",
+   "claim": "Recorded MCP run of A1 (clean)",
+   "state": "recorded",
+   "detail": "3 rows, as the oracle"
+  },
+  {
+   "case": "farm",
+   "id": "farm/clean/A2/oracle",
+   "claim": "Oracle answer to A2 (clean)",
+   "state": "computed here",
+   "detail": "4 rows, rdflib"
+  },
+  {
+   "case": "farm",
+   "id": "farm/clean/A2/server",
+   "claim": "x3d_mcp sparql_scene answers A2 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "4 rows, same order as the oracle"
+  },
+  {
+   "case": "farm",
+   "id": "farm/clean/A2/recorded",
+   "claim": "Recorded MCP run of A2 (clean)",
+   "state": "recorded",
+   "detail": "4 rows, as the oracle"
+  },
+  {
+   "case": "farm",
+   "id": "farm/clean/A3/oracle",
+   "claim": "Oracle answer to A3 (clean)",
+   "state": "computed here",
+   "detail": "3 rows, rdflib"
+  },
+  {
+   "case": "farm",
+   "id": "farm/clean/A3/server",
+   "claim": "x3d_mcp sparql_scene answers A3 (clean) like the oracle",
+   "state": "computed here",
+   "detail": "3 rows, same order as the oracle"
+  },
+  {
+   "case": "farm",
+   "id": "farm/clean/A3/recorded",
+   "claim": "Recorded MCP run of A3 (clean)",
+   "state": "recorded",
+   "detail": "3 rows, as the oracle"
+  },
+  {
+   "case": "farm",
+   "id": "farm/clean/INF/oracle",
+   "claim": "Oracle answer to INF (clean)",
+   "state": "computed here",
+   "detail": "7 rows, rdflib"
+  },
+  {
+   "case": "farm",
+   "id": "farm/clean/INF/server",
+   "claim": "x3d_mcp sparql_scene answers INF (clean) like the oracle",
+   "state": "computed here",
+   "detail": "7 rows, same order as the oracle"
+  },
+  {
+   "case": "farm",
+   "id": "farm/clean/INF/recorded",
+   "claim": "Recorded MCP run of INF (clean)",
+   "state": "recorded",
+   "detail": "7 rows, as the oracle"
+  },
+  {
+   "case": "farm",
+   "id": "farm/clean/shacl",
+   "claim": "The clean variant conforms",
+   "state": "computed here",
+   "detail": "0 results, pyshacl"
+  },
+  {
+   "case": "farm",
+   "id": "farm/fault/A1/oracle",
+   "claim": "Oracle answer to A1 (fault)",
+   "state": "computed here",
+   "detail": "3 rows, rdflib"
+  },
+  {
+   "case": "farm",
+   "id": "farm/fault/A1/server",
+   "claim": "x3d_mcp sparql_scene answers A1 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "3 rows, same order as the oracle"
+  },
+  {
+   "case": "farm",
+   "id": "farm/fault/A1/recorded",
+   "claim": "Recorded MCP run of A1 (fault)",
+   "state": "recorded",
+   "detail": "3 rows, as the oracle"
+  },
+  {
+   "case": "farm",
+   "id": "farm/fault/A2/oracle",
+   "claim": "Oracle answer to A2 (fault)",
+   "state": "computed here",
+   "detail": "4 rows, rdflib"
+  },
+  {
+   "case": "farm",
+   "id": "farm/fault/A2/server",
+   "claim": "x3d_mcp sparql_scene answers A2 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "4 rows, same order as the oracle"
+  },
+  {
+   "case": "farm",
+   "id": "farm/fault/A2/recorded",
+   "claim": "Recorded MCP run of A2 (fault)",
+   "state": "recorded",
+   "detail": "4 rows, as the oracle"
+  },
+  {
+   "case": "farm",
+   "id": "farm/fault/A3/oracle",
+   "claim": "Oracle answer to A3 (fault)",
+   "state": "computed here",
+   "detail": "3 rows, rdflib"
+  },
+  {
+   "case": "farm",
+   "id": "farm/fault/A3/server",
+   "claim": "x3d_mcp sparql_scene answers A3 (fault) like the oracle",
+   "state": "computed here",
+   "detail": "3 rows, same order as the oracle"
+  },
+  {
+   "case": "farm",
+   "id": "farm/fault/A3/recorded",
+   "claim": "Recorded MCP run of A3 (fault)",
+   "state": "recorded",
+   "detail": "3 rows, as the oracle"
+  },
+  {
+   "case": "farm",
+   "id": "farm/fault/INF/oracle",
+   "claim": "Oracle answer to INF (fault)",
+   "state": "computed here",
+   "detail": "7 rows, rdflib"
+  },
+  {
+   "case": "farm",
+   "id": "farm/fault/INF/server",
+   "claim": "x3d_mcp sparql_scene answers INF (fault) like the oracle",
+   "state": "computed here",
+   "detail": "7 rows, same order as the oracle"
+  },
+  {
+   "case": "farm",
+   "id": "farm/fault/INF/recorded",
+   "claim": "Recorded MCP run of INF (fault)",
+   "state": "recorded",
+   "detail": "7 rows, as the oracle"
+  },
+  {
+   "case": "farm",
+   "id": "farm/fault/shacl",
+   "claim": "The fault variant fails, and every planted fault is caught",
+   "state": "computed here",
+   "detail": "2 results, pyshacl"
+  },
+  {
+   "case": null,
+   "id": "layers/questions",
+   "claim": "Records alone answer 27 of 36; scene alone 0 of 36",
+   "state": "recorded",
+   "detail": "eval/layers.json; re-run with build/layers.py"
+  },
+  {
+   "case": null,
+   "id": "browser",
+   "claim": "N3.js, Comunica and shacl-engine match the oracle on 90 of 90 runs",
+   "state": "not packaged",
+   "detail": "measured on the x3d.demo page (demos/semantic-twins/v1); the browser engines are not in this folder"
+  },
+  {
+   "case": null,
+   "id": "vocab",
+   "claim": "All 116 class and property uses are declared in each publisher's vocabulary file",
+   "state": "not packaged",
+   "detail": "checked against the publishers' files as read on 16 Nov 2026; those files are not kept here"
+  }
+ ]
+}

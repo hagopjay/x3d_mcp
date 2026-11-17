@@ -33,6 +33,7 @@ All 116 class and property uses are declared in each publisher's own vocabulary 
   - `scenes*.py` and `domain*.py` generate everything; `cases.py` merges the two rounds.
   - `oracle.py` computes the gold answers, and `record.py` replays them through the MCP server.
   - `layers.py` and `layers2.py` run the layer test below.
+- `build/evidence.py` gives every claim an evidence state and writes `evidence/` (see below).
 - `dl/agrovoc/chain.json`: AGROVOC broader chains fetched from the FAO REST API (AGROVOC is CC BY 4.0, FAO).
 - `eval/`: `eval-set-v1.json` (45 items with gold answers) and `layers.json`.
 
@@ -44,6 +45,7 @@ python ../examples/semantic_twins/build/scenes.py && python ../examples/semantic
 python ../examples/semantic_twins/build/oracle.py     # gold answers
 python ../examples/semantic_twins/build/record.py     # the same calls through the MCP server
 python ../examples/semantic_twins/build/layers.py && python ../examples/semantic_twins/build/layers2.py
+python ../examples/semantic_twins/build/evidence.py   # evidence states; exits 1 on any mismatch
 ```
 
 ## Results (16 Nov 2026)
@@ -55,6 +57,25 @@ python ../examples/semantic_twins/build/layers.py && python ../examples/semantic
   - Questions and rules: the scene alone answers 0 of 36, the domain records alone answer 27 of 36, and both together answer all 36.
   - Planted faults: the records alone catch 5 of 18, and the scene plus the records catch all 18.
   - The cases and faults were written by us, so read this as lift between layers on this data, not a general result.
+
+## Evidence states (17 Nov 2026)
+
+A bare "Confirmed" does not say whether a number was recomputed or copied. `build/evidence.py` gives each of the 238 claims one state, after the Semantic Twin Lab Evidence Edition:
+
+| State | Meaning | Claims |
+|---|---|---|
+| computed here | Recomputed from the packaged files, and it agrees with the stored result | 162 |
+| recorded | Taken from a stored record (the MCP run of 16 Nov, the layer test) without re-running it | 60 |
+| explained difference | Recomputed, differs from the record, and the reason is known | 13 |
+| hash checked | The 75 packaged files match `evidence/manifest.json` | 1 |
+| not packaged | Rests on material not kept here (the browser engines, the publishers' vocabulary files) | 2 |
+| mismatch | Recomputed, differs, reason unknown | 0 |
+
+The 162 "computed here" claims are, for each of the 9 cases, 2 variants and 4 queries: the oracle answer recomputed with rdflib, and the same query through `sparql_scene` with `result_format="typed"` returning the same rows in the same order; plus the 18 SHACL verdicts.
+
+The 13 explained differences are one finding. The server recorded on 16 Nov re-sorted every answer, so a query's `ORDER BY` was lost: in 13 of the 54 recorded answers to ordered queries, the stored row order is not the order the query asked for. The rows themselves were right. Since x3d_mcp PR #24, `sparql_scene` keeps the query's order when it has `ORDER BY` and says so in `order`.
+
+The per-claim list is in `evidence/evidence.json`; `evidence/EVIDENCE.md` is the summary.
 
 ## Eval set
 
