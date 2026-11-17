@@ -59,7 +59,8 @@ Counts mode reduces direct author-text exposure. It is not a general proof of pr
 2. drop `untrusted.names`, then `untrusted.quoted`;
 3. collapse lists to counts and fold the text-surface digests into one total;
 4. drop facets in this order: materials, lights, camera, bounds, routes, census;
-5. drop `untrusted`, then the `render` stub.
+5. drop `untrusted`, then the `render` stub;
+6. as a last resort, drop `input.sha256_full` (named in `budget.dropped`); the 16-hex `input.sha256` stays, so the 1,024-byte floor remains satisfiable.
 
 The input digest and the `validators` verdicts survive longest. If even that cannot fit, the answer is `{"ok":false,"error":"budget-too-small","min_bytes":N}`.
 
@@ -74,7 +75,7 @@ A brief is a slice, not a proof. Two rules if you use it to feed a model that cl
 
 * `bounds` is the box of the authored pose: no routes, animation or scripts are applied, and `Text`, `Inline`, `ProtoInstance`, `Extrusion`, `ElevationGrid` and anything with an unparsable value are counted under `unbounded` with a reason, never guessed. An author's own `bboxSize` is ignored.
 * The enhanced bounds path applies `CADPart` transforms, rejects fractional `Switch.whichChoice` values, and normalizes very large finite rotation axes without squaring overflow. Derived numeric overflow is reported under `unbounded.numeric-overflow`. If the aggregate size cannot be represented by finite binary64 values, `aggregate-numeric-overflow` is reported and the aggregate coordinates are omitted. JSON serialization also refuses nonfinite numbers as a final guard.
-* Displayed bounds endpoints are rounded **outward** to 0.001 scene units, so quantization does not shrink a conservative envelope. Size and centre are derived from those displayed endpoints; a centre can shift by up to 0.0005 scene units. This is neither a dynamic swept volume nor a complete scene box when coverage is incomplete. The bounds walk considers the authored selected Switch child and first LOD level only.
+* Displayed bounds endpoints are rounded **outward** to 0.001 scene units, so quantization does not shrink a conservative envelope. The shortest decimal that names each double is quantized (0.1 stays 0.1), and the double itself is the outer clamp. Size and centre are derived from those displayed endpoints; a centre can shift by up to 0.0005 scene units. This is neither a dynamic swept volume nor a complete scene box when coverage is incomplete. The bounds walk considers the authored selected Switch child and first LOD level only.
 * The XSD check pays the schema compile on the first call of a process (about 1.5 to 1.9 s); later calls are milliseconds. Leave `validators` out of `facets` to avoid both.
 * Documents over libxml2's default depth limit (256) or with a start tag over 10 MB are refused as `not-well-formed`; a DOCTYPE is read but its entities are not expanded and nothing is fetched.
 * The text surface lists attribute names it does not know under `other_attr` and counts them; it does not decide whether a string is an instruction. Pattern linting belongs to the caller, and is a pre-filter at best.
