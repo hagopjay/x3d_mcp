@@ -152,6 +152,14 @@ def test_budget_is_a_hard_cap(budget, xml):
         assert b["budget"]["dropped"], "a tight budget must name what it dropped"
 
 
+@pytest.mark.parametrize("n", [1, 3000])
+def test_the_documented_floor_still_holds_with_the_full_input_digest(n):
+    # The 64-hex input.sha256_full is part of the fixed answer; the 1,024-byte floor documented in docs/scene-brief.md must stay satisfiable.
+    for mode in ("counts", "quoted"):
+        b = sb.scene_brief(blocks(n), budget_bytes=sb.MIN_BUDGET, text_mode=mode, ids="names")
+        assert len(sb.render(b).encode()) <= sb.MIN_BUDGET and b["input"]["sha256_full"].startswith(b["input"]["sha256"])
+
+
 def test_a_budget_below_the_floor_is_clamped_and_says_so():
     b = sb.scene_brief(INJECTION, budget_bytes=10)
     assert b["budget"]["bytes"] == sb.MIN_BUDGET == 1024 and b["budget"]["clamped"] is True
@@ -213,7 +221,7 @@ def test_bounds_analytic_cases():
     b = bounds('<Transform scale="2 1 3" translation="10 0 0"><Shape><Box size="1 1 1"/></Shape></Transform>')
     assert (b["min"], b["max"]) == ([9.0, -0.5, -1.5], [11.0, 0.5, 1.5])
     b = bounds(f'<Transform rotation="0 1 0 {math.pi / 2}"><Shape><Box size="4 2 2"/></Shape></Transform>')      # a quarter turn swaps x and z
-    assert b["size"] == [2.0, 2.0, 4.0]
+    assert b["size"] == pytest.approx([2.0, 2.0, 4.0], abs=0.0021)
     b = bounds('<Transform translation="1 0 0"><Transform translation="0 2 0" scale="2 2 2"><Shape><Sphere radius="1"/></Shape></Transform></Transform>')
     assert (b["min"], b["max"]) == ([-1.0, 0.0, -2.0], [3.0, 4.0, 2.0])
     b = bounds('<Transform scale="-1 1 1" translation="5 0 0"><Shape><Box size="2 2 2"/></Shape></Transform>')    # a mirror still gives min <= max
@@ -221,12 +229,13 @@ def test_bounds_analytic_cases():
     b = bounds('<Shape><IndexedFaceSet coordIndex="0 1 2 -1"><Coordinate point="0 0 0 4 0 0 0 3 0"/></IndexedFaceSet></Shape>')
     assert (b["min"], b["max"]) == ([0.0, 0.0, 0.0], [4.0, 3.0, 0.0])
     b = bounds('<Transform center="1 0 0" rotation="0 0 1 3.141592653589793"><Shape><Box size="2 2 2"/></Shape></Transform>')
-    assert b["center"] == [2.0, 0.0, 0.0]            # a half turn about a centre one unit out lands the box two units out
+    assert b["center"] == pytest.approx([2.0, 0.0, 0.0], abs=0.001)  # a half turn about a centre one unit out lands the box two units out; outward endpoint quantization can move the displayed centre
 
 
 def test_bounds_45_degree_turn_is_the_exact_box_of_the_rotated_corners():
     b = bounds(f'<Transform rotation="0 1 0 {math.pi / 4}"><Shape><Box size="2 2 2"/></Shape></Transform>')
-    assert b["size"][0] == b["size"][2] == round(2 * math.sqrt(2), 3) and b["conservative"] is True and b["static"] is True
+    assert 2 * math.sqrt(2) <= b["size"][0] == b["size"][2] < 2 * math.sqrt(2) + 0.0021
+    assert b["conservative"] is True and b["static"] is True
 
 
 def test_bounds_switch_lod_and_use():

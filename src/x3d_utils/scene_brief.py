@@ -11,8 +11,8 @@ the UTF-8 length). Everything in it is one of:
 Author text (DEF names, `meta`, titles, descriptions, urls, Script source, comments) never appears in a facet.
 It is counted and digested under `untrusted`, and quoted there (capped, JSON-escaped) only when `text="quoted"`.
 Validator messages are never forwarded: XSD errors are classified into a closed `kind`, semantic findings keep
-their check id. That is what makes the brief safe to put in front of a language model: the text a scene's author
-controls cannot reach the reader as an instruction, because it is not in the answer.
+their check id. Default counts mode removes direct author-text channels; this is not a general proof of prompt
+injection resistance. Opt-in quoted text remains untrusted and must never acquire tool or acceptance authority.
 
 The brief is a slice, not a proof. `validators` facets are oracle outputs of this server's own checkers; do not
 hand them to a judge you are trying to score against those same checkers (answer leakage): ask for the other
@@ -29,6 +29,7 @@ import math
 import re
 import time
 from collections import Counter
+from decimal import Decimal, ROUND_CEILING, ROUND_FLOOR, localcontext
 
 from lxml import etree
 
@@ -156,7 +157,11 @@ _I3 = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
 
 def _rot(axis_angle):
     x, y, z, a = axis_angle
-    n = math.sqrt(x * x + y * y + z * z) or 1.0
+    scale = max(abs(x), abs(y), abs(z))
+    if scale == 0:
+        return _I3 if a == 0 else None
+    x, y, z = x / scale, y / scale, z / scale
+    n = math.hypot(x, y, z)
     x, y, z = x / n, y / n, z / n
     c, s = math.cos(a), math.sin(a)
     t = 1 - c
@@ -183,6 +188,8 @@ def _local(el):
     if None in (t, c, r, so, s):
         return None
     R, SR = _rot(r), _rot(so)
+    if R is None or SR is None:
+        return None
     S = [[s[0], 0, 0], [0, s[1], 0], [0, 0, s[2]]]
     lin = _mm(_mm(_mm(R, SR), S), [list(col) for col in zip(*SR)])
     off = [t[i] + c[i] - sum(lin[i][k] * c[k] for k in range(3)) for i in range(3)]
@@ -192,6 +199,26 @@ def _local(el):
 def _compose(parent, child):
     (pl, po), (cl, co) = parent, child
     return _mm(pl, cl), [po[i] + sum(pl[i][k] * co[k] for k in range(3)) for i in range(3)]
+
+
+def _finite_transform(transform):
+    linear, offset = transform
+    return all(math.isfinite(x) for row in linear for x in row) and all(math.isfinite(x) for x in offset)
+
+
+def _outward_box(lo, hi):
+    """Quantize the displayed endpoints outwards; nearest rounding can shrink a conservative box."""
+    quantum = Decimal("0.001")
+    # 400 decimal digits cover all finite binary64 values, including their fractional part at this precision.
+    with localcontext() as ctx:
+        ctx.prec = 400
+        low = [min(x, float(Decimal.from_float(x).quantize(quantum, rounding=ROUND_FLOOR))) for x in lo]
+        high = [max(x, float(Decimal.from_float(x).quantize(quantum, rounding=ROUND_CEILING))) for x in hi]
+    size = [high[i] - low[i] for i in range(3)]
+    center = [low[i] / 2 + high[i] / 2 for i in range(3)]
+    if not all(math.isfinite(x) for x in low + high + size + center):
+        return None
+    return {"min": low, "max": high, "size": size, "center": center}
 
 
 def _shape_box(shape, defs):
@@ -251,7 +278,11 @@ def _bounds(scene, defs, total_shapes: int) -> dict:
         t = _tag(el)
         if t == "Switch":
             w = floats(el.get("whichChoice", "-1"), 1)
-            w = int(w[0]) if w else -1
+            if not w or not w[0].is_integer():
+                unbounded["invalid-value"] += 1
+                kids = []
+                continue
+            w = int(w[0])
             kids = [kids[w]] if 0 <= w < len(kids) else []
         elif t == "LOD":
             kids = kids[:1]
@@ -269,31 +300,43 @@ def _bounds(scene, defs, total_shapes: int) -> dict:
                     unbounded[why] += 1
                     continue
                 lin, off = m
+                points = []
                 for cx in (box[0][0], box[1][0]):
                     for cy in (box[0][1], box[1][1]):
                         for cz in (box[0][2], box[1][2]):
                             p = _mv(lin, [cx, cy, cz])
-                            for i in range(3):
-                                q = p[i] + off[i]
-                                lo[i] = min(lo[i], q)
-                                hi[i] = max(hi[i], q)
+                            points.append([p[i] + off[i] for i in range(3)])
+                if not all(math.isfinite(q) for p in points for q in p):
+                    unbounded["numeric-overflow"] += 1
+                    continue
+                for p in points:
+                    for i, q in enumerate(p):
+                        lo[i] = min(lo[i], q)
+                        hi[i] = max(hi[i], q)
                 got += 1
-            elif nt in ("Transform", "HAnimJoint", "HAnimSite", "HAnimSegment", "HAnimHumanoid"):
+            elif nt in ("Transform", "CADPart", "HAnimJoint", "HAnimSite", "HAnimSegment", "HAnimHumanoid"):
                 loc = _local(node)
                 if loc is None:
                     unbounded["invalid-value"] += 1
                     continue
-                stack.append((node, _compose(m, loc), depth + 1))
+                combined = _compose(m, loc)
+                if not _finite_transform(loc) or not _finite_transform(combined):
+                    unbounded["numeric-overflow"] += 1
+                    continue
+                stack.append((node, combined, depth + 1))
             elif nt in ("Inline", "ProtoInstance", "Text", "GeoTransform", "GeoLocation", "GeoLOD", "EspduTransform"):
                 unbounded["unsupported:" + _safe_node(nt)] += 1
             elif nt in ("Group", "Anchor", "Collision", "Billboard", "StaticGroup", "Switch", "LOD",
-                        "CADLayer", "CADAssembly", "CADPart", "CADFace"):
+                        "CADLayer", "CADAssembly", "CADFace"):
                 stack.append((node, m, depth + 1))
     out = {"tier": "derived", "static": True, "method": "aabb-of-transformed-primitive-aabbs", "conservative": True,
            "shapes": total_shapes, "bounded_shapes": got, "unbounded": dict(sorted(unbounded.items()))}
     if got:
-        out.update({"min": _r3(lo), "max": _r3(hi), "size": _r3([hi[i] - lo[i] for i in range(3)]),
-                    "center": _r3([(hi[i] + lo[i]) / 2 for i in range(3)])})
+        summary = _outward_box(lo, hi)
+        if summary is None:
+            out["unbounded"]["aggregate-numeric-overflow"] = 1
+        else:
+            out.update(summary)
     return out
 
 
@@ -430,7 +473,7 @@ def _text_surface(root, handle, defs, text_mode: str, text_cap: int, ids: str, m
 
 # --- assembling and fitting ----------------------------------------------------------------------------------
 def _canon(obj) -> str:
-    return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+    return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False)
 
 
 def _cut(d: dict, key: str, n: int):
@@ -646,9 +689,10 @@ def scene_brief(text: str, *, facets=None, budget_bytes: int = DEFAULT_BUDGET, m
                                 "top_edges": dict(pairs.most_common(max_items))}
     if "validators" in want:
         out_facets["validators"] = _validators(text, els, defs, handle, max_items)
+    input_digest = hashlib.sha256(data).hexdigest()
     body: dict = {
         "schema": SCHEMA, "ok": True,
-        "input": {"sha256": hashlib.sha256(data).hexdigest()[:16], "bytes": len(data),
+        "input": {"sha256": input_digest[:16], "sha256_full": input_digest, "bytes": len(data),
                   "x3d_version": root.get("version") if root.get("version") in VERSIONS else None,
                   "profile": root.get("profile") if root.get("profile") in PROFILES else None,
                   "declared_invalid": [k for k, ok in (("version", root.get("version") in VERSIONS or root.get("version") is None),
