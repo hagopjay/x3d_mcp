@@ -43,7 +43,7 @@ sys.stdout = sys.stderr
 from tools import (
     workflow, granular, convert, query, validate_tool, render, scene_ops, animate,
     claims as claim_tools, prompts, semantics, semantic_web, scene_brief as brief_tools,
-    scene_evidence as evidence_tools,
+    scene_evidence as evidence_tools, source_tools,
 )
 from tools import transfer as blob_tools
 from tools import splats as splat_tools
@@ -76,7 +76,8 @@ semantic_audit, convert_to_x3dom). They encode the known-good tool order so you 
 MEANING, NOT ONLY SYNTAX (the semantic_audit prompt runs this): `scene_to_rdf` turns a scene into RDF \
 (X3D Ontology 4.1 terms, the Consortium X3dToTurtle conventions) and returns a `graph_id`; \
 `sparql_scene(graph_id=..., sparql=...)` answers questions about it (which Shapes lack an Appearance, \
-what a ROUTE chain drives, every geometry via `a/rdfs:subClassOf*`); `shacl_validate(graph_id=...)` \
+what a ROUTE chain drives, every geometry via `a/rdfs:subClassOf*`; pass `result_format="typed"` when \
+datatypes, unbound values or blank nodes matter, and use ORDER BY when order does); `shacl_validate(graph_id=...)` \
 checks it against shapes and names each offending node, its DEF, the check and a fix; then \
 `validate_x3d` + `validate_semantic` for schema and order (RDF keeps no document order); record what \
 you verified with `claim_append`, passing the `instrument` object these tools return. `rdf_infer` shows \
@@ -101,6 +102,8 @@ never contains text the scene's author wrote; it is a slice, not a proof, so sti
 EVIDENCE FOR VALUES: `scene_evidence(content|path|blob_id, claims=[{field, value, quote}], sources=[{id, text}])` checks that each quote is in \
 its source, that the value is in the quote and that the scene holds that value; it returns verdicts, offsets and handles, never \
 the quotes. "verified" means the quote contains the value, not that it is the right place.
+
+REPAIRS YOU CAN REVIEW: `source_witness_audit` locates DEF/USE/ROUTE faults by byte span in the exact source; `patch_x3d_attribute(def_name, attribute, new_value, expected_sha256)` changes one value and keeps every other byte, refusing a stale hash or an ambiguous DEF. Before turning SHACL inference on, `shacl_counterfactual` shows which violations inference hides (not repairs) and which results it adds.
 
 When unsure, the answer is describe_node + validate_semantic -- not recall."""
 
@@ -157,6 +160,7 @@ semantic_web.register(mcp)
 claim_tools.register(mcp)
 brief_tools.register(mcp)
 evidence_tools.register(mcp)
+source_tools.register(mcp)
 
 if _SPLATS:
     splat_tools.register(mcp)

@@ -168,7 +168,8 @@ def register(mcp: FastMCP):
     @holds_input
     async def sparql_scene(sparql: str, content: str = "", path: str = "", blob_id: str = "", graph_id: str = "",
                            include_ontology: bool = True, ontology_version: str = "", offset: int = 0,
-                           limit: int = 50, data_ttl: str = "", ctx: Context = None) -> str:
+                           limit: int = 50, data_ttl: str = "", result_format: str = "compact",
+                           ctx: Context = None) -> str:
         """Run a SPARQL SELECT or ASK over a scene's RDF graph, joined with the X3D Ontology.
 
         Prefixes are pre-declared: x3do = X3dOntology4.1# (written x3d: instead when the query uses only
@@ -177,8 +178,11 @@ def register(mcp: FastMCP):
           SELECT ?n ?t WHERE { ?n a ?t . ?t rdfs:subClassOf* x3do:X3DGeometryNode }   (class hierarchy)
         Colours and vectors are rdf:Lists: ?m x3do:diffuseColor ?c . ?c rdf:first ?r . ROUTE endpoints are
         DEF strings: ?r x3do:fromNode ?def . ?n x3do:DEF ?def . Only SELECT and ASK run; SERVICE and FROM
-        are refused; the server's deadline and row cap apply. Rows are sorted and paged with a stable
-        page_sha256; scene individuals show as :Name, ontology terms as x3do:Name.
+        are refused; the server's deadline and row cap apply. A query with ORDER BY keeps its order; other
+        rows are sorted. Pages carry a stable page_sha256. Scene individuals show as :Name, ontology terms
+        as x3do:Name. The default compact rows are short strings and lose information: an unbound variable
+        and an empty string both read "", every blank node reads _:blank, and 11 and "11" look alike. Use
+        result_format="typed" when the answer depends on types, missing values or which blank is which.
 
         Args:
             sparql: The query (SELECT or ASK).
@@ -193,22 +197,25 @@ def register(mcp: FastMCP):
                   records, FHIR resources...). Link it to scene nodes by their IRIs (the scene's base + DEF,
                   e.g. <https://example.org/cell/scene.ttl#Station3>) so one query can need both graphs.
                   Up to 2,000,000 characters; nothing it names is fetched.
+            result_format: "compact" (default) or "typed": each cell a SPARQL JSON term {type: uri |
+                  literal | bnode, value, datatype?, xml:lang?, compact?}; unbound variables are left out of
+                  the row; blank nodes are labelled b0, b1 ... per answer, keeping co-reference.
 
-        Returns JSON {graph_id, rows, total, offset, next_offset, page_sha256, ontology_version, truncated?,
-        instrument, ms}.
+        Returns JSON {graph_id, rows, total, offset, next_offset, page_sha256, ontology_version, order (query | sorted),
+        result_format, vars (typed only), truncated?, instrument, ms}.
         """
         t0 = time.perf_counter()
         try:
             sg, inp, cached = await _scene(ctx, content, path, blob_id, graph_id)
             ov = ontology_version or sg.ontology_version
             dkey = hashlib.sha256(data_ttl.encode()).hexdigest() if data_ttl else ""
-            key = (id(_cache(ctx)), sg.graph_id, sparql, bool(include_ontology), ov, dkey)
+            key = (id(_cache(ctx)), sg.graph_id, sparql, bool(include_ontology), ov, dkey, result_format)
             if key in _PAGES:
                 _PAGES.move_to_end(key)
                 result = _PAGES[key]
             else:
                 result = _remember(_PAGES, key, await run_heavy(sw.sparql, sg, sparql, bool(include_ontology), ov,
-                                                                 data_ttl, size=sg.triples * 40 + len(data_ttl)))
+                                                                 data_ttl, result_format, size=sg.triples * 40 + len(data_ttl)))
         except QueryRefused as e:
             return _err(f"Query refused: {e}")
         except QueryTimeout as e:
@@ -227,6 +234,8 @@ def register(mcp: FastMCP):
             "graph_id": sg.graph_id,
             "graph_sha256": sg.sha256,
             "ontology_version": result["ontology_version"],
+            "order": result["order"],
+            "result_format": result["result_format"],
             "rows": chunk,
             "total": result["total"],
             "offset": offset,
@@ -234,6 +243,8 @@ def register(mcp: FastMCP):
             "page_sha256": hashlib.sha256(json.dumps({"rows": chunk}, sort_keys=True, ensure_ascii=False)
                                           .encode()).hexdigest(),
         }
+        if "vars" in result:
+            out["vars"] = result["vars"]
         if result["truncated"]:
             out["truncated"] = True
         if not cached:

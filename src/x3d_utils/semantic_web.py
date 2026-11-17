@@ -322,20 +322,83 @@ def tbox_slice(sg: SceneGraph, version: str) -> tuple[str, int, int]:
 
 # ------------------------------------------------------------------------------------------- SPARQL
 
-def _run_select(graph, text: str, base: str, cap: int):
+def typed_term(term, base: str = "") -> dict:
+    """A term as a SPARQL 1.1 JSON results term, plus the short form: {type: uri | literal | bnode, value,
+    datatype?, xml:lang?, compact?}. Literal lexical forms are kept exactly (11 stays "11" with its
+    datatype, so it sorts after 2 as a number, and big integers are not rounded)."""
+    if isinstance(term, BNode):
+        return {"type": "bnode", "value": str(term)}
+    if isinstance(term, Literal):
+        out = {"type": "literal", "value": str(term)}
+        if term.language:
+            out["xml:lang"] = term.language
+        elif term.datatype is not None:
+            out["datatype"] = str(term.datatype)
+        return out
+    out = {"type": "uri", "value": str(term)}
+    short = compact(term, base)
+    if short != str(term):
+        out["compact"] = short
+    return out
+
+
+def _has_order_by(text: str) -> bool:
+    """True when the query's own algebra holds an ORDER BY, so its row order is part of the answer."""
+    from rdflib.plugins.sparql import prepareQuery
+
+    def walk(node, seen):
+        if id(node) in seen:
+            return False
+        seen.add(id(node))
+        if getattr(node, "name", None) == "OrderBy":
+            return True
+        if isinstance(node, dict):
+            return any(walk(v, seen) for v in node.values())
+        if isinstance(node, (list, tuple)):
+            return any(walk(v, seen) for v in node)
+        return False
+
+    try:
+        return walk(prepareQuery(text).algebra, set())
+    except Exception:
+        return False
+
+
+def _run_select(graph, text: str, base: str, cap: int, typed: bool = False):
     result = graph.query(text)
     if result.type == "ASK":
-        return 1, [{"ask": bool(result.askAnswer)}]
+        return 1, [{"ask": bool(result.askAnswer)}], []
+    names = [str(v) for v in result.vars]
     rows = []
     for binding in result:
-        rows.append({str(v): compact(binding[v], base) for v in result.vars})
+        if typed:      # unbound variables are left out of the row, as in SPARQL JSON results
+            rows.append({str(v): typed_term(binding[v], base) for v in result.vars if binding[v] is not None})
+        else:
+            rows.append({str(v): compact(binding[v], base) for v in result.vars})
         if len(rows) > cap:
             break
-    return len(rows), rows
+    return len(rows), rows, names
 
 
 def _row_key(row: dict) -> str:
     return json.dumps(row, sort_keys=True, ensure_ascii=False)
+
+
+def _typed_sort_key(row: dict) -> str:
+    """Sort key that ignores blank-node labels (they are engine-local and change between runs)."""
+    return _row_key({k: ({"type": "bnode"} if t.get("type") == "bnode" else t) if isinstance(t, dict) else t
+                     for k, t in row.items()})
+
+
+def relabel_blanks(rows: list) -> list:
+    """Rename blank nodes _:b0, _:b1 ... by first appearance in the answer, so a label names the same node
+    everywhere in this answer (co-reference kept) and the same answer always reads the same."""
+    names: dict = {}
+    for row in rows:
+        for t in row.values():
+            if isinstance(t, dict) and t.get("type") == "bnode":
+                t["value"] = names.setdefault(t["value"], f"b{len(names)}")
+    return rows
 
 
 def data_graph(data_ttl: str = "") -> rdflib.Graph | None:
@@ -384,20 +447,36 @@ def _joined(sg: SceneGraph, ontology_version: str | None, data_ttl: str = "") ->
 
 
 def sparql(sg: SceneGraph, query: str, include_ontology: bool = True, ontology_version: str = "",
-           data_ttl: str = "") -> dict:
+           data_ttl: str = "", result_format: str = "compact") -> dict:
     """Guard, then run a SELECT or ASK over the scene (plus data_ttl, and the ontology), with the server's
-    deadline and row cap. Rows are sorted so pages are stable. Raises QueryRefused / QueryTimeout / RuntimeError."""
+    deadline and row cap. A query with ORDER BY keeps the engine's order; otherwise rows are sorted so
+    pages are stable. result_format "compact" gives short strings (lossy: an unbound variable and an empty
+    string both read "", every blank node reads _:blank, 11 and "11" look alike); "typed" gives SPARQL
+    JSON terms with datatype and language, leaves unbound variables out, and labels blank nodes per answer.
+    Raises QueryRefused / QueryTimeout / RuntimeError / SceneError."""
+    if result_format not in ("compact", "typed"):
+        raise SceneError("result_format must be 'compact' or 'typed'")
+    typed = result_format == "typed"
     prefixes = scene_prefixes(sg.base, query)
     text = prefixes + query
     guard_sparql(text)
     ov = check_ontology_version(ontology_version or sg.ontology_version)
     graph = _joined(sg, ov if include_ontology else None, data_ttl)
     cap = max_rows()
-    total, rows = run_bounded(_run_select, graph, text, sg.base, cap)
+    total, rows, names = run_bounded(_run_select, graph, text, sg.base, cap, typed)
     truncated = total > cap
-    rows = sorted(rows[:cap], key=_row_key)
-    return {"rows": rows, "total": min(total, cap), "truncated": truncated,
-            "ontology_version": ov if include_ontology else None}
+    rows = rows[:cap]
+    ordered = _has_order_by(text)
+    if not ordered:
+        rows = sorted(rows, key=_typed_sort_key if typed else _row_key)
+    if typed:
+        rows = relabel_blanks(rows)
+    out = {"rows": rows, "total": min(total, cap), "truncated": truncated,
+           "ontology_version": ov if include_ontology else None,
+           "order": "query" if ordered else "sorted", "result_format": result_format}
+    if typed:
+        out["vars"] = names
+    return out
 
 
 # ------------------------------------------------------------------------------------------- SHACL
