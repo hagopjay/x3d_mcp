@@ -146,9 +146,19 @@ def test_patch_recheck_reports_invalid_value(mcp):
 
 # --- shacl_counterfactual -------------------------------------------------------------------------
 
-def test_counterfactual_shows_inference_hiding_s7(mcp):
+# The RDFS run expands the scene with the whole X3D Ontology, so its cost does not shrink with the scene: this
+# 7-node fixture takes 17-20 s on a 4-core container (pyshacl 0.40.2, rdflib 7.6.0, owlrl 7.6.2), against the
+# 20 s default deadline (X3D_MCP_SPARQL_TIMEOUT). On GitHub runners it crossed the deadline intermittently and
+# the tool answered {"ok": false, "error": "query ran past 20 s ..."}, which read as a logic failure. This test is
+# about what inference hides, not about speed, so it gets its own generous deadline; the deadline itself is
+# covered by the ontology guard tests.
+COUNTERFACTUAL_DEADLINE_S = "180"
+
+
+def test_counterfactual_shows_inference_hiding_s7(mcp, monkeypatch):
+    monkeypatch.setenv("X3D_MCP_SPARQL_TIMEOUT", COUNTERFACTUAL_DEADLINE_S)
     res = call(mcp, "shacl_counterfactual", content=F5, inference="rdfs")
-    assert res["ok"] is True
+    assert res["ok"] is True, res
     assert res["asserted"]["conforms"] is False
     hidden = res["hidden_by_inference"]
     assert hidden["violations"] >= 1
