@@ -1,0 +1,25 @@
+{
+  "schema": "x3d_mcp.standards-disagreement/1",
+  "id": "volume-transferFunction-containerField",
+  "status": "open; upstream report drafted and HELD (nothing sent until the owner types 'send')",
+  "normative": {
+    "document": "ISO/IEC 19775-1:2023 (X3D 4.0) Part 1, 41.4.7 OpacityMapVolumeStyle",
+    "url": "https://www.web3d.org/specifications/X3Dv4/ISO-IEC19775-1v4-IS/Part01/components/volume.html",
+    "text": "SFNode [in,out] transferFunction NULL [X3DTexture2DNode,X3DTexture3DNode]"
+  },
+  "x3duom_4_0": "agrees with the IS: field transferFunction, acceptableNodeTypes X3DTexture2DNode|X3DTexture3DNode (X3dUnifiedObjectModel-4.0.xml, bundled)",
+  "xsd_4_0": "disagrees: containerFieldChoicesX3DTexture2DNode and containerFieldChoicesX3DTexture3DNode omit transferFunction, so every conforming form is rejected",
+  "xsd_checked": [
+    {"copy": "bundled src/validation/schemas/x3d-4.0.xsd", "sha256_prefix": "0509fa5bd6016a0b", "commit": "fa5dccf"},
+    {"copy": "live https://www.web3d.org/specifications/x3d-4.0.xsd fetched 2026-11-18", "bytes": 1336330, "sha256_prefix": "d01ac41b4ac218ac"}
+  ],
+  "cases": {
+    "opacity-pixeltexture-2d.x3d":     {"normative": "conforming", "xsd_stock": "invalid", "semantic_errors": 0},
+    "opacity-imagetexture-2d.x3d":     {"normative": "conforming", "xsd_stock": "invalid", "semantic_errors": 0},
+    "opacity-pixeltexture3d-3d.x3d":   {"normative": "conforming", "xsd_stock": "invalid", "semantic_errors": 0},
+    "opacity-imagetexture3d-3d.x3d":   {"normative": "conforming", "xsd_stock": "invalid", "semantic_errors": 0},
+    "control-no-containerfield.x3d":   {"normative": "non-conforming (default containerField 'texture' is not a field of OpacityMapVolumeStyle)", "xsd_stock": "valid", "semantic_errors": 1}
+  },
+  "consequence": "XSD alone both rejects every conforming transfer function and accepts the wrong-field control. A green XSD verdict is not conformance here; x3d_mcp's semantic layer (X3DUOM) gets all five right.",
+  "proposed_fix": "add <xs:enumeration value=\"transferFunction\"> (appinfo: parent node is OpacityMapVolumeStyle) to containerFieldChoicesX3DTexture2DNode and containerFieldChoicesX3DTexture3DNode (the bundled 4.1 draft XSD has the same omission)"
+}

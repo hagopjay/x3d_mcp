@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<X3D profile="Full" version="4.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema-instance" xsd:noNamespaceSchemaLocation="https://www.web3d.org/specifications/x3d-4.0.xsd">
+ <head><meta name="description" content="Minimal counterexample: ISO/IEC 19775-1:2023 (X3D 4.0) 41.4.7 OpacityMapVolumeStyle declares SFNode [in,out] transferFunction NULL [X3DTexture2DNode,X3DTexture3DNode]. The XSD containerField enumerations omit transferFunction."/></head>
+ <Scene>
+  <Viewpoint description="front"/>
+  <VolumeData dimensions="1 1 1">
+   <PixelTexture3D containerField="voxels" image="2 2 2 1 0 255 0 255 255 0 255 0"/>
+   <OpacityMapVolumeStyle>
+    <PixelTexture3D containerField="transferFunction" image="2 1 1 4 0 -1"/>
+   </OpacityMapVolumeStyle>
+  </VolumeData>
+ </Scene>
+</X3D>
