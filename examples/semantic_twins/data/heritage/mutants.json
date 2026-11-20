@@ -1,0 +1,21 @@
+{
+ "about": "Eight faults planted by a review on 20 Nov 2026, beyond the two this case ships. shapes.ttl reports 0 violations on every one; shapes-strict.ttl must report each under `expect`. Each mutant is one text replacement in the clean scene or the clean domain file. tests/test_semantic_twin_strict.py runs them.",
+ "mutants": [
+  {"id": "M1", "what": "Transform scale 1 1.3 1 on Shaft A: drawn 12.5 m against 9.62 m documented", "file": "scene",
+   "find": "<Transform DEF='OsirisShaftA' ", "replace": "<Transform DEF='OsirisShaftA' scale='1 1.3 1' ", "expect": ["S_H2s"]},
+  {"id": "M2", "what": "Shaft A drawn as a Cylinder of height 12", "file": "scene",
+   "find": "<Box size='1.2 9.62 1.2'/>", "replace": "<Cylinder height='12' radius='0.6'/>", "expect": ["S_H6"]},
+  {"id": "M3", "what": "Shaft A Box with no size (default 2 2 2)", "file": "scene",
+   "find": "<Box size='1.2 9.62 1.2'/>", "replace": "<Box/>", "expect": ["S_H2s"]},
+  {"id": "M4", "what": "Shaft A's 9.62 recorded in feet", "file": "domain",
+   "find": "crm:P90_has_value 9.62 ; crm:P91_has_unit unit:M", "replace": "crm:P90_has_value 9.62 ; crm:P91_has_unit unit:FT", "expect": ["S_H5"]},
+  {"id": "M5", "what": "A drawn tunnel with no record at all", "file": "scene",
+   "find": "<Transform DEF='UndergroundLink'", "replace": "<Transform DEF='SecretTunnel' translation='0 -50 0'><Shape><Box size='90 3 3'/></Shape></Transform><Transform DEF='UndergroundLink'", "expect": ["S_H4"]},
+  {"id": "M6", "what": "Hall of Records attribution assigns a unit, not a tier", "file": "domain",
+   "find": "crm:P140_assigned_attribute_to h:HallOfRecords ; crm:P141_assigned h:tierSpeculative", "replace": "crm:P140_assigned_attribute_to h:HallOfRecords ; crm:P141_assigned unit:M", "expect": ["S_H1s"]},
+  {"id": "M7", "what": "The record points at a DEF the scene does not have", "file": "domain",
+   "find": "sc:OsirisShaftA", "replace": "sc:NoSuchDEF", "all": true, "expect": ["S_H3", "S_H4", "S_H6"]},
+  {"id": "M8", "what": "Shaft A's Shape wrapped in a Group and drawn 15 m tall", "file": "scene",
+   "find": "<Shape DEF='OsirisShaftA_Shape'><Appearance><PhysicalMaterial baseColor='0.24 0.9 0.82' emissiveColor='0.108 0.405 0.369' roughness='0.8' metallic='0' transparency='0.35'/></Appearance><Box size='1.2 9.62 1.2'/></Shape>", "replace": "<Group><Shape DEF='OsirisShaftA_Shape'><Appearance><PhysicalMaterial baseColor='0.24 0.9 0.82' emissiveColor='0.108 0.405 0.369' roughness='0.8' metallic='0' transparency='0.35'/></Appearance><Box size='1.2 15 1.2'/></Shape></Group>", "expect": ["S_H2s"]}
+ ]
+}

@@ -26,6 +26,7 @@ All 116 class and property uses are declared in each publisher's own vocabulary 
 - `data/<case>/`:
   - `domain.ttl` and `domain-fault.ttl`
   - `shapes.ttl`
+  - heritage only: `shapes-strict.ttl` and `mutants.json`. A review planted eight more faults (a scaled Transform, a Cylinder for the Box, a Box with no size, feet for metres, an unrecorded object, an attribution that assigns no tier, a DEF the scene lacks, a wrapping Group); `shapes.ttl` passes all eight, the strict shapes name each, and "cannot measure" is a violation of its own instead of a pass. `tests/test_semantic_twin_strict.py` runs them. The other eight cases have not had this audit.
   - `questions.json` (the questions, the rule and the fault text)
   - `oracle.json` (the rdflib and pyshacl answers)
   - `mcp.json` (real calls to this server over stdio; arguments longer than 300 characters are stored as sha256)
