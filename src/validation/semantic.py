@@ -556,6 +556,66 @@ def _check_sfnode_multiple(scene: etree._Element) -> list[Diagnostic]:
     return diagnostics
 
 
+_GEO_COORD_FIELDS = {
+    "GeoLocation": ("geoCoords",), "GeoOrigin": ("geoCoords",), "GeoViewpoint": ("position",),
+    "GeoElevationGrid": ("geoGridOrigin",), "GeoLOD": ("center",), "GeoTransform": ("geoCenter",),
+    "GeoProximitySensor": ("geoCenter",), "GeoCoordinate": ("point",), "GeoPositionInterpolator": ("keyValue",),
+}
+
+
+def _check_geo_range(scene: etree._Element) -> list[Diagnostic]:
+    """Geodetic coordinates must be possible: latitude within -90..90, longitude within -180..180.
+
+    The XSD types these fields as plain SFVec3d/MFVec3d, so a latitude of 137 validates. X3D writes geodetic
+    (GD) coordinates latitude first unless geoSystem says "longitude_first", and writing them the other way
+    round is the commonest geospatial mistake; a range test catches every swap whose longitude is past 90.
+    Only GD systems are read (the default); UTM and GC values are left alone. One diagnostic per field.
+    """
+    diagnostics: list[Diagnostic] = []
+    for el in scene.iter():
+        tag = _local_tag(el)
+        for field in _GEO_COORD_FIELDS.get(tag, ()):
+            raw = el.get(field)
+            if not raw:
+                continue
+            system = re.findall(r"[A-Za-z_]+", el.get("geoSystem") or "GD")
+            if not system or system[0] not in ("GD", "GDC"):
+                continue
+            try:
+                nums = [float(v) for v in raw.replace(",", " ").split()]
+            except ValueError:
+                continue                        # not numbers: the XSD reports that
+            lon_first = "longitude_first" in system
+            bad_lat = bad_lon = swapped = 0
+            first = None
+            for i in range(0, len(nums) - 2, 3):
+                a, b = nums[i], nums[i + 1]
+                lat, lon = (b, a) if lon_first else (a, b)
+                if abs(lat) > 90:
+                    bad_lat += 1
+                    swapped += abs(lon) <= 90
+                    first = first or (lat, lon)
+                elif abs(lon) > 180:
+                    bad_lon += 1
+                    first = first or (lat, lon)
+            if not (bad_lat or bad_lon):
+                continue
+            order = "longitude latitude elevation (geoSystem has longitude_first)" if lon_first else "latitude longitude elevation"
+            what = []
+            if bad_lat:
+                what.append(f"{bad_lat} latitude value(s) outside -90..90")
+            if bad_lon:
+                what.append(f"{bad_lon} longitude value(s) outside -180..180")
+            hint = (" The two look swapped: the other number would be a legal latitude." if swapped
+                    else "")
+            diagnostics.append(Diagnostic(
+                level="error" if bad_lat else "warning", check="geo-coordinate-range",
+                message=f"{tag}.{field} has {' and '.join(what)} (first: latitude {first[0]:g}, longitude {first[1]:g}). "
+                        f"Geodetic order here is {order}.{hint}",
+                node_tag=tag, def_name=el.get("DEF", "")))
+    return diagnostics
+
+
 def _check_use_before_def(scene: etree._Element) -> list[Diagnostic]:
     """A USE must reference a DEF that PRECEDES it in document order (ISO 19775-1).
 
@@ -1542,6 +1602,7 @@ _ALL_CHECKS = [
     _check_use_before_def,
     _check_containerfield,
     _check_sfnode_multiple,
+    _check_geo_range,
     _check_shape_completeness,
     _check_empty_groups,
     _check_route_validity,

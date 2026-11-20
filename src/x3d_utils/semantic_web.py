@@ -362,26 +362,32 @@ def typed_term(term, base: str = "") -> dict:
     return out
 
 
-def _has_order_by(text: str) -> bool:
-    """True when the query's own algebra holds an ORDER BY, so its row order is part of the answer."""
+_OUTER_MODIFIERS = ("SelectQuery", "Slice", "Distinct", "Reduced", "Project", "OrderBy")
+
+
+def _outer_modifiers(text: str) -> tuple[bool, bool]:
+    """(ordered, sliced) for the query's OUTERMOST solution modifiers: its own ORDER BY, its own LIMIT/OFFSET.
+
+    Only the top of the algebra is read. An ORDER BY inside a subquery orders the subquery's rows and says
+    nothing about the order of the outer rows (review 20 Nov 2026: such a query was labelled order "query"
+    and came back in a different order per process)."""
     from rdflib.plugins.sparql import prepareQuery
 
-    def walk(node, seen):
-        if id(node) in seen:
-            return False
-        seen.add(id(node))
-        if getattr(node, "name", None) == "OrderBy":
-            return True
-        if isinstance(node, dict):
-            return any(walk(v, seen) for v in node.values())
-        if isinstance(node, (list, tuple)):
-            return any(walk(v, seen) for v in node)
-        return False
-
+    ordered = sliced = False
     try:
-        return walk(prepareQuery(text).algebra, set())
+        node = prepareQuery(text).algebra
     except Exception:
-        return False
+        return False, False
+    while getattr(node, "name", None) in _OUTER_MODIFIERS:
+        ordered = ordered or node.name == "OrderBy"
+        sliced = sliced or node.name == "Slice"
+        node = node.get("p")
+    return ordered, sliced
+
+
+def _has_order_by(text: str) -> bool:
+    """True when the query's outermost SELECT has an ORDER BY, so its row order is part of the answer."""
+    return _outer_modifiers(text)[0]
 
 
 def _run_select(graph, text: str, base: str, cap: int, typed: bool = False):
@@ -469,8 +475,9 @@ def _joined(sg: SceneGraph, ontology_version: str | None, data_ttl: str = "") ->
 def sparql(sg: SceneGraph, query: str, include_ontology: bool = True, ontology_version: str = "",
            data_ttl: str = "", result_format: str = "compact") -> dict:
     """Guard, then run a SELECT or ASK over the scene (plus data_ttl, and the ontology), with the server's
-    deadline and row cap. A query with ORDER BY keeps the engine's order; otherwise rows are sorted so
-    pages are stable. result_format "compact" gives short strings (lossy: an unbound variable and an empty
+    deadline, memory cap and row cap. A query with its own (outermost) ORDER BY keeps the engine's order;
+    otherwise rows are sorted. `stable` is False, with a `warning`, when LIMIT, OFFSET or the row cap cut an
+    answer that has no ORDER BY, because then the membership of the page is not repeatable. result_format "compact" gives short strings (lossy: an unbound variable and an empty
     string both read "", every blank node reads _:blank, 11 and "11" look alike); "typed" gives SPARQL
     JSON terms with datatype and language, leaves unbound variables out, and labels blank nodes per answer.
     Raises QueryRefused / QueryTimeout / RuntimeError / SceneError."""
@@ -486,7 +493,7 @@ def sparql(sg: SceneGraph, query: str, include_ontology: bool = True, ontology_v
     total, rows, names = run_bounded(_run_select, graph, text, sg.base, cap, typed)
     truncated = total > cap
     rows = rows[:cap]
-    ordered = _has_order_by(text)
+    ordered, sliced = _outer_modifiers(text)
     if not ordered:
         rows = sorted(rows, key=_typed_sort_key if typed else _row_key)
     if typed:
@@ -494,6 +501,14 @@ def sparql(sg: SceneGraph, query: str, include_ontology: bool = True, ontology_v
     out = {"rows": rows, "total": min(total, cap), "truncated": truncated,
            "ontology_version": ov if include_ontology else None,
            "order": "query" if ordered else "sorted", "result_format": result_format}
+    # Sorting fixes the ORDER of the rows that came back, not WHICH rows came back. A LIMIT, an OFFSET or the
+    # row cap without an ORDER BY cuts the engine's own (hash-ordered) sequence, so two runs can return
+    # different rows. Say so instead of handing back a page that looks reproducible.
+    out["stable"] = ordered or not (sliced or truncated)
+    if not out["stable"]:
+        out["warning"] = ("which rows are returned can differ between runs: "
+                          + ("LIMIT or OFFSET" if sliced else "the row cap") + " cut the answer and the query has no "
+                          "ORDER BY of its own (one inside a subquery does not count). Add ORDER BY for a repeatable answer.")
     if typed:
         out["vars"] = names
     return out

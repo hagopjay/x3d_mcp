@@ -17,6 +17,8 @@ from rdflib.plugins.sparql import algebra, parser
 MAX_CHARS_ENV = "X3D_MCP_SPARQL_MAX_CHARS"
 TIMEOUT_ENV = "X3D_MCP_SPARQL_TIMEOUT"
 MAX_ROWS_ENV = "X3D_MCP_ONTOLOGY_MAX_ROWS"
+MAX_MEMORY_ENV = "X3D_MCP_SPARQL_MAX_MEMORY_MB"
+DEFAULT_MAX_MEMORY_MB = 1024
 DEFAULT_MAX_CHARS = 20_000
 DEFAULT_TIMEOUT = 20.0
 DEFAULT_MAX_ROWS = 20_000
@@ -30,6 +32,11 @@ class QueryRefused(ValueError):
 
 class QueryTimeout(TimeoutError):
     """The query ran past its deadline and was stopped."""
+
+
+class QueryMemory(QueryTimeout):
+    """The query asked for more memory than its worker may add and was stopped. A subclass of QueryTimeout so
+    every caller that reports a stopped query reports this one too."""
 
 
 def _env_number(name: str, default, cast):
@@ -49,6 +56,44 @@ def max_chars() -> int:
 
 def timeout_seconds() -> float:
     return _env_number(TIMEOUT_ENV, DEFAULT_TIMEOUT, float)
+
+
+def max_memory_mb() -> int:
+    """How much address space a query worker may add on top of what the server holds at the fork."""
+    return _env_number(MAX_MEMORY_ENV, DEFAULT_MAX_MEMORY_MB, int)
+
+
+def _address_space_bytes() -> int | None:
+    """This process's virtual size, or None where it cannot be read (no /proc: macOS, Windows)."""
+    try:
+        with open("/proc/self/statm") as f:
+            return int(f.read().split()[0]) * os.sysconf("SC_PAGE_SIZE")
+    except (OSError, ValueError, IndexError):
+        return None
+
+
+def limit_worker_memory() -> bool:
+    """Cap the calling process's address space at its present size plus max_memory_mb(). Called in the forked
+    worker only. A deadline bounds time, not memory: 26 string doublings build 1 GiB in about 3 s. Returns
+    False where the cap cannot be set (no /proc or no RLIMIT_AS); the deadline is then the only bound."""
+    try:
+        import resource
+    except ImportError:
+        return False
+    now = _address_space_bytes()
+    if now is None or not hasattr(resource, "RLIMIT_AS"):
+        return False
+    want = now + max_memory_mb() * 1024 * 1024
+    try:
+        soft, hard = resource.getrlimit(resource.RLIMIT_AS)
+        if hard != resource.RLIM_INFINITY:
+            want = min(want, hard)
+        if soft != resource.RLIM_INFINITY and soft <= want:
+            return True                         # an outer limit is already tighter
+        resource.setrlimit(resource.RLIMIT_AS, (want, hard))
+        return True
+    except (ValueError, OSError):
+        return False
 
 
 def max_rows() -> int:
@@ -106,7 +151,10 @@ def guard_sparql(text: str) -> None:
 
 def _child(conn, fn, args):
     try:
+        limit_worker_memory()
         conn.send(("ok", fn(*args)))
+    except MemoryError:
+        conn.send(("mem", ""))
     except BaseException as e:                  # sent back as an error, never raised in the child
         conn.send(("err", f"{type(e).__name__}: {e}"))
     finally:
@@ -140,7 +188,9 @@ def run_bounded(fn, *args, timeout: float | None = None):
     Where fork exists the work runs in a forked child that is killed at the deadline (the ontology graph is
     shared copy-on-write, so there is nothing to load). Without fork it runs in a daemon thread and the
     caller is released at the deadline, but the thread keeps going until it finishes.
-    Raises QueryTimeout; any error inside fn is raised as RuntimeError with its message.
+    The forked child may add max_memory_mb() of address space and no more (Linux; elsewhere only the deadline
+    bounds it). Raises QueryTimeout, or its subclass QueryMemory; any other error inside fn is raised as
+    RuntimeError with its message.
     """
     limit = timeout_seconds() if timeout is None else timeout
     if "fork" in multiprocessing.get_all_start_methods():
@@ -155,7 +205,7 @@ def run_bounded(fn, *args, timeout: float | None = None):
             try:
                 status, value = recv.recv()
             except EOFError:
-                raise RuntimeError("query worker ended without an answer (out of memory?)") from None
+                raise QueryMemory(f"query worker ended without an answer, most likely out of memory ({MAX_MEMORY_ENV})") from None
         finally:
             if proc.is_alive():
                 proc.kill()
@@ -176,6 +226,8 @@ def run_bounded(fn, *args, timeout: float | None = None):
         if "r" not in box:
             raise QueryTimeout(f"query ran past {limit:g} s ({TIMEOUT_ENV}); it cannot be stopped on this platform")
         status, value = box["r"]
+    if status == "mem":
+        raise QueryMemory(f"query needed more than {max_memory_mb()} MB of working memory and was stopped ({MAX_MEMORY_ENV})")
     if status == "err":
         raise RuntimeError(value)
     return value

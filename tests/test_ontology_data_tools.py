@@ -233,3 +233,18 @@ def test_claim_tools_round_trip(mcp):
     assert pg["total"] == 2 and "sha256" not in pg["columns"]
     assert "error" in call(mcp, "claim_append", {"claim": "x", "grade": "Sure"})
     assert "error" in call(mcp, "claims_page", {"ledger": "not json"})
+
+
+def test_where_can_place_rows_carry_the_xsd_verdict(mcp):
+    full = placement.where_can_place("MetadataSet", 0, 500)
+    assert {r["xsd"] for r in full["rows"]} <= {"A", "R", "I"} and full["xsd"]["source"] == "verified-containment.json"
+    x = full["xsd"]
+    assert x["accepted"] + x["rejected"] + x["inconclusive"] == full["total"] and x["rejected"] >= 1
+    only = call(mcp, "where_can_place", {"child": "MetadataSet", "limit": 500, "verified_only": True})
+    assert only["total"] == x["accepted"] and {r["xsd"] for r in only["rows"]} == {"A"} and only["xsd"]["verified_only"] is True
+    assert only["xsd"]["rejected"] == x["rejected"]                       # the counts describe the unfiltered rows
+    assert only["table_sha256"] == full["table_sha256"]                   # the verdict is not part of the table hash
+    sphere = placement.where_can_place("Sphere", 0, 500)
+    assert next(r for r in sphere["rows"] if (r["parent"], r["field"]) == ("Shape", "geometry"))["xsd"] == "A"
+    whole = [placement.xsd_verdict(r["parent"], r["field"], c) for c, rows in placement.get_table()["rows"].items() for r in rows]
+    assert (whole.count("A"), whole.count("R"), whole.count("I")) == (4879, 740, 890)

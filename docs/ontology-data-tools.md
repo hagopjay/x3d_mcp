@@ -17,6 +17,7 @@ Sizes behind the design are from the Playground review of this server's ontology
 
 - parse the query first and refuse anything but SELECT and ASK, and any SERVICE or FROM clause;
 - stop at a deadline: a forked worker is killed at `X3D_MCP_SPARQL_TIMEOUT` seconds (default 20; without fork the thread is only abandoned);
+- stop at a memory cap: the forked worker may add `X3D_MCP_SPARQL_MAX_MEMORY_MB` (default 1024) of address space and no more, so a query that doubles a string 26 times is stopped in under a second instead of building 1 GiB (Linux only; without `/proc` and `RLIMIT_AS` the deadline is the only bound);
 - cap the text at `X3D_MCP_SPARQL_MAX_CHARS` (20,000) and the rows at `X3D_MCP_ONTOLOGY_MAX_ROWS` (20,000). Past the cap the answer says `truncated` and the total;
 - check that `node_type` is a plain name (letters, digits, underscore) before it goes into a query.
 
@@ -27,7 +28,7 @@ Q04 still exceeds the default deadline. Precomputing it as a table is not done h
 | Tool | What |
 |---|---|
 | `query_ontology_page(sparql, offset, limit)` | Same guard. Rows sorted, blank nodes shown as `_:blank`, so a page has a stable `page_sha256`. The query runs once; the four most recent are cached for paging. |
-| `where_can_place(child, offset, limit)` | Parents and fields that accept a node type, from the X3DUOM's `acceptableNodeTypes` (event-only fields left out), with `needsContainerField` and a versioned `table_sha256`. Unlike `node_parents` these are real placements. |
+| `where_can_place(child, offset, limit, verified_only)` | Parents and fields that accept a node type, from the X3DUOM's `acceptableNodeTypes` (event-only fields left out), with `needsContainerField` and a versioned `table_sha256`. Unlike `node_parents` these are real placements. Each row also carries `xsd`: `A` the XSD accepts that placement, `R` it rejects it, `I` inconclusive (from `verified-containment.json`; over the whole 4.1 table 4,879 A, 740 R, 890 I of 6,509). `verified_only=true` keeps the `A` rows. The verdict is not part of `table_sha256`. |
 | `claim_append`, `claims_page`, `claims_verify` | JSON Lines claim ledger: canonical record, sha256, optional hash chain, graded Confirmed / Likely / Suspected, with an `instrument` object. `claims_page` takes `columns`, `hash_chars` and `drop_hashes` (a 50-row page: 27 KB full, 13 KB with 12-character hashes, 9 KB without). |
 | resources `x3d-ontology://turtle` and `x3d-ontology://placement/{child}` | The ontology and a placement table without the tool-answer overhead. |
 
