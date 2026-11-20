@@ -229,6 +229,6 @@ def register(mcp: FastMCP):
                "graph_id": sg.graph_id, "graph_sha256": sg.sha256}
         if not cached:
             out["converted"] = {"triples": sg.triples, "warnings": sg.warnings, "input": inp}
-        out["instrument"] = sw.instrument(asserted["ontology_version"], shapes if shapes in sw.SHAPES else "x3d-core")
+        out["instrument"] = sw.instrument(asserted["ontology_version"], shapes if sw.bundled_shape_names(shapes) else "x3d-core")
         out["ms"] = round((time.perf_counter() - t0) * 1000, 1)
         return json.dumps(out, indent=1)

@@ -271,7 +271,9 @@ def register(mcp: FastMCP):
         Args:
             content / path / blob_id: The scene, converted first (as scene_to_rdf); or
             graph_id: A scene converted earlier in this session.
-            shapes: "x3d-core" (default) or "none" (only extra_shapes_ttl).
+            shapes: "x3d-core" (default), "x3d-core,x3d-cardinality" (adds: an SFNode field such as
+                  Appearance.material holds one node, generated from the X3DUOM), or "none" (only
+                  extra_shapes_ttl).
             extra_shapes_ttl: Your own shapes in Turtle, added to the bundled ones (x3do: is the
                   X3dOntology4.1# namespace). SPARQL constraints are guarded like sparql_scene.
             inference: "none" (default), "rdfs", "owlrl" or "both". Inference expands the scene with the
@@ -321,7 +323,7 @@ def register(mcp: FastMCP):
         if not cached:
             out["converted"] = {"triples": sg.triples, "warnings": sg.warnings, "input": inp}
         out["instrument"] = sw.instrument(res["ontology_version"],
-                                          shapes if shapes in sw.SHAPES else "x3d-core")
+                                          shapes if sw.bundled_shape_names(shapes) else "x3d-core")
         out["ms"] = round((time.perf_counter() - t0) * 1000, 1)
         return json.dumps(out, indent=1)
 

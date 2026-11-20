@@ -1,0 +1,559 @@
+# x3d-cardinality: an SFNode field holds at most one node. GENERATED, do not edit:
+#   python evaluation/build_cardinality_shapes.py
+# Source: X3DUOM 4.1 field types. 267 node shapes, 69 property shapes, 481 (node, field) pairs.
+# Fields skipped because the X3D Ontology 4.1 declares no has<Field> property: none.
+# A USE counts: it occupies the field. validate_semantic reports the same as sfnode-multiple.
+
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix x3do: <https://www.web3d.org/specifications/X3dOntology4.1#> .
+@prefix xs:   <urn:x3d-mcp:shapes:x3d-core#> .
+@prefix xc:   <urn:x3d-mcp:shapes:x3d-cardinality#> .
+
+xc: a owl:Ontology ; rdfs:label "x3d-cardinality shapes" ; owl:versionInfo "1" .
+
+xc:one_acousticProperties a sh:PropertyShape ; sh:path x3do:hasAcousticProperties ; sh:maxCount 1 ;
+  sh:message "acousticProperties is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in acousticProperties; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_ambientTexture a sh:PropertyShape ; sh:path x3do:hasAmbientTexture ; sh:maxCount 1 ;
+  sh:message "ambientTexture is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in ambientTexture; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_appearance a sh:PropertyShape ; sh:path x3do:hasAppearance ; sh:maxCount 1 ;
+  sh:message "appearance is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in appearance; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_backMaterial a sh:PropertyShape ; sh:path x3do:hasBackMaterial ; sh:maxCount 1 ;
+  sh:message "backMaterial is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in backMaterial; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_backTexture a sh:PropertyShape ; sh:path x3do:hasBackTexture ; sh:maxCount 1 ;
+  sh:message "backTexture is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in backTexture; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_baseTexture a sh:PropertyShape ; sh:path x3do:hasBaseTexture ; sh:maxCount 1 ;
+  sh:message "baseTexture is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in baseTexture; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_body1 a sh:PropertyShape ; sh:path x3do:hasBody1 ; sh:maxCount 1 ;
+  sh:message "body1 is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in body1; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_body2 a sh:PropertyShape ; sh:path x3do:hasBody2 ; sh:maxCount 1 ;
+  sh:message "body2 is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in body2; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_bottomTexture a sh:PropertyShape ; sh:path x3do:hasBottomTexture ; sh:maxCount 1 ;
+  sh:message "bottomTexture is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in bottomTexture; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_collidable a sh:PropertyShape ; sh:path x3do:hasCollidable ; sh:maxCount 1 ;
+  sh:message "collidable is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in collidable; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_collider a sh:PropertyShape ; sh:path x3do:hasCollider ; sh:maxCount 1 ;
+  sh:message "collider is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in collider; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_color a sh:PropertyShape ; sh:path x3do:hasColor ; sh:maxCount 1 ;
+  sh:message "color is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in color; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_controlPoint a sh:PropertyShape ; sh:path x3do:hasControlPoint ; sh:maxCount 1 ;
+  sh:message "controlPoint is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in controlPoint; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_coord a sh:PropertyShape ; sh:path x3do:hasCoord ; sh:maxCount 1 ;
+  sh:message "coord is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in coord; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_crossSectionCurve a sh:PropertyShape ; sh:path x3do:hasCrossSectionCurve ; sh:maxCount 1 ;
+  sh:message "crossSectionCurve is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in crossSectionCurve; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_diffuseTexture a sh:PropertyShape ; sh:path x3do:hasDiffuseTexture ; sh:maxCount 1 ;
+  sh:message "diffuseTexture is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in diffuseTexture; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_emissiveTexture a sh:PropertyShape ; sh:path x3do:hasEmissiveTexture ; sh:maxCount 1 ;
+  sh:message "emissiveTexture is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in emissiveTexture; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_emitter a sh:PropertyShape ; sh:path x3do:hasEmitter ; sh:maxCount 1 ;
+  sh:message "emitter is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in emitter; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_fillProperties a sh:PropertyShape ; sh:path x3do:hasFillProperties ; sh:maxCount 1 ;
+  sh:message "fillProperties is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in fillProperties; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_fogCoord a sh:PropertyShape ; sh:path x3do:hasFogCoord ; sh:maxCount 1 ;
+  sh:message "fogCoord is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in fogCoord; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_fontStyle a sh:PropertyShape ; sh:path x3do:hasFontStyle ; sh:maxCount 1 ;
+  sh:message "fontStyle is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in fontStyle; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_frontTexture a sh:PropertyShape ; sh:path x3do:hasFrontTexture ; sh:maxCount 1 ;
+  sh:message "frontTexture is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in frontTexture; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_geoOrigin a sh:PropertyShape ; sh:path x3do:hasGeoOrigin ; sh:maxCount 1 ;
+  sh:message "geoOrigin is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in geoOrigin; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_geometry a sh:PropertyShape ; sh:path x3do:hasGeometry ; sh:maxCount 1 ;
+  sh:message "geometry is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in geometry; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_geometry1 a sh:PropertyShape ; sh:path x3do:hasGeometry1 ; sh:maxCount 1 ;
+  sh:message "geometry1 is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in geometry1; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_geometry2 a sh:PropertyShape ; sh:path x3do:hasGeometry2 ; sh:maxCount 1 ;
+  sh:message "geometry2 is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in geometry2; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_gradients a sh:PropertyShape ; sh:path x3do:hasGradients ; sh:maxCount 1 ;
+  sh:message "gradients is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in gradients; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_layout a sh:PropertyShape ; sh:path x3do:hasLayout ; sh:maxCount 1 ;
+  sh:message "layout is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in layout; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_leftTexture a sh:PropertyShape ; sh:path x3do:hasLeftTexture ; sh:maxCount 1 ;
+  sh:message "leftTexture is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in leftTexture; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_lineProperties a sh:PropertyShape ; sh:path x3do:hasLineProperties ; sh:maxCount 1 ;
+  sh:message "lineProperties is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in lineProperties; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_massDensityModel a sh:PropertyShape ; sh:path x3do:hasMassDensityModel ; sh:maxCount 1 ;
+  sh:message "massDensityModel is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in massDensityModel; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_material a sh:PropertyShape ; sh:path x3do:hasMaterial ; sh:maxCount 1 ;
+  sh:message "material is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in material; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_metadata a sh:PropertyShape ; sh:path x3do:hasMetadata ; sh:maxCount 1 ;
+  sh:message "metadata is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in metadata; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_metallicRoughnessTexture a sh:PropertyShape ; sh:path x3do:hasMetallicRoughnessTexture ; sh:maxCount 1 ;
+  sh:message "metallicRoughnessTexture is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in metallicRoughnessTexture; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_navigationInfo a sh:PropertyShape ; sh:path x3do:hasNavigationInfo ; sh:maxCount 1 ;
+  sh:message "navigationInfo is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in navigationInfo; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_normal a sh:PropertyShape ; sh:path x3do:hasNormal ; sh:maxCount 1 ;
+  sh:message "normal is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in normal; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_normalTexture a sh:PropertyShape ; sh:path x3do:hasNormalTexture ; sh:maxCount 1 ;
+  sh:message "normalTexture is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in normalTexture; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_occlusionTexture a sh:PropertyShape ; sh:path x3do:hasOcclusionTexture ; sh:maxCount 1 ;
+  sh:message "occlusionTexture is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in occlusionTexture; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_periodicWave a sh:PropertyShape ; sh:path x3do:hasPeriodicWave ; sh:maxCount 1 ;
+  sh:message "periodicWave is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in periodicWave; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_pickingGeometry a sh:PropertyShape ; sh:path x3do:hasPickingGeometry ; sh:maxCount 1 ;
+  sh:message "pickingGeometry is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in pickingGeometry; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_pointProperties a sh:PropertyShape ; sh:path x3do:hasPointProperties ; sh:maxCount 1 ;
+  sh:message "pointProperties is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in pointProperties; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_profileCurve a sh:PropertyShape ; sh:path x3do:hasProfileCurve ; sh:maxCount 1 ;
+  sh:message "profileCurve is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in profileCurve; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_proxy a sh:PropertyShape ; sh:path x3do:hasProxy ; sh:maxCount 1 ;
+  sh:message "proxy is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in proxy; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_renderStyle a sh:PropertyShape ; sh:path x3do:hasRenderStyle ; sh:maxCount 1 ;
+  sh:message "renderStyle is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in renderStyle; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_rightTexture a sh:PropertyShape ; sh:path x3do:hasRightTexture ; sh:maxCount 1 ;
+  sh:message "rightTexture is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in rightTexture; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_segmentIdentifiers a sh:PropertyShape ; sh:path x3do:hasSegmentIdentifiers ; sh:maxCount 1 ;
+  sh:message "segmentIdentifiers is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in segmentIdentifiers; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_shape a sh:PropertyShape ; sh:path x3do:hasShape ; sh:maxCount 1 ;
+  sh:message "shape is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in shape; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_shininessTexture a sh:PropertyShape ; sh:path x3do:hasShininessTexture ; sh:maxCount 1 ;
+  sh:message "shininessTexture is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in shininessTexture; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_skinBindingCoords a sh:PropertyShape ; sh:path x3do:hasSkinBindingCoords ; sh:maxCount 1 ;
+  sh:message "skinBindingCoords is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in skinBindingCoords; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_skinBindingNormals a sh:PropertyShape ; sh:path x3do:hasSkinBindingNormals ; sh:maxCount 1 ;
+  sh:message "skinBindingNormals is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in skinBindingNormals; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_skinCoord a sh:PropertyShape ; sh:path x3do:hasSkinCoord ; sh:maxCount 1 ;
+  sh:message "skinCoord is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in skinCoord; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_skinNormal a sh:PropertyShape ; sh:path x3do:hasSkinNormal ; sh:maxCount 1 ;
+  sh:message "skinNormal is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in skinNormal; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_source a sh:PropertyShape ; sh:path x3do:hasSource ; sh:maxCount 1 ;
+  sh:message "source is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in source; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_specularTexture a sh:PropertyShape ; sh:path x3do:hasSpecularTexture ; sh:maxCount 1 ;
+  sh:message "specularTexture is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in specularTexture; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_surface a sh:PropertyShape ; sh:path x3do:hasSurface ; sh:maxCount 1 ;
+  sh:message "surface is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in surface; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_surfaceNormals a sh:PropertyShape ; sh:path x3do:hasSurfaceNormals ; sh:maxCount 1 ;
+  sh:message "surfaceNormals is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in surfaceNormals; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_tangent a sh:PropertyShape ; sh:path x3do:hasTangent ; sh:maxCount 1 ;
+  sh:message "tangent is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in tangent; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_targetObject a sh:PropertyShape ; sh:path x3do:hasTargetObject ; sh:maxCount 1 ;
+  sh:message "targetObject is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in targetObject; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_texCoord a sh:PropertyShape ; sh:path x3do:hasTexCoord ; sh:maxCount 1 ;
+  sh:message "texCoord is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in texCoord; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_texture a sh:PropertyShape ; sh:path x3do:hasTexture ; sh:maxCount 1 ;
+  sh:message "texture is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in texture; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_textureProperties a sh:PropertyShape ; sh:path x3do:hasTextureProperties ; sh:maxCount 1 ;
+  sh:message "textureProperties is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in textureProperties; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_textureTransform a sh:PropertyShape ; sh:path x3do:hasTextureTransform ; sh:maxCount 1 ;
+  sh:message "textureTransform is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in textureTransform; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_topTexture a sh:PropertyShape ; sh:path x3do:hasTopTexture ; sh:maxCount 1 ;
+  sh:message "topTexture is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in topTexture; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_trajectoryCurve a sh:PropertyShape ; sh:path x3do:hasTrajectoryCurve ; sh:maxCount 1 ;
+  sh:message "trajectoryCurve is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in trajectoryCurve; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_transferFunction a sh:PropertyShape ; sh:path x3do:hasTransferFunction ; sh:maxCount 1 ;
+  sh:message "transferFunction is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in transferFunction; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_viewport a sh:PropertyShape ; sh:path x3do:hasViewport ; sh:maxCount 1 ;
+  sh:message "viewport is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in viewport; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_voxels a sh:PropertyShape ; sh:path x3do:hasVoxels ; sh:maxCount 1 ;
+  sh:message "voxels is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in voxels; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_weightTransferFunction1 a sh:PropertyShape ; sh:path x3do:hasWeightTransferFunction1 ; sh:maxCount 1 ;
+  sh:message "weightTransferFunction1 is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in weightTransferFunction1; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+xc:one_weightTransferFunction2 a sh:PropertyShape ; sh:path x3do:hasWeightTransferFunction2 ; sh:maxCount 1 ;
+  sh:message "weightTransferFunction2 is an SFNode field: it holds one node, and this node has more than one child filed there" ;
+  xs:checkId "sfnode-multiple" ;
+  xs:fixHint "Keep one node in weightTransferFunction2; remove the others or give each the containerField of the field it is meant for (modify_x3d_node)." .
+
+xc:AcousticProperties a sh:NodeShape ; sh:targetClass x3do:AcousticProperties ; sh:property xc:one_metadata .
+xc:Analyser a sh:NodeShape ; sh:targetClass x3do:Analyser ; sh:property xc:one_metadata .
+xc:Anchor a sh:NodeShape ; sh:targetClass x3do:Anchor ; sh:property xc:one_metadata .
+xc:Appearance a sh:NodeShape ; sh:targetClass x3do:Appearance ; sh:property xc:one_acousticProperties , xc:one_backMaterial , xc:one_fillProperties , xc:one_lineProperties , xc:one_material , xc:one_metadata , xc:one_pointProperties , xc:one_texture , xc:one_textureTransform .
+xc:Arc2D a sh:NodeShape ; sh:targetClass x3do:Arc2D ; sh:property xc:one_metadata .
+xc:ArcClose2D a sh:NodeShape ; sh:targetClass x3do:ArcClose2D ; sh:property xc:one_metadata .
+xc:AudioClip a sh:NodeShape ; sh:targetClass x3do:AudioClip ; sh:property xc:one_metadata .
+xc:AudioDestination a sh:NodeShape ; sh:targetClass x3do:AudioDestination ; sh:property xc:one_metadata .
+xc:Background a sh:NodeShape ; sh:targetClass x3do:Background ; sh:property xc:one_metadata .
+xc:BallJoint a sh:NodeShape ; sh:targetClass x3do:BallJoint ; sh:property xc:one_body1 , xc:one_body2 , xc:one_metadata .
+xc:Billboard a sh:NodeShape ; sh:targetClass x3do:Billboard ; sh:property xc:one_metadata .
+xc:BiquadFilter a sh:NodeShape ; sh:targetClass x3do:BiquadFilter ; sh:property xc:one_metadata .
+xc:BlendedVolumeStyle a sh:NodeShape ; sh:targetClass x3do:BlendedVolumeStyle ; sh:property xc:one_metadata , xc:one_renderStyle , xc:one_voxels , xc:one_weightTransferFunction1 , xc:one_weightTransferFunction2 .
+xc:BooleanFilter a sh:NodeShape ; sh:targetClass x3do:BooleanFilter ; sh:property xc:one_metadata .
+xc:BooleanSequencer a sh:NodeShape ; sh:targetClass x3do:BooleanSequencer ; sh:property xc:one_metadata .
+xc:BooleanToggle a sh:NodeShape ; sh:targetClass x3do:BooleanToggle ; sh:property xc:one_metadata .
+xc:BooleanTrigger a sh:NodeShape ; sh:targetClass x3do:BooleanTrigger ; sh:property xc:one_metadata .
+xc:BoundaryEnhancementVolumeStyle a sh:NodeShape ; sh:targetClass x3do:BoundaryEnhancementVolumeStyle ; sh:property xc:one_metadata .
+xc:BoundedPhysicsModel a sh:NodeShape ; sh:targetClass x3do:BoundedPhysicsModel ; sh:property xc:one_geometry , xc:one_metadata .
+xc:Box a sh:NodeShape ; sh:targetClass x3do:Box ; sh:property xc:one_metadata .
+xc:BufferAudioSource a sh:NodeShape ; sh:targetClass x3do:BufferAudioSource ; sh:property xc:one_metadata .
+xc:CADAssembly a sh:NodeShape ; sh:targetClass x3do:CADAssembly ; sh:property xc:one_metadata .
+xc:CADFace a sh:NodeShape ; sh:targetClass x3do:CADFace ; sh:property xc:one_metadata , xc:one_shape .
+xc:CADLayer a sh:NodeShape ; sh:targetClass x3do:CADLayer ; sh:property xc:one_metadata .
+xc:CADPart a sh:NodeShape ; sh:targetClass x3do:CADPart ; sh:property xc:one_metadata .
+xc:CartoonVolumeStyle a sh:NodeShape ; sh:targetClass x3do:CartoonVolumeStyle ; sh:property xc:one_metadata , xc:one_surfaceNormals .
+xc:ChannelMerger a sh:NodeShape ; sh:targetClass x3do:ChannelMerger ; sh:property xc:one_metadata .
+xc:ChannelSelector a sh:NodeShape ; sh:targetClass x3do:ChannelSelector ; sh:property xc:one_metadata .
+xc:ChannelSplitter a sh:NodeShape ; sh:targetClass x3do:ChannelSplitter ; sh:property xc:one_metadata .
+xc:Circle2D a sh:NodeShape ; sh:targetClass x3do:Circle2D ; sh:property xc:one_metadata .
+xc:ClipPlane a sh:NodeShape ; sh:targetClass x3do:ClipPlane ; sh:property xc:one_metadata .
+xc:CollidableOffset a sh:NodeShape ; sh:targetClass x3do:CollidableOffset ; sh:property xc:one_collidable , xc:one_metadata .
+xc:CollidableShape a sh:NodeShape ; sh:targetClass x3do:CollidableShape ; sh:property xc:one_metadata , xc:one_shape .
+xc:Collision a sh:NodeShape ; sh:targetClass x3do:Collision ; sh:property xc:one_metadata , xc:one_proxy .
+xc:CollisionCollection a sh:NodeShape ; sh:targetClass x3do:CollisionCollection ; sh:property xc:one_metadata .
+xc:CollisionSensor a sh:NodeShape ; sh:targetClass x3do:CollisionSensor ; sh:property xc:one_collider , xc:one_metadata .
+xc:CollisionSpace a sh:NodeShape ; sh:targetClass x3do:CollisionSpace ; sh:property xc:one_metadata .
+xc:Color a sh:NodeShape ; sh:targetClass x3do:Color ; sh:property xc:one_metadata .
+xc:ColorChaser a sh:NodeShape ; sh:targetClass x3do:ColorChaser ; sh:property xc:one_metadata .
+xc:ColorDamper a sh:NodeShape ; sh:targetClass x3do:ColorDamper ; sh:property xc:one_metadata .
+xc:ColorInterpolator a sh:NodeShape ; sh:targetClass x3do:ColorInterpolator ; sh:property xc:one_metadata .
+xc:ColorRGBA a sh:NodeShape ; sh:targetClass x3do:ColorRGBA ; sh:property xc:one_metadata .
+xc:ComposedCubeMapTexture a sh:NodeShape ; sh:targetClass x3do:ComposedCubeMapTexture ; sh:property xc:one_backTexture , xc:one_bottomTexture , xc:one_frontTexture , xc:one_leftTexture , xc:one_metadata , xc:one_rightTexture , xc:one_textureProperties , xc:one_topTexture .
+xc:ComposedShader a sh:NodeShape ; sh:targetClass x3do:ComposedShader ; sh:property xc:one_metadata .
+xc:ComposedTexture3D a sh:NodeShape ; sh:targetClass x3do:ComposedTexture3D ; sh:property xc:one_metadata , xc:one_textureProperties .
+xc:ComposedVolumeStyle a sh:NodeShape ; sh:targetClass x3do:ComposedVolumeStyle ; sh:property xc:one_metadata .
+xc:Cone a sh:NodeShape ; sh:targetClass x3do:Cone ; sh:property xc:one_metadata .
+xc:ConeEmitter a sh:NodeShape ; sh:targetClass x3do:ConeEmitter ; sh:property xc:one_metadata .
+xc:Contact a sh:NodeShape ; sh:targetClass x3do:Contact ; sh:property xc:one_body1 , xc:one_body2 , xc:one_geometry1 , xc:one_geometry2 , xc:one_metadata .
+xc:Contour2D a sh:NodeShape ; sh:targetClass x3do:Contour2D ; sh:property xc:one_metadata .
+xc:ContourPolyline2D a sh:NodeShape ; sh:targetClass x3do:ContourPolyline2D ; sh:property xc:one_metadata .
+xc:Convolver a sh:NodeShape ; sh:targetClass x3do:Convolver ; sh:property xc:one_metadata .
+xc:Coordinate a sh:NodeShape ; sh:targetClass x3do:Coordinate ; sh:property xc:one_metadata .
+xc:CoordinateChaser a sh:NodeShape ; sh:targetClass x3do:CoordinateChaser ; sh:property xc:one_metadata .
+xc:CoordinateDamper a sh:NodeShape ; sh:targetClass x3do:CoordinateDamper ; sh:property xc:one_metadata .
+xc:CoordinateDouble a sh:NodeShape ; sh:targetClass x3do:CoordinateDouble ; sh:property xc:one_metadata .
+xc:CoordinateInterpolator a sh:NodeShape ; sh:targetClass x3do:CoordinateInterpolator ; sh:property xc:one_metadata .
+xc:CoordinateInterpolator2D a sh:NodeShape ; sh:targetClass x3do:CoordinateInterpolator2D ; sh:property xc:one_metadata .
+xc:Cylinder a sh:NodeShape ; sh:targetClass x3do:Cylinder ; sh:property xc:one_metadata .
+xc:CylinderSensor a sh:NodeShape ; sh:targetClass x3do:CylinderSensor ; sh:property xc:one_metadata .
+xc:DISEntityManager a sh:NodeShape ; sh:targetClass x3do:DISEntityManager ; sh:property xc:one_metadata .
+xc:DISEntityTypeMapping a sh:NodeShape ; sh:targetClass x3do:DISEntityTypeMapping ; sh:property xc:one_metadata .
+xc:Delay a sh:NodeShape ; sh:targetClass x3do:Delay ; sh:property xc:one_metadata .
+xc:DirectionalLight a sh:NodeShape ; sh:targetClass x3do:DirectionalLight ; sh:property xc:one_metadata .
+xc:Disk2D a sh:NodeShape ; sh:targetClass x3do:Disk2D ; sh:property xc:one_metadata .
+xc:DoubleAxisHingeJoint a sh:NodeShape ; sh:targetClass x3do:DoubleAxisHingeJoint ; sh:property xc:one_body1 , xc:one_body2 , xc:one_metadata .
+xc:DynamicsCompressor a sh:NodeShape ; sh:targetClass x3do:DynamicsCompressor ; sh:property xc:one_metadata .
+xc:EaseInEaseOut a sh:NodeShape ; sh:targetClass x3do:EaseInEaseOut ; sh:property xc:one_metadata .
+xc:EdgeEnhancementVolumeStyle a sh:NodeShape ; sh:targetClass x3do:EdgeEnhancementVolumeStyle ; sh:property xc:one_metadata , xc:one_surfaceNormals .
+xc:ElevationGrid a sh:NodeShape ; sh:targetClass x3do:ElevationGrid ; sh:property xc:one_color , xc:one_fogCoord , xc:one_metadata , xc:one_normal , xc:one_texCoord .
+xc:EnvironmentLight a sh:NodeShape ; sh:targetClass x3do:EnvironmentLight ; sh:property xc:one_diffuseTexture , xc:one_metadata , xc:one_specularTexture .
+xc:EspduTransform a sh:NodeShape ; sh:targetClass x3do:EspduTransform ; sh:property xc:one_metadata .
+xc:ExplosionEmitter a sh:NodeShape ; sh:targetClass x3do:ExplosionEmitter ; sh:property xc:one_metadata .
+xc:Extrusion a sh:NodeShape ; sh:targetClass x3do:Extrusion ; sh:property xc:one_metadata .
+xc:FillProperties a sh:NodeShape ; sh:targetClass x3do:FillProperties ; sh:property xc:one_metadata .
+xc:FloatVertexAttribute a sh:NodeShape ; sh:targetClass x3do:FloatVertexAttribute ; sh:property xc:one_metadata .
+xc:Fog a sh:NodeShape ; sh:targetClass x3do:Fog ; sh:property xc:one_metadata .
+xc:FogCoordinate a sh:NodeShape ; sh:targetClass x3do:FogCoordinate ; sh:property xc:one_metadata .
+xc:FontLibrary a sh:NodeShape ; sh:targetClass x3do:FontLibrary ; sh:property xc:one_metadata .
+xc:FontStyle a sh:NodeShape ; sh:targetClass x3do:FontStyle ; sh:property xc:one_metadata .
+xc:ForcePhysicsModel a sh:NodeShape ; sh:targetClass x3do:ForcePhysicsModel ; sh:property xc:one_metadata .
+xc:Gain a sh:NodeShape ; sh:targetClass x3do:Gain ; sh:property xc:one_metadata .
+xc:GaussianSplats a sh:NodeShape ; sh:targetClass x3do:GaussianSplats ; sh:property xc:one_metadata .
+xc:GeneratedCubeMapTexture a sh:NodeShape ; sh:targetClass x3do:GeneratedCubeMapTexture ; sh:property xc:one_metadata , xc:one_textureProperties .
+xc:GeoCoordinate a sh:NodeShape ; sh:targetClass x3do:GeoCoordinate ; sh:property xc:one_geoOrigin , xc:one_metadata .
+xc:GeoElevationGrid a sh:NodeShape ; sh:targetClass x3do:GeoElevationGrid ; sh:property xc:one_color , xc:one_geoOrigin , xc:one_metadata , xc:one_normal , xc:one_texCoord .
+xc:GeoLOD a sh:NodeShape ; sh:targetClass x3do:GeoLOD ; sh:property xc:one_geoOrigin , xc:one_metadata .
+xc:GeoLocation a sh:NodeShape ; sh:targetClass x3do:GeoLocation ; sh:property xc:one_geoOrigin , xc:one_metadata .
+xc:GeoMetadata a sh:NodeShape ; sh:targetClass x3do:GeoMetadata ; sh:property xc:one_metadata .
+xc:GeoOrigin a sh:NodeShape ; sh:targetClass x3do:GeoOrigin ; sh:property xc:one_metadata .
+xc:GeoPositionInterpolator a sh:NodeShape ; sh:targetClass x3do:GeoPositionInterpolator ; sh:property xc:one_geoOrigin , xc:one_metadata .
+xc:GeoProximitySensor a sh:NodeShape ; sh:targetClass x3do:GeoProximitySensor ; sh:property xc:one_geoOrigin , xc:one_metadata .
+xc:GeoTouchSensor a sh:NodeShape ; sh:targetClass x3do:GeoTouchSensor ; sh:property xc:one_geoOrigin , xc:one_metadata .
+xc:GeoTransform a sh:NodeShape ; sh:targetClass x3do:GeoTransform ; sh:property xc:one_geoOrigin , xc:one_metadata .
+xc:GeoViewpoint a sh:NodeShape ; sh:targetClass x3do:GeoViewpoint ; sh:property xc:one_geoOrigin , xc:one_metadata , xc:one_navigationInfo .
+xc:Group a sh:NodeShape ; sh:targetClass x3do:Group ; sh:property xc:one_metadata .
+xc:HAnimDisplacer a sh:NodeShape ; sh:targetClass x3do:HAnimDisplacer ; sh:property xc:one_metadata .
+xc:HAnimHumanoid a sh:NodeShape ; sh:targetClass x3do:HAnimHumanoid ; sh:property xc:one_metadata , xc:one_skinBindingCoords , xc:one_skinBindingNormals , xc:one_skinCoord , xc:one_skinNormal .
+xc:HAnimJoint a sh:NodeShape ; sh:targetClass x3do:HAnimJoint ; sh:property xc:one_metadata .
+xc:HAnimMotion a sh:NodeShape ; sh:targetClass x3do:HAnimMotion ; sh:property xc:one_metadata .
+xc:HAnimPose a sh:NodeShape ; sh:targetClass x3do:HAnimPose ; sh:property xc:one_metadata .
+xc:HAnimSegment a sh:NodeShape ; sh:targetClass x3do:HAnimSegment ; sh:property xc:one_coord , xc:one_metadata .
+xc:HAnimSite a sh:NodeShape ; sh:targetClass x3do:HAnimSite ; sh:property xc:one_metadata .
+xc:ImageCubeMapTexture a sh:NodeShape ; sh:targetClass x3do:ImageCubeMapTexture ; sh:property xc:one_metadata , xc:one_textureProperties .
+xc:ImageTexture a sh:NodeShape ; sh:targetClass x3do:ImageTexture ; sh:property xc:one_metadata , xc:one_textureProperties .
+xc:ImageTexture3D a sh:NodeShape ; sh:targetClass x3do:ImageTexture3D ; sh:property xc:one_metadata , xc:one_textureProperties .
+xc:IndexedFaceSet a sh:NodeShape ; sh:targetClass x3do:IndexedFaceSet ; sh:property xc:one_color , xc:one_coord , xc:one_fogCoord , xc:one_metadata , xc:one_normal , xc:one_tangent , xc:one_texCoord .
+xc:IndexedLineSet a sh:NodeShape ; sh:targetClass x3do:IndexedLineSet ; sh:property xc:one_color , xc:one_coord , xc:one_fogCoord , xc:one_metadata , xc:one_normal .
+xc:IndexedQuadSet a sh:NodeShape ; sh:targetClass x3do:IndexedQuadSet ; sh:property xc:one_color , xc:one_coord , xc:one_fogCoord , xc:one_metadata , xc:one_normal , xc:one_tangent , xc:one_texCoord .
+xc:IndexedTriangleFanSet a sh:NodeShape ; sh:targetClass x3do:IndexedTriangleFanSet ; sh:property xc:one_color , xc:one_coord , xc:one_fogCoord , xc:one_metadata , xc:one_normal , xc:one_tangent , xc:one_texCoord .
+xc:IndexedTriangleSet a sh:NodeShape ; sh:targetClass x3do:IndexedTriangleSet ; sh:property xc:one_color , xc:one_coord , xc:one_fogCoord , xc:one_metadata , xc:one_normal , xc:one_tangent , xc:one_texCoord .
+xc:IndexedTriangleStripSet a sh:NodeShape ; sh:targetClass x3do:IndexedTriangleStripSet ; sh:property xc:one_color , xc:one_coord , xc:one_fogCoord , xc:one_metadata , xc:one_normal , xc:one_tangent , xc:one_texCoord .
+xc:Inline a sh:NodeShape ; sh:targetClass x3do:Inline ; sh:property xc:one_metadata .
+xc:InlineGeometry a sh:NodeShape ; sh:targetClass x3do:InlineGeometry ; sh:property xc:one_metadata .
+xc:IntegerSequencer a sh:NodeShape ; sh:targetClass x3do:IntegerSequencer ; sh:property xc:one_metadata .
+xc:IntegerTrigger a sh:NodeShape ; sh:targetClass x3do:IntegerTrigger ; sh:property xc:one_metadata .
+xc:IsoSurfaceVolumeData a sh:NodeShape ; sh:targetClass x3do:IsoSurfaceVolumeData ; sh:property xc:one_gradients , xc:one_metadata , xc:one_voxels .
+xc:KeySensor a sh:NodeShape ; sh:targetClass x3do:KeySensor ; sh:property xc:one_metadata .
+xc:LOD a sh:NodeShape ; sh:targetClass x3do:LOD ; sh:property xc:one_metadata .
+xc:Layer a sh:NodeShape ; sh:targetClass x3do:Layer ; sh:property xc:one_metadata , xc:one_viewport .
+xc:LayerSet a sh:NodeShape ; sh:targetClass x3do:LayerSet ; sh:property xc:one_metadata .
+xc:Layout a sh:NodeShape ; sh:targetClass x3do:Layout ; sh:property xc:one_metadata .
+xc:LayoutGroup a sh:NodeShape ; sh:targetClass x3do:LayoutGroup ; sh:property xc:one_layout , xc:one_metadata , xc:one_viewport .
+xc:LayoutLayer a sh:NodeShape ; sh:targetClass x3do:LayoutLayer ; sh:property xc:one_layout , xc:one_metadata , xc:one_viewport .
+xc:LinePickSensor a sh:NodeShape ; sh:targetClass x3do:LinePickSensor ; sh:property xc:one_metadata , xc:one_pickingGeometry .
+xc:LineProperties a sh:NodeShape ; sh:targetClass x3do:LineProperties ; sh:property xc:one_metadata .
+xc:LineSet a sh:NodeShape ; sh:targetClass x3do:LineSet ; sh:property xc:one_color , xc:one_coord , xc:one_fogCoord , xc:one_metadata , xc:one_normal .
+xc:ListenerPointSource a sh:NodeShape ; sh:targetClass x3do:ListenerPointSource ; sh:property xc:one_metadata .
+xc:LoadSensor a sh:NodeShape ; sh:targetClass x3do:LoadSensor ; sh:property xc:one_metadata .
+xc:LocalFog a sh:NodeShape ; sh:targetClass x3do:LocalFog ; sh:property xc:one_metadata .
+xc:Material a sh:NodeShape ; sh:targetClass x3do:Material ; sh:property xc:one_ambientTexture , xc:one_diffuseTexture , xc:one_emissiveTexture , xc:one_metadata , xc:one_normalTexture , xc:one_occlusionTexture , xc:one_shininessTexture , xc:one_specularTexture .
+xc:Matrix3VertexAttribute a sh:NodeShape ; sh:targetClass x3do:Matrix3VertexAttribute ; sh:property xc:one_metadata .
+xc:Matrix4VertexAttribute a sh:NodeShape ; sh:targetClass x3do:Matrix4VertexAttribute ; sh:property xc:one_metadata .
+xc:MetadataBoolean a sh:NodeShape ; sh:targetClass x3do:MetadataBoolean ; sh:property xc:one_metadata .
+xc:MetadataDouble a sh:NodeShape ; sh:targetClass x3do:MetadataDouble ; sh:property xc:one_metadata .
+xc:MetadataFloat a sh:NodeShape ; sh:targetClass x3do:MetadataFloat ; sh:property xc:one_metadata .
+xc:MetadataInteger a sh:NodeShape ; sh:targetClass x3do:MetadataInteger ; sh:property xc:one_metadata .
+xc:MetadataSet a sh:NodeShape ; sh:targetClass x3do:MetadataSet ; sh:property xc:one_metadata .
+xc:MetadataString a sh:NodeShape ; sh:targetClass x3do:MetadataString ; sh:property xc:one_metadata .
+xc:MicrophoneSource a sh:NodeShape ; sh:targetClass x3do:MicrophoneSource ; sh:property xc:one_metadata .
+xc:MotorJoint a sh:NodeShape ; sh:targetClass x3do:MotorJoint ; sh:property xc:one_body1 , xc:one_body2 , xc:one_metadata .
+xc:MovieTexture a sh:NodeShape ; sh:targetClass x3do:MovieTexture ; sh:property xc:one_metadata , xc:one_textureProperties .
+xc:MultiTexture a sh:NodeShape ; sh:targetClass x3do:MultiTexture ; sh:property xc:one_metadata .
+xc:MultiTextureCoordinate a sh:NodeShape ; sh:targetClass x3do:MultiTextureCoordinate ; sh:property xc:one_metadata .
+xc:MultiTextureTransform a sh:NodeShape ; sh:targetClass x3do:MultiTextureTransform ; sh:property xc:one_metadata .
+xc:NavigationInfo a sh:NodeShape ; sh:targetClass x3do:NavigationInfo ; sh:property xc:one_metadata .
+xc:Normal a sh:NodeShape ; sh:targetClass x3do:Normal ; sh:property xc:one_metadata .
+xc:NormalInterpolator a sh:NodeShape ; sh:targetClass x3do:NormalInterpolator ; sh:property xc:one_metadata .
+xc:NurbsCurve a sh:NodeShape ; sh:targetClass x3do:NurbsCurve ; sh:property xc:one_controlPoint , xc:one_metadata .
+xc:NurbsCurve2D a sh:NodeShape ; sh:targetClass x3do:NurbsCurve2D ; sh:property xc:one_metadata .
+xc:NurbsOrientationInterpolator a sh:NodeShape ; sh:targetClass x3do:NurbsOrientationInterpolator ; sh:property xc:one_controlPoint , xc:one_metadata .
+xc:NurbsPatchSurface a sh:NodeShape ; sh:targetClass x3do:NurbsPatchSurface ; sh:property xc:one_controlPoint , xc:one_metadata , xc:one_texCoord .
+xc:NurbsPositionInterpolator a sh:NodeShape ; sh:targetClass x3do:NurbsPositionInterpolator ; sh:property xc:one_controlPoint , xc:one_metadata .
+xc:NurbsSet a sh:NodeShape ; sh:targetClass x3do:NurbsSet ; sh:property xc:one_metadata .
+xc:NurbsSurfaceInterpolator a sh:NodeShape ; sh:targetClass x3do:NurbsSurfaceInterpolator ; sh:property xc:one_controlPoint , xc:one_metadata .
+xc:NurbsSweptSurface a sh:NodeShape ; sh:targetClass x3do:NurbsSweptSurface ; sh:property xc:one_crossSectionCurve , xc:one_metadata , xc:one_trajectoryCurve .
+xc:NurbsSwungSurface a sh:NodeShape ; sh:targetClass x3do:NurbsSwungSurface ; sh:property xc:one_metadata , xc:one_profileCurve , xc:one_trajectoryCurve .
+xc:NurbsTextureCoordinate a sh:NodeShape ; sh:targetClass x3do:NurbsTextureCoordinate ; sh:property xc:one_metadata .
+xc:NurbsTrimmedSurface a sh:NodeShape ; sh:targetClass x3do:NurbsTrimmedSurface ; sh:property xc:one_controlPoint , xc:one_metadata , xc:one_texCoord .
+xc:OpacityMapVolumeStyle a sh:NodeShape ; sh:targetClass x3do:OpacityMapVolumeStyle ; sh:property xc:one_metadata , xc:one_transferFunction .
+xc:OrientationChaser a sh:NodeShape ; sh:targetClass x3do:OrientationChaser ; sh:property xc:one_metadata .
+xc:OrientationDamper a sh:NodeShape ; sh:targetClass x3do:OrientationDamper ; sh:property xc:one_metadata .
+xc:OrientationInterpolator a sh:NodeShape ; sh:targetClass x3do:OrientationInterpolator ; sh:property xc:one_metadata .
+xc:OrthoViewpoint a sh:NodeShape ; sh:targetClass x3do:OrthoViewpoint ; sh:property xc:one_metadata , xc:one_navigationInfo .
+xc:OscillatorSource a sh:NodeShape ; sh:targetClass x3do:OscillatorSource ; sh:property xc:one_metadata , xc:one_periodicWave .
+xc:PackagedShader a sh:NodeShape ; sh:targetClass x3do:PackagedShader ; sh:property xc:one_metadata .
+xc:ParticleSystem a sh:NodeShape ; sh:targetClass x3do:ParticleSystem ; sh:property xc:one_appearance , xc:one_color , xc:one_emitter , xc:one_geometry , xc:one_metadata , xc:one_texCoord .
+xc:PeriodicWave a sh:NodeShape ; sh:targetClass x3do:PeriodicWave ; sh:property xc:one_metadata .
+xc:PhysicalMaterial a sh:NodeShape ; sh:targetClass x3do:PhysicalMaterial ; sh:property xc:one_baseTexture , xc:one_emissiveTexture , xc:one_metadata , xc:one_metallicRoughnessTexture , xc:one_normalTexture , xc:one_occlusionTexture .
+xc:PickableGroup a sh:NodeShape ; sh:targetClass x3do:PickableGroup ; sh:property xc:one_metadata .
+xc:PixelTexture a sh:NodeShape ; sh:targetClass x3do:PixelTexture ; sh:property xc:one_metadata , xc:one_textureProperties .
+xc:PixelTexture3D a sh:NodeShape ; sh:targetClass x3do:PixelTexture3D ; sh:property xc:one_metadata , xc:one_textureProperties .
+xc:PlaneSensor a sh:NodeShape ; sh:targetClass x3do:PlaneSensor ; sh:property xc:one_metadata .
+xc:PointEmitter a sh:NodeShape ; sh:targetClass x3do:PointEmitter ; sh:property xc:one_metadata .
+xc:PointLight a sh:NodeShape ; sh:targetClass x3do:PointLight ; sh:property xc:one_metadata .
+xc:PointPickSensor a sh:NodeShape ; sh:targetClass x3do:PointPickSensor ; sh:property xc:one_metadata , xc:one_pickingGeometry .
+xc:PointProperties a sh:NodeShape ; sh:targetClass x3do:PointProperties ; sh:property xc:one_metadata .
+xc:PointSet a sh:NodeShape ; sh:targetClass x3do:PointSet ; sh:property xc:one_color , xc:one_coord , xc:one_fogCoord , xc:one_metadata , xc:one_normal .
+xc:Polyline2D a sh:NodeShape ; sh:targetClass x3do:Polyline2D ; sh:property xc:one_metadata .
+xc:PolylineEmitter a sh:NodeShape ; sh:targetClass x3do:PolylineEmitter ; sh:property xc:one_coord , xc:one_metadata .
+xc:Polypoint2D a sh:NodeShape ; sh:targetClass x3do:Polypoint2D ; sh:property xc:one_metadata .
+xc:PositionChaser a sh:NodeShape ; sh:targetClass x3do:PositionChaser ; sh:property xc:one_metadata .
+xc:PositionChaser2D a sh:NodeShape ; sh:targetClass x3do:PositionChaser2D ; sh:property xc:one_metadata .
+xc:PositionDamper a sh:NodeShape ; sh:targetClass x3do:PositionDamper ; sh:property xc:one_metadata .
+xc:PositionDamper2D a sh:NodeShape ; sh:targetClass x3do:PositionDamper2D ; sh:property xc:one_metadata .
+xc:PositionInterpolator a sh:NodeShape ; sh:targetClass x3do:PositionInterpolator ; sh:property xc:one_metadata .
+xc:PositionInterpolator2D a sh:NodeShape ; sh:targetClass x3do:PositionInterpolator2D ; sh:property xc:one_metadata .
+xc:PrimitivePickSensor a sh:NodeShape ; sh:targetClass x3do:PrimitivePickSensor ; sh:property xc:one_metadata , xc:one_pickingGeometry .
+xc:ProgramShader a sh:NodeShape ; sh:targetClass x3do:ProgramShader ; sh:property xc:one_metadata .
+xc:ProjectionVolumeStyle a sh:NodeShape ; sh:targetClass x3do:ProjectionVolumeStyle ; sh:property xc:one_metadata .
+xc:ProtoInstance a sh:NodeShape ; sh:targetClass x3do:ProtoInstance ; sh:property xc:one_metadata .
+xc:ProximitySensor a sh:NodeShape ; sh:targetClass x3do:ProximitySensor ; sh:property xc:one_metadata .
+xc:QuadSet a sh:NodeShape ; sh:targetClass x3do:QuadSet ; sh:property xc:one_color , xc:one_coord , xc:one_fogCoord , xc:one_metadata , xc:one_normal , xc:one_tangent , xc:one_texCoord .
+xc:ReceiverPdu a sh:NodeShape ; sh:targetClass x3do:ReceiverPdu ; sh:property xc:one_metadata .
+xc:Rectangle2D a sh:NodeShape ; sh:targetClass x3do:Rectangle2D ; sh:property xc:one_metadata .
+xc:RenderedTexture a sh:NodeShape ; sh:targetClass x3do:RenderedTexture ; sh:property xc:one_metadata , xc:one_textureProperties .
+xc:RigidBody a sh:NodeShape ; sh:targetClass x3do:RigidBody ; sh:property xc:one_massDensityModel , xc:one_metadata .
+xc:RigidBodyCollection a sh:NodeShape ; sh:targetClass x3do:RigidBodyCollection ; sh:property xc:one_collider , xc:one_metadata .
+xc:ScalarChaser a sh:NodeShape ; sh:targetClass x3do:ScalarChaser ; sh:property xc:one_metadata .
+xc:ScalarDamper a sh:NodeShape ; sh:targetClass x3do:ScalarDamper ; sh:property xc:one_metadata .
+xc:ScalarInterpolator a sh:NodeShape ; sh:targetClass x3do:ScalarInterpolator ; sh:property xc:one_metadata .
+xc:ScreenFontStyle a sh:NodeShape ; sh:targetClass x3do:ScreenFontStyle ; sh:property xc:one_metadata .
+xc:ScreenGroup a sh:NodeShape ; sh:targetClass x3do:ScreenGroup ; sh:property xc:one_metadata .
+xc:Script a sh:NodeShape ; sh:targetClass x3do:Script ; sh:property xc:one_metadata .
+xc:SegmentedVolumeData a sh:NodeShape ; sh:targetClass x3do:SegmentedVolumeData ; sh:property xc:one_metadata , xc:one_segmentIdentifiers , xc:one_voxels .
+xc:ShadedVolumeStyle a sh:NodeShape ; sh:targetClass x3do:ShadedVolumeStyle ; sh:property xc:one_material , xc:one_metadata , xc:one_surfaceNormals .
+xc:ShaderPart a sh:NodeShape ; sh:targetClass x3do:ShaderPart ; sh:property xc:one_metadata .
+xc:ShaderProgram a sh:NodeShape ; sh:targetClass x3do:ShaderProgram ; sh:property xc:one_metadata .
+xc:Shape a sh:NodeShape ; sh:targetClass x3do:Shape ; sh:property xc:one_appearance , xc:one_geometry , xc:one_metadata .
+xc:SignalPdu a sh:NodeShape ; sh:targetClass x3do:SignalPdu ; sh:property xc:one_metadata .
+xc:SilhouetteEnhancementVolumeStyle a sh:NodeShape ; sh:targetClass x3do:SilhouetteEnhancementVolumeStyle ; sh:property xc:one_metadata , xc:one_surfaceNormals .
+xc:SingleAxisHingeJoint a sh:NodeShape ; sh:targetClass x3do:SingleAxisHingeJoint ; sh:property xc:one_body1 , xc:one_body2 , xc:one_metadata .
+xc:SliderJoint a sh:NodeShape ; sh:targetClass x3do:SliderJoint ; sh:property xc:one_body1 , xc:one_body2 , xc:one_metadata .
+xc:Sound a sh:NodeShape ; sh:targetClass x3do:Sound ; sh:property xc:one_metadata , xc:one_source .
+xc:SpatialSound a sh:NodeShape ; sh:targetClass x3do:SpatialSound ; sh:property xc:one_metadata .
+xc:Sphere a sh:NodeShape ; sh:targetClass x3do:Sphere ; sh:property xc:one_metadata .
+xc:SphereSensor a sh:NodeShape ; sh:targetClass x3do:SphereSensor ; sh:property xc:one_metadata .
+xc:SplinePositionInterpolator a sh:NodeShape ; sh:targetClass x3do:SplinePositionInterpolator ; sh:property xc:one_metadata .
+xc:SplinePositionInterpolator2D a sh:NodeShape ; sh:targetClass x3do:SplinePositionInterpolator2D ; sh:property xc:one_metadata .
+xc:SplineScalarInterpolator a sh:NodeShape ; sh:targetClass x3do:SplineScalarInterpolator ; sh:property xc:one_metadata .
+xc:SpotLight a sh:NodeShape ; sh:targetClass x3do:SpotLight ; sh:property xc:one_metadata .
+xc:SquadOrientationInterpolator a sh:NodeShape ; sh:targetClass x3do:SquadOrientationInterpolator ; sh:property xc:one_metadata .
+xc:StaticGroup a sh:NodeShape ; sh:targetClass x3do:StaticGroup ; sh:property xc:one_metadata .
+xc:StreamAudioDestination a sh:NodeShape ; sh:targetClass x3do:StreamAudioDestination ; sh:property xc:one_metadata .
+xc:StreamAudioSource a sh:NodeShape ; sh:targetClass x3do:StreamAudioSource ; sh:property xc:one_metadata .
+xc:StringSensor a sh:NodeShape ; sh:targetClass x3do:StringSensor ; sh:property xc:one_metadata .
+xc:SurfaceEmitter a sh:NodeShape ; sh:targetClass x3do:SurfaceEmitter ; sh:property xc:one_metadata , xc:one_surface .
+xc:Switch a sh:NodeShape ; sh:targetClass x3do:Switch ; sh:property xc:one_metadata .
+xc:Tangent a sh:NodeShape ; sh:targetClass x3do:Tangent ; sh:property xc:one_metadata .
+xc:TexCoordChaser2D a sh:NodeShape ; sh:targetClass x3do:TexCoordChaser2D ; sh:property xc:one_metadata .
+xc:TexCoordDamper2D a sh:NodeShape ; sh:targetClass x3do:TexCoordDamper2D ; sh:property xc:one_metadata .
+xc:Text a sh:NodeShape ; sh:targetClass x3do:Text ; sh:property xc:one_fontStyle , xc:one_metadata .
+xc:TextureBackground a sh:NodeShape ; sh:targetClass x3do:TextureBackground ; sh:property xc:one_backTexture , xc:one_bottomTexture , xc:one_frontTexture , xc:one_leftTexture , xc:one_metadata , xc:one_rightTexture , xc:one_topTexture .
+xc:TextureCoordinate a sh:NodeShape ; sh:targetClass x3do:TextureCoordinate ; sh:property xc:one_metadata .
+xc:TextureCoordinate3D a sh:NodeShape ; sh:targetClass x3do:TextureCoordinate3D ; sh:property xc:one_metadata .
+xc:TextureCoordinate4D a sh:NodeShape ; sh:targetClass x3do:TextureCoordinate4D ; sh:property xc:one_metadata .
+xc:TextureCoordinateGenerator a sh:NodeShape ; sh:targetClass x3do:TextureCoordinateGenerator ; sh:property xc:one_metadata .
+xc:TextureProjector a sh:NodeShape ; sh:targetClass x3do:TextureProjector ; sh:property xc:one_metadata , xc:one_texture .
+xc:TextureProjectorParallel a sh:NodeShape ; sh:targetClass x3do:TextureProjectorParallel ; sh:property xc:one_metadata , xc:one_texture .
+xc:TextureProperties a sh:NodeShape ; sh:targetClass x3do:TextureProperties ; sh:property xc:one_metadata .
+xc:TextureTransform a sh:NodeShape ; sh:targetClass x3do:TextureTransform ; sh:property xc:one_metadata .
+xc:TextureTransform3D a sh:NodeShape ; sh:targetClass x3do:TextureTransform3D ; sh:property xc:one_metadata .
+xc:TextureTransformMatrix3D a sh:NodeShape ; sh:targetClass x3do:TextureTransformMatrix3D ; sh:property xc:one_metadata .
+xc:TimeSensor a sh:NodeShape ; sh:targetClass x3do:TimeSensor ; sh:property xc:one_metadata .
+xc:TimeTrigger a sh:NodeShape ; sh:targetClass x3do:TimeTrigger ; sh:property xc:one_metadata .
+xc:ToneMappedVolumeStyle a sh:NodeShape ; sh:targetClass x3do:ToneMappedVolumeStyle ; sh:property xc:one_metadata , xc:one_surfaceNormals .
+xc:TouchSensor a sh:NodeShape ; sh:targetClass x3do:TouchSensor ; sh:property xc:one_metadata .
+xc:Transform a sh:NodeShape ; sh:targetClass x3do:Transform ; sh:property xc:one_metadata .
+xc:TransformSensor a sh:NodeShape ; sh:targetClass x3do:TransformSensor ; sh:property xc:one_metadata , xc:one_targetObject .
+xc:TransmitterPdu a sh:NodeShape ; sh:targetClass x3do:TransmitterPdu ; sh:property xc:one_metadata .
+xc:TriangleFanSet a sh:NodeShape ; sh:targetClass x3do:TriangleFanSet ; sh:property xc:one_color , xc:one_coord , xc:one_fogCoord , xc:one_metadata , xc:one_normal , xc:one_tangent , xc:one_texCoord .
+xc:TriangleSet a sh:NodeShape ; sh:targetClass x3do:TriangleSet ; sh:property xc:one_color , xc:one_coord , xc:one_fogCoord , xc:one_metadata , xc:one_normal , xc:one_tangent , xc:one_texCoord .
+xc:TriangleSet2D a sh:NodeShape ; sh:targetClass x3do:TriangleSet2D ; sh:property xc:one_metadata .
+xc:TriangleStripSet a sh:NodeShape ; sh:targetClass x3do:TriangleStripSet ; sh:property xc:one_color , xc:one_coord , xc:one_fogCoord , xc:one_metadata , xc:one_normal , xc:one_tangent , xc:one_texCoord .
+xc:TwoSidedMaterial a sh:NodeShape ; sh:targetClass x3do:TwoSidedMaterial ; sh:property xc:one_metadata .
+xc:UniversalJoint a sh:NodeShape ; sh:targetClass x3do:UniversalJoint ; sh:property xc:one_body1 , xc:one_body2 , xc:one_metadata .
+xc:UnlitMaterial a sh:NodeShape ; sh:targetClass x3do:UnlitMaterial ; sh:property xc:one_emissiveTexture , xc:one_metadata , xc:one_normalTexture .
+xc:Viewpoint a sh:NodeShape ; sh:targetClass x3do:Viewpoint ; sh:property xc:one_metadata , xc:one_navigationInfo .
+xc:ViewpointGroup a sh:NodeShape ; sh:targetClass x3do:ViewpointGroup ; sh:property xc:one_metadata .
+xc:Viewport a sh:NodeShape ; sh:targetClass x3do:Viewport ; sh:property xc:one_metadata .
+xc:VisibilitySensor a sh:NodeShape ; sh:targetClass x3do:VisibilitySensor ; sh:property xc:one_metadata .
+xc:VolumeData a sh:NodeShape ; sh:targetClass x3do:VolumeData ; sh:property xc:one_metadata , xc:one_renderStyle , xc:one_voxels .
+xc:VolumeEmitter a sh:NodeShape ; sh:targetClass x3do:VolumeEmitter ; sh:property xc:one_coord , xc:one_metadata .
+xc:VolumePickSensor a sh:NodeShape ; sh:targetClass x3do:VolumePickSensor ; sh:property xc:one_metadata , xc:one_pickingGeometry .
+xc:WaveShaper a sh:NodeShape ; sh:targetClass x3do:WaveShaper ; sh:property xc:one_metadata .
+xc:WindPhysicsModel a sh:NodeShape ; sh:targetClass x3do:WindPhysicsModel ; sh:property xc:one_metadata .
+xc:WorldInfo a sh:NodeShape ; sh:targetClass x3do:WorldInfo ; sh:property xc:one_metadata .

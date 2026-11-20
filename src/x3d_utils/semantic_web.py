@@ -34,7 +34,15 @@ from x3d_utils.ontology_guard import QueryRefused, guard_sparql, max_rows, run_b
 
 SCHEMAS_DIR = Path(__file__).resolve().parent.parent / "validation" / "schemas"
 SHAPES_DIR = SCHEMAS_DIR / "shapes"
-SHAPES = {"x3d-core": SHAPES_DIR / "x3d-core.shacl.ttl"}
+# x3d-core is hand-written; x3d-cardinality is generated from the X3DUOM (evaluation/build_cardinality_shapes.py)
+# and is opt-in: shapes="x3d-core,x3d-cardinality".
+SHAPES = {"x3d-core": SHAPES_DIR / "x3d-core.shacl.ttl",
+          "x3d-cardinality": SHAPES_DIR / "x3d-cardinality.shacl.ttl"}
+
+
+def bundled_shape_names(shapes: str) -> list[str]:
+    """The bundled shape sets named in a shapes argument ("x3d-core,x3d-cardinality"), in the order given."""
+    return [n for n in (s.strip() for s in (shapes or "").split(",")) if n in SHAPES]
 X3DUOM_PATH = SCHEMAS_DIR / "X3dUnifiedObjectModel-4.1.xml"
 CONTAINMENT_PATH = SCHEMAS_DIR / "verified-containment.json"
 REPO_DIR = Path(__file__).resolve().parents[2]
@@ -103,6 +111,18 @@ def _version(module: str):
         return None
 
 
+def _shapes_instrument(shapes: str):
+    """One bundled set reads {name, sha256} as before; several read {name: "a,b", sha256 of the hashes, sets: [...]}."""
+    names = bundled_shape_names(shapes)
+    if not names:
+        return None
+    sets = [{"name": n, "sha256": _file_sha(str(SHAPES[n]))} for n in names]
+    if len(sets) == 1:
+        return sets[0]
+    joined = hashlib.sha256("\n".join(x["sha256"] for x in sets).encode()).hexdigest()
+    return {"name": ",".join(names), "sha256": joined, "sets": sets}
+
+
 def instrument(ontology_version: str | None = None, shapes: str = "x3d-core") -> dict:
     """What produced an answer: commit, file hashes and library versions."""
     ov = check_ontology_version(ontology_version or "4.1")
@@ -110,7 +130,7 @@ def instrument(ontology_version: str | None = None, shapes: str = "x3d-core") ->
     out = dict(_commit())
     out.update({
         "ontology": {"version": ov, "file": ONTOLOGIES[ov][0].name, "sha256": ontology_sha256(ov)},
-        "shapes": {"name": shapes, "sha256": _file_sha(str(SHAPES[shapes]))} if shapes in SHAPES else None,
+        "shapes": _shapes_instrument(shapes),
         "x3duom_sha256": _file_sha(str(X3DUOM_PATH)),
         "converter": {"stylesheet": "X3dToTurtle.xslt r40388",
                       "stylesheet_sha256": tables["X3dToTurtle.xslt"]["sha256"],

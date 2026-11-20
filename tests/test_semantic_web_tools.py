@@ -555,3 +555,51 @@ def test_sequence_path_rows_not_doubled_by_ontology_join():
     with_ont = sw.sparql(sg, q, include_ontology=True)
     without = sw.sparql(sg, q, include_ontology=False)
     assert with_ont["total"] == without["total"] == 2
+
+
+# x3d-cardinality: generated shapes, an SFNode field holds one node -------------------------------
+
+def _doc41(body: str) -> str:
+    return f"<?xml version='1.0' encoding='UTF-8'?>\n<X3D profile='Full' version='4.1'><Scene>{body}</Scene></X3D>"
+
+
+def test_cardinality_shapes_file_is_what_the_generator_writes():
+    import importlib.util
+    path = Path(__file__).resolve().parent.parent / "evaluation" / "build_cardinality_shapes.py"
+    spec = importlib.util.spec_from_file_location("build_cardinality_shapes", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    assert sw.SHAPES["x3d-cardinality"].read_text(encoding="utf-8") == mod.build()
+
+
+@pytest.mark.parametrize("body, node_type, path", [
+    ("<Shape><Appearance><Material/><Material diffuseColor='1 0 0'/></Appearance><Box/></Shape>",
+     "x3do:Appearance", "x3do:hasMaterial"),
+    ("<Shape><Appearance><Material DEF='M'/><Material USE='M'/></Appearance><Box/></Shape>",
+     "x3do:Appearance", "x3do:hasMaterial"),
+    ("<Shape><IndexedFaceSet coordIndex='0 1 2 -1'><Coordinate point='0 0 0 1 0 0 0 1 0'/>"
+     "<Coordinate point='0 0 0 1 0 0 0 1 1'/></IndexedFaceSet></Shape>", "x3do:IndexedFaceSet", "x3do:hasCoord"),
+])
+def test_cardinality_shapes_catch_what_core_passes(body, node_type, path):
+    sg = sw.convert(_doc41(body))
+    assert "sfnode-multiple" not in sw.shacl(sg)["by_check"]              # x3d-core alone: silent
+    res = sw.shacl(sg, shapes="x3d-core,x3d-cardinality")
+    hits = [r for r in res["results"] if r["check_id"] == "sfnode-multiple"]
+    assert len(hits) == 1 and hits[0]["severity"] == "Violation"
+    assert node_type in hits[0]["node_type"] and hits[0]["path"] == path and hits[0]["fix_hint"]
+
+
+@pytest.mark.parametrize("stem", CLEAN)
+def test_cardinality_shapes_no_false_positives(stem):
+    res = sw.shacl(sw.convert(read(stem)), shapes="x3d-cardinality")
+    assert res["results"] == []
+
+
+def test_cardinality_shapes_through_the_tool(mcp):
+    doc = _doc41("<Viewpoint/><Shape><Appearance><Material/><Material/></Appearance><Box/></Shape>")
+    out = call(mcp, "shacl_validate", {"content": doc, "shapes": "x3d-core,x3d-cardinality"})
+    assert out["ok"] and out["by_check"] == {"sfnode-multiple": 1}
+    inst = out["instrument"]["shapes"]
+    assert inst["name"] == "x3d-core,x3d-cardinality" and [s["name"] for s in inst["sets"]] == ["x3d-core", "x3d-cardinality"]
+    default = call(mcp, "shacl_validate", {"content": doc})
+    assert default["by_check"] == {} and default["instrument"]["shapes"]["name"] == "x3d-core"
