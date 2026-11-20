@@ -128,6 +128,26 @@ with their domains), so pyshacl does not have to load the whole ontology. S6 rea
 document version, because it lists the parent types that X3D 3.3 and 4.0 documents also use (for example for
 `hasChildren`, `hasGeometry` and `hasCoord`).
 
+### x3d-cardinality (opt-in, generated)
+
+`shapes="x3d-core,x3d-cardinality"` adds `src/validation/schemas/shapes/x3d-cardinality.shacl.ttl`: an SFNode field
+holds at most one node (`check_id` `sfnode-multiple`, Violation). The XSD content models do not count children per
+field and the X3D Ontology states no cardinality, so two `Material` nodes in one `Appearance`, or two `Coordinate`
+nodes in one `IndexedFaceSet`, pass the XSD and `x3d-core`. The file is generated from the X3DUOM 4.1 field types by
+`evaluation/build_cardinality_shapes.py` (`--check` fails when it is out of date; a test compares the two): 267 node
+shapes, 69 property shapes, 481 (node, field) pairs, every SFNode field a file can set except `IS`. A USE counts,
+because it occupies the field. `validate_semantic` runs the same rule on the XML for every document, so the shapes
+are for work that is already in RDF. With several sets the `instrument.shapes` object gains a `sets` list and its
+`sha256` is over the sets' hashes.
+
+Measured at this change (grade Confirmed, rdflib 7.6.0, pyshacl 0.40.2, XSD 4.1 and X3DUOM 4.1 as bundled):
+
+| Measurement | Value |
+|---|---|
+| planted faults caught (12 hand-written scenes; the XSD accepts 8 of them) | 12 of 12, by the XML check and by the shapes |
+| legal controls flagged (two different fields filled, MFNode fields, MetadataSet values) | 0 of 6 |
+| clean fixtures in `tests/fixtures/scene_rdf` flagged | 0 of 7 |
+
 `extra_shapes_ttl` adds your own shapes (x3do: is the 4.1 namespace). `owl:imports`, `sh:construct` and updates
 are refused, and SPARQL constraints go through the same guard as `sparql_scene`. `shapes="none"` runs only yours.
 `inference` defaults to `none`; with `rdfs`, `owlrl` or `both` pyshacl expands the scene with the whole ontology

@@ -917,3 +917,74 @@ def test_hanim_names_skipped_for_hanim1_in_x3d3():
     assert "hanim-joint-name" not in validate_semantic(doc)
     doc = _wrap(_humanoid("<HAnimJoint DEF='a' name='l_wrist'/>", "2.0")).replace('version="4.1"', 'version="3.3"')
     assert "hanim-joint-name" in validate_semantic(doc)
+
+
+# ---- An SFNode field holds one node (sfnode-multiple) ----
+# The XSD content models do not count children per field: every "valid" case below passes validate_xml.
+
+_SFNODE_FAULTS = {
+    "two Material in one Appearance":
+        "<Shape><Appearance><Material/><Material diffuseColor='1 0 0'/></Appearance><Box/></Shape>",
+    "a Material and a USE of it":
+        "<Shape><Appearance><Material DEF='M'/><Material USE='M'/></Appearance><Box/></Shape>",
+    "two Coordinate in one IndexedFaceSet":
+        "<Shape><IndexedFaceSet coordIndex='0 1 2 -1'><Coordinate point='0 0 0 1 0 0 0 1 0'/>"
+        "<Coordinate point='0 0 0 1 0 0 0 1 1'/></IndexedFaceSet></Shape>",
+    "two textures in Appearance.texture":
+        "<Shape><Appearance><ImageTexture url='\"a.png\"'/><ImageTexture url='\"b.png\"'/></Appearance><Box/></Shape>",
+    "two baseTexture on a PhysicalMaterial":
+        "<Shape><Appearance><PhysicalMaterial><ImageTexture containerField='baseTexture' url='\"a.png\"'/>"
+        "<ImageTexture containerField='baseTexture' url='\"b.png\"'/></PhysicalMaterial></Appearance><Box/></Shape>",
+    "two proxy shapes in a Collision":
+        "<Collision><Shape containerField='proxy'><Box/></Shape><Shape containerField='proxy'><Sphere/></Shape></Collision>",
+    "two sources in a Sound":
+        "<Sound><AudioClip url='\"a.wav\"'/><AudioClip url='\"b.wav\"'/></Sound>",
+}
+
+_SFNODE_CLEAN = {
+    "one node in each of two fields":
+        "<Shape><Appearance><Material/><Material containerField='backMaterial'/></Appearance><Box/></Shape>",
+    "baseTexture and normalTexture":
+        "<Shape><Appearance><PhysicalMaterial><ImageTexture containerField='baseTexture' url='\"a.png\"'/>"
+        "<ImageTexture containerField='normalTexture' url='\"b.png\"'/></PhysicalMaterial></Appearance><Box/></Shape>",
+    "an MFNode field with several nodes":
+        "<Shape><Appearance><MultiTexture><ImageTexture url='\"a.png\"'/><ImageTexture url='\"b.png\"'/>"
+        "</MultiTexture></Appearance><Box/></Shape>",
+    "MetadataSet values":
+        "<Transform><MetadataSet name='s'><MetadataString containerField='value' name='a'/>"
+        "<MetadataString containerField='value' name='b'/></MetadataSet></Transform>",
+    "coord, color, normal and texCoord together":
+        "<Shape><IndexedFaceSet coordIndex='0 1 2 -1'><Coordinate point='0 0 0 1 0 0 0 1 0'/>"
+        "<Color color='1 0 0 0 1 0 0 0 1'/><Normal vector='0 0 1 0 0 1 0 0 1'/>"
+        "<TextureCoordinate point='0 0 1 0 0 1'/></IndexedFaceSet></Shape>",
+    "a proxy beside children":
+        "<Collision><Shape containerField='proxy'><Box/></Shape><Shape><Sphere/></Shape><Shape><Cone/></Shape></Collision>",
+}
+
+
+@pytest.mark.parametrize("name", sorted(_SFNODE_FAULTS))
+def test_sfnode_multiple_flagged_where_the_xsd_passes(name):
+    from validation.validate import validate_xml
+    xml = _wrap(_SFNODE_FAULTS[name], profile="Full")
+    assert validate_xml(xml)["valid"], "the point of the check: the schema accepts this"
+    report = validate_semantic(xml)
+    assert report.count("[sfnode-multiple]") == 1 and "## Errors" in report
+
+
+@pytest.mark.parametrize("name", sorted(_SFNODE_CLEAN))
+def test_sfnode_multiple_silent_on_legal_scenes(name):
+    assert "sfnode-multiple" not in validate_semantic(_wrap(_SFNODE_CLEAN[name], profile="Full"))
+
+
+def test_sfnode_multiple_reports_each_extra_child_and_names_the_first():
+    body = ("<Shape><Appearance><Material DEF='Keep'/><Material DEF='Extra1'/><Material DEF='Extra2'/>"
+            "</Appearance><Box/></Shape>")
+    report = validate_semantic(_wrap(body))
+    assert report.count("[sfnode-multiple]") == 2
+    assert "Appearance.material is an SFNode field" in report and "DEF='Keep'" in report
+
+
+def test_sfnode_multiple_leaves_a_wrong_containerfield_to_its_own_check():
+    # two bare Metadata nodes default to containerField 'value', which a Transform does not have
+    report = validate_semantic(_wrap("<Transform><MetadataString name='a'/><MetadataString name='b'/></Transform>"))
+    assert "containerfield-unknown" in report and "sfnode-multiple" not in report

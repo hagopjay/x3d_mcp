@@ -158,7 +158,8 @@ def register(mcp: FastMCP):
         Detects authoring issues XSD cannot catch and that silently break rendering:
         nodes outside the declared profile and component statements (X_ITE refuses
         such scenes; the fix lists the component statements to add),
-        wrong/defaulted containerField (with the correct field suggested),
+        wrong/defaulted containerField (with the correct field suggested), a second
+        node in a single-node (SFNode) field such as Appearance.material,
         USE-before-DEF ordering, ROUTE field/type/access-type problems, Shapes
         without geometry, empty grouping nodes, duplicate DEFs, and missing
         Viewpoints. Returns a markdown report.

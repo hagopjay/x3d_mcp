@@ -521,6 +521,41 @@ def _check_containerfield(scene: etree._Element) -> list[Diagnostic]:
     return diagnostics
 
 
+def _check_sfnode_multiple(scene: etree._Element) -> list[Diagnostic]:
+    """An SFNode field holds one node: flag the second and later children filed in the same single-node field.
+
+    The XSD content models do not count children per field, so two Material nodes in one Appearance, or two
+    Coordinate nodes in one IndexedFaceSet, validate; a browser keeps one and silently drops the other. The
+    X3DUOM gives each field's type, and that is all this reads. Children whose containerField does not name
+    an SFNode field of the parent are left to _check_containerfield. A USE counts: it occupies the field.
+    """
+    diagnostics: list[Diagnostic] = []
+    nodes = get_x3duom().get_concrete_nodes()
+    for parent in scene.iter():
+        ptag = _local_tag(parent)
+        if ptag not in nodes:
+            continue
+        pfields = _node_field_map(ptag, nodes)
+        seen: dict[str, etree._Element] = {}
+        for child in parent:
+            ctag = _local_tag(child)
+            if ctag not in nodes:
+                continue
+            cf = child.get("containerField") or (None if ctag == "ProtoInstance" else nodes[ctag]["containerField"])
+            field = pfields.get(cf) if cf else None
+            if field is None or field.get("type") != "SFNode":
+                continue
+            first = seen.setdefault(cf, child)
+            if first is not child:
+                diagnostics.append(Diagnostic(
+                    level="error", check="sfnode-multiple",
+                    message=f"{ptag}.{cf} is an SFNode field and holds one node, but this {ctag} is a second "
+                            f"child filed there (after {_label(first)}). A browser keeps only one. Remove one, "
+                            f"or give it the containerField of the field it is meant for.",
+                    node_tag=ctag, def_name=child.get("DEF", "")))
+    return diagnostics
+
+
 def _check_use_before_def(scene: etree._Element) -> list[Diagnostic]:
     """A USE must reference a DEF that PRECEDES it in document order (ISO 19775-1).
 
@@ -1506,6 +1541,7 @@ _ALL_CHECKS = [
     _check_def_use_consistency,
     _check_use_before_def,
     _check_containerfield,
+    _check_sfnode_multiple,
     _check_shape_completeness,
     _check_empty_groups,
     _check_route_validity,
