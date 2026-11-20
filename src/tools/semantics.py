@@ -173,7 +173,7 @@ def register(mcp: FastMCP):
         return json.dumps(onto.describe_term(term), indent=2)
 
     @mcp.tool(structured_output=False)
-    def where_can_place(child: str, offset: int = 0, limit: int = 50) -> str:
+    def where_can_place(child: str, offset: int = 0, limit: int = 50, verified_only: bool = False) -> str:
         """List the parent nodes and fields where a node type may be placed, from the X3DUOM.
 
         Unlike node_parents (the ontology's looser containment lattice) this reads the X3DUOM's
@@ -182,15 +182,21 @@ def register(mcp: FastMCP):
         Rows are sorted, and the whole table is versioned by table_sha256. Most nodes have fewer
         than 50 rows; MovieTexture and the Metadata* nodes have more, so page with offset.
 
+        The X3DUOM and the XSD do not always agree, so each row also carries `xsd`: "A" the XSD accepts
+        that placement, "R" the XSD rejects it (the scene would fail validate_xml), "I" the check was
+        inconclusive. Use verified_only=true to get only the placements the XSD accepts.
+
         Args:
             child: The X3D node type name (e.g. "Sphere", "Material").
             offset: First row of the page (0-based).
             limit: Rows per page, 1 to 500 (default 50).
+            verified_only: Keep only rows the XSD accepts (xsd "A").
 
-        Returns JSON {child, source, table_sha256, total, offset, rows, next_offset}.
+        Returns JSON {child, source, table_sha256, total, offset, rows, next_offset, xsd}; xsd counts
+        the accepted, rejected and inconclusive rows before any filtering.
         """
         try:
-            return json.dumps(placement.where_can_place(child, offset, limit), separators=(",", ":"))
+            return json.dumps(placement.where_can_place(child, offset, limit, bool(verified_only)), separators=(",", ":"))
         except KeyError:
             return json.dumps({"error": f"Unknown node type: {child}"})
 

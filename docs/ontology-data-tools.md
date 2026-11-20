@@ -28,7 +28,7 @@ Q04 still exceeds the default deadline. Precomputing it as a table is not done h
 | Tool | What |
 |---|---|
 | `query_ontology_page(sparql, offset, limit)` | Same guard. Rows sorted, blank nodes shown as `_:blank`, so a page has a stable `page_sha256`. The query runs once; the four most recent are cached for paging. |
-| `where_can_place(child, offset, limit)` | Parents and fields that accept a node type, from the X3DUOM's `acceptableNodeTypes` (event-only fields left out), with `needsContainerField` and a versioned `table_sha256`. Unlike `node_parents` these are real placements. |
+| `where_can_place(child, offset, limit, verified_only)` | Parents and fields that accept a node type, from the X3DUOM's `acceptableNodeTypes` (event-only fields left out), with `needsContainerField` and a versioned `table_sha256`. Unlike `node_parents` these are real placements. Each row also carries `xsd`: `A` the XSD accepts that placement, `R` it rejects it, `I` inconclusive (from `verified-containment.json`; over the whole 4.1 table 4,879 A, 740 R, 890 I of 6,509). `verified_only=true` keeps the `A` rows. The verdict is not part of `table_sha256`. |
 | `claim_append`, `claims_page`, `claims_verify` | JSON Lines claim ledger: canonical record, sha256, optional hash chain, graded Confirmed / Likely / Suspected, with an `instrument` object. `claims_page` takes `columns`, `hash_chars` and `drop_hashes` (a 50-row page: 27 KB full, 13 KB with 12-character hashes, 9 KB without). |
 | resources `x3d-ontology://turtle` and `x3d-ontology://placement/{child}` | The ontology and a placement table without the tool-answer overhead. |
 

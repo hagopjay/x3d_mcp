@@ -13,7 +13,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from validation.semantic import validate_semantic
+from validation.semantic import semantic_diagnostics, validate_semantic
 
 
 def _wrap(scene_body: str, profile: str = "Immersive") -> str:
@@ -988,3 +988,32 @@ def test_sfnode_multiple_leaves_a_wrong_containerfield_to_its_own_check():
     # two bare Metadata nodes default to containerField 'value', which a Transform does not have
     report = validate_semantic(_wrap("<Transform><MetadataString name='a'/><MetadataString name='b'/></Transform>"))
     assert "containerfield-unknown" in report and "sfnode-multiple" not in report
+
+
+# geo-coordinate-range ------------------------------------------------------------------------------
+
+def _geo(body: str) -> str:
+    return ("<X3D profile='Full' version='4.0'><Scene>" + body + "</Scene></X3D>")
+
+
+@pytest.mark.parametrize("body, level, needle", [
+    ("<GeoLocation geoCoords='137 30 0'/>", "error", "look swapped"),                       # lon lat written as lat lon
+    ("<GeoLocation geoSystem='\"GD\" \"WE\"' geoCoords='-95.5 200 0'/>", "error", "latitude -95.5"),
+    ("<GeoViewpoint position='29.98 231.13 100'/>", "warning", "longitude value(s) outside"),
+    ("<GeoLocation geoSystem='\"GD\" \"longitude_first\"' geoCoords='31.13 137 0'/>", "error", "longitude_first"),
+    ("<Shape><IndexedLineSet coordIndex='0 1 -1'><GeoCoordinate point='29.9 31.1 0 120 31.1 0'/></IndexedLineSet></Shape>", "error", "1 latitude"),
+])
+def test_geo_coordinate_out_of_range(body, level, needle):
+    hits = [d for d in semantic_diagnostics(_geo(body)) if d.check == "geo-coordinate-range"]
+    assert len(hits) == 1 and hits[0].level == level and needle in hits[0].message, [d.message for d in hits]
+
+
+@pytest.mark.parametrize("body", [
+    "<GeoLocation geoCoords='29.9792 31.1342 60'/>",
+    "<GeoLocation geoSystem='\"GD\" \"longitude_first\"' geoCoords='137 30 0'/>",          # legal once the order is declared
+    "<GeoLocation geoSystem='\"UTM\" \"Z36\"' geoCoords='3318000 326000 60'/>",              # not geodetic: left alone
+    "<GeoLocation geoSystem='\"GC\"' geoCoords='4700000 2800000 3200000'/>",
+    "<GeoViewpoint position='-90 180 0'/>",
+])
+def test_geo_coordinate_in_range_is_quiet(body):
+    assert [d for d in semantic_diagnostics(_geo(body)) if d.check == "geo-coordinate-range"] == []
