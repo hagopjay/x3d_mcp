@@ -247,6 +247,9 @@ def register(mcp: FastMCP):
             out["vars"] = result["vars"]
         if result["truncated"]:
             out["truncated"] = True
+        if not result.get("stable", True):      # the page hash of an unrepeatable answer is not a fingerprint
+            out["stable"] = False
+            out["warning"] = result["warning"]
         if not cached:
             out["converted"] = {"triples": sg.triples, "warnings": sg.warnings, "input": inp}
         out["instrument"] = sw.instrument(result["ontology_version"] or sg.ontology_version)

@@ -603,3 +603,52 @@ def test_cardinality_shapes_through_the_tool(mcp):
     assert inst["name"] == "x3d-core,x3d-cardinality" and [s["name"] for s in inst["sets"]] == ["x3d-core", "x3d-cardinality"]
     default = call(mcp, "shacl_validate", {"content": doc})
     assert default["by_check"] == {} and default["instrument"]["shapes"]["name"] == "x3d-core"
+
+
+# SPARQL guard: memory, and what "stable" means (review findings of 20 Nov 2026) ---------------------------------
+
+def _doubling(n: int) -> str:
+    binds = " ".join(f"BIND(CONCAT(?s{i},?s{i}) AS ?s{i + 1})" for i in range(n))
+    return "SELECT (STRLEN(?s%d) AS ?n) WHERE { BIND('xxxxxxxxxxxxxxxx' AS ?s0) %s }" % (n, binds)
+
+
+@pytest.mark.skipif(not os.path.exists("/proc/self/statm"), reason="the memory cap needs /proc and RLIMIT_AS")
+def test_a_query_that_builds_a_huge_string_is_stopped_by_the_memory_cap(monkeypatch):
+    from x3d_utils.ontology_guard import QueryMemory, QueryTimeout
+    monkeypatch.setenv("X3D_MCP_SPARQL_MAX_MEMORY_MB", "256")
+    sg = sw.convert(read("HelloWorld"))
+    small = sw.sparql(sg, _doubling(10), include_ontology=False)          # 16 KiB: well inside the cap
+    assert small["rows"] == [{"n": "16384"}]
+    with pytest.raises(QueryMemory) as e:                                  # 1 GiB: the guard passes it, the cap stops it
+        sw.sparql(sg, _doubling(26), include_ontology=False)
+    assert "X3D_MCP_SPARQL_MAX_MEMORY_MB" in str(e.value) and isinstance(e.value, QueryTimeout)
+    assert sw.sparql(sg, _doubling(10), include_ontology=False)["rows"] == small["rows"]   # the server is unharmed
+
+
+def test_order_by_inside_a_subquery_does_not_switch_off_the_sort():
+    sub = "SELECT ?c ?p WHERE { { SELECT ?c WHERE { ?c a owl:Class } ORDER BY ?c LIMIT 40 } ?c rdfs:subClassOf ?p }"
+    assert sw._outer_modifiers(sw.scene_prefixes("", sub) + sub) == (False, False)
+    out = sw.sparql(sw.convert(read("HelloWorld")), sub)
+    assert out["order"] == "sorted" and out["stable"] is True and "warning" not in out
+    assert out["rows"] == sorted(out["rows"], key=sw._row_key)
+    own = "SELECT ?c WHERE { ?c a owl:Class } ORDER BY ?c LIMIT 5"
+    assert sw._outer_modifiers(sw.scene_prefixes("", own) + own) == (True, True)
+
+
+def test_limit_without_order_by_is_reported_as_not_repeatable(mcp):
+    sg = sw.convert(read("HelloWorld"))
+    cut = sw.sparql(sg, "SELECT ?c WHERE { ?c a owl:Class } LIMIT 5")
+    assert cut["stable"] is False and "ORDER BY" in cut["warning"] and len(cut["rows"]) == 5
+    for q in ("SELECT ?c WHERE { ?c a owl:Class } ORDER BY ?c LIMIT 5", "SELECT ?c WHERE { ?c a owl:Class }",
+              "ASK { ?c a owl:Class }"):
+        ok = sw.sparql(sg, q)
+        assert ok["stable"] is True and "warning" not in ok, q
+    tool = call(mcp, "sparql_scene", {"content": read("HelloWorld"), "sparql": "SELECT ?c WHERE { ?c a owl:Class } OFFSET 3"})
+    assert tool["stable"] is False and "warning" in tool
+    assert "stable" not in call(mcp, "sparql_scene", {"content": read("HelloWorld"), "sparql": "SELECT ?c WHERE { ?c a owl:Class }"})
+
+
+def test_the_row_cap_without_order_by_is_reported_as_not_repeatable(monkeypatch):
+    monkeypatch.setenv("X3D_MCP_ONTOLOGY_MAX_ROWS", "7")
+    out = sw.sparql(sw.convert(read("HelloWorld")), "SELECT ?c WHERE { ?c a owl:Class }")
+    assert out["truncated"] is True and out["stable"] is False and "row cap" in out["warning"]

@@ -96,8 +96,16 @@ the scene plus the ontology (`include_ontology=true`, needed for `rdfs:subClassO
 
 The guard is the one `query_ontology` uses: the text is parsed first, and anything but SELECT and ASK (UPDATE,
 LOAD, CONSTRUCT, DESCRIBE), any SERVICE and any FROM / FROM NAMED is refused. The query runs in a forked worker
-that is killed at `X3D_MCP_SPARQL_TIMEOUT`; rows are capped at `X3D_MCP_ONTOLOGY_MAX_ROWS`. Rows are sorted, so a
-page (`offset`, `limit` up to 500) has a stable `page_sha256`; the eight most recent results are kept for paging.
+that is killed at `X3D_MCP_SPARQL_TIMEOUT` and may add at most `X3D_MCP_SPARQL_MAX_MEMORY_MB` (default 1024) of
+memory on top of the server's own (Linux; elsewhere only the deadline bounds it); rows are capped at
+`X3D_MCP_ONTOLOGY_MAX_ROWS`. Rows are sorted unless the query's outermost SELECT has an ORDER BY (one inside a
+subquery does not count), so a page (`offset`, `limit` up to 500) has a stable `page_sha256`; the eight most recent
+results are kept for paging.
+
+One case is not repeatable and says so: a SPARQL `LIMIT` or `OFFSET`, or the row cap, on a query with no ORDER BY
+of its own. Sorting fixes the order of the rows that came back, not which rows came back, and rdflib's own order
+changes between processes. The answer then carries `"stable": false` and a `warning`. Page with the tool's
+`offset` and `limit` instead, or add ORDER BY.
 
 ```sparql
 SELECT ?n ?t WHERE { ?n a ?t . ?t rdfs:subClassOf* x3do:X3DGeometryNode }       # all geometry

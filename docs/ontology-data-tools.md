@@ -17,6 +17,7 @@ Sizes behind the design are from the Playground review of this server's ontology
 
 - parse the query first and refuse anything but SELECT and ASK, and any SERVICE or FROM clause;
 - stop at a deadline: a forked worker is killed at `X3D_MCP_SPARQL_TIMEOUT` seconds (default 20; without fork the thread is only abandoned);
+- stop at a memory cap: the forked worker may add `X3D_MCP_SPARQL_MAX_MEMORY_MB` (default 1024) of address space and no more, so a query that doubles a string 26 times is stopped in under a second instead of building 1 GiB (Linux only; without `/proc` and `RLIMIT_AS` the deadline is the only bound);
 - cap the text at `X3D_MCP_SPARQL_MAX_CHARS` (20,000) and the rows at `X3D_MCP_ONTOLOGY_MAX_ROWS` (20,000). Past the cap the answer says `truncated` and the total;
 - check that `node_type` is a plain name (letters, digits, underscore) before it goes into a query.
 
