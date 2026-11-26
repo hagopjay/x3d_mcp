@@ -1006,6 +1006,115 @@ SCENE_CHECKS += [check_unused_indices, check_route_fan_in, check_unreachable_key
                  check_unused_components, check_hanim_bindings]
 
 
+def _quat(r):
+    ln = math.sqrt(r[0] ** 2 + r[1] ** 2 + r[2] ** 2)
+    if ln < 1e-9:
+        return None
+    h = r[3] / 2.0
+    k = math.sin(h) / ln
+    return (math.cos(h), r[0] * k, r[1] * k, r[2] * k)
+
+
+def _short_turn(qa, qb):
+    """The turn from qa to qb the short way, as axis times angle."""
+    w = qb[0] * qa[0] + qb[1] * qa[1] + qb[2] * qa[2] + qb[3] * qa[3]
+    x = qb[1] * qa[0] - qb[0] * qa[1] - qb[2] * qa[3] + qb[3] * qa[2]
+    y = qb[2] * qa[0] - qb[0] * qa[2] - qb[3] * qa[1] + qb[1] * qa[3]
+    z = qb[3] * qa[0] - qb[0] * qa[3] - qb[1] * qa[2] + qb[2] * qa[1]
+    if w < 0:
+        w, x, y, z = -w, -x, -y, -z
+    n = math.sqrt(x * x + y * y + z * z)
+    if n < 1e-12:
+        return (0.0, 0.0, 0.0)
+    ang = 2.0 * math.atan2(n, w)
+    return (x / n * ang, y / n * ang, z / n * ang)
+
+
+HALF_TURN_BAND = 1e-3      # a step this close to pi was meant as a half turn
+SINGLE_PRECISION = 1e-6    # closer to pi than this, 32-bit and 64-bit engines can pick different directions
+STILL_TOTAL = 0.02         # an interpolator that turns less than this in all (about one degree) does not turn
+
+
+def check_orientation_steps(scene) -> list:
+    """An OrientationInterpolator turns between two key values along the shortest path (19775-1 19.4.6). So a step
+    written as more than pi plays the other way, a step written as a whole turn does not play at all, and a step
+    of a half turn goes whichever way the last digit of pi was rounded: 3.14159 goes forward, 3.1416 and 3.141593
+    go back. Loom failure modes 357, 361, 451.
+
+    A step over pi is not always a mistake: a baked animation that wraps its angle (6.28 back to 0.01, or pi to
+    minus three quarters of pi) means the short way. Such a step is left alone when the way it plays agrees with the
+    way a neighbouring step is written."""
+    out = []
+    for el in scene.iter():
+        if _tag(el) != "OrientationInterpolator" or el.get("USE"):
+            continue
+        v = _nums(el.get("keyValue"))
+        if not v or len(v) < 8 or len(v) % 4:
+            continue
+        rots = [v[i:i + 4] for i in range(0, len(v), 4)]
+        quats = [_quat(r) for r in rots]
+        steps, total, unknown = [], 0.0, False      # per step: (written turn or None, played turn, played turn as a vector)
+        for i in range(len(rots) - 1):
+            a, b, qa, qb = rots[i], rots[i + 1], quats[i], quats[i + 1]
+            if a == b:
+                steps.append(None)                           # a hold, written on purpose
+                continue
+            if qa is None or qb is None:
+                steps.append(None)
+                unknown = True                               # a zero axis is the axis check's business
+                continue
+            dot = max(-1.0, min(1.0, sum(x * y for x, y in zip(qa, qb))))
+            played = 2.0 * math.acos(abs(dot))               # what the shortest path turns, 0 to pi
+            total += played
+            la, lb = math.sqrt(sum(x * x for x in a[:3])), math.sqrt(sum(x * x for x in b[:3]))
+            cos = sum(x * y for x, y in zip(a[:3], b[:3])) / (la * lb)
+            if abs(cos) <= 1 - 1e-6:
+                steps.append((None, played, _short_turn(qa, qb)))
+                continue
+            written = b[3] * (1 if cos > 0 else -1) - a[3]
+            steps.append((written, played, _short_turn(qa, qb)))
+        over = [i for i, st in enumerate(steps) if st and st[0] is not None and abs(st[0]) > math.pi]
+        if over and total < STILL_TOTAL and not unknown:
+            i = max(over, key=lambda k: abs(steps[k][0]))
+            out.append(_diag("warning", "orientation-never-turns", el,
+                             f"is written to turn {abs(steps[i][0]):.6g} rad from key value {i} to {i + 1}, but its key values "
+                             f"are all the same orientation to within {total:.2g} rad, so nothing turns. A full turn needs "
+                             f"steps shorter than pi, for example angles 0, 2.094, 4.189, 6.283."))
+            continue
+
+        def agrees(i):                                       # does a neighbour that plays as written go the same way round?
+            for j in (i - 1, i + 1):
+                if 0 <= j < len(steps) and steps[j] and j not in over and steps[j][1] > 1e-9:
+                    if sum(x * y for x, y in zip(steps[i][2], steps[j][2])) > 0:
+                        return True
+            return False
+
+        for i in over:
+            w, short = steps[i][0], steps[i][1]
+            if short < 1e-4 or agrees(i):
+                continue                                     # a wrapped angle that means the short way
+            near = " The angle is pi rounded up, so the half turn runs backwards." if abs(w) - math.pi < HALF_TURN_BAND else ""
+            out.append(_diag("warning", "orientation-step-long-way", el,
+                             f"step {i} to {i + 1} is written as {abs(w):.9g} rad, more than pi, and plays as {abs(short):.9g} rad "
+                             f"the other way: interpolation takes the shortest path.{near} Add key values so every step "
+                             f"is clearly shorter than pi."))
+        half = [(i, math.pi - abs(st[1])) for i, st in enumerate(steps)
+                if st and i not in over and math.pi - abs(st[1]) < HALF_TURN_BAND]
+        if half:
+            i, margin = min(half, key=lambda h: h[1])
+            close = margin < SINGLE_PRECISION
+            out.append(_diag("warning" if close else "info", "orientation-half-turn-step", el,
+                             f"has {len(half)} step(s) of a half turn (closest: key value {i} to {i + 1}, {margin:.2g} rad short "
+                             f"of pi). " + ("That is inside single-precision rounding, so engines that store 32-bit floats "
+                                            "can turn it the other way. " if close else
+                                            "It plays as written, but rounding the angle to fewer digits reverses it. ")
+                             + "Add a key value in between so every step is clearly shorter than pi."))
+    return out
+
+
+SCENE_CHECKS.append(check_orientation_steps)
+
+
 def data_diagnostics(scene, base_dir=None) -> list:
     from validation.usd_checks import USD_FILE_CHECKS, USD_SCENE_CHECKS   # answers to the USD validators
     out = []
