@@ -71,8 +71,9 @@ left out). 443 hold an OrientationInterpolator.
 By source: 98 of 98 turntables written by one generator (keys 0, 3.14159265, 6.28318531: they rock),
 29 of 190 scenes written by language models in earlier experiments (25 of them spins that never turn),
 4 hand-written game levels (fans turning the wrong way), and 5 others. Before the wrap rule above was
-added the check also reported 9 baked animations; all 9 were wraps that play as meant, and none is
-reported now. The 13 warnings outside the two large families were read one by one and are real.
+added the check also reported 10 scenes with baked animation (sampled paths, a camera track, a crank).
+Eight are plain wrapped angles that play as meant. Two are a rolling ball with one step of 10.5 rad among
+smaller ones, where the intent cannot be read from the file; they are left silent as well. The 13 warnings outside the two large families were read one by one and are real.
 
 Limits: these are one project's files, and two families make up most of the count. It is a count of
 scenes that play differently from how they are written, not a rate for X3D at large.
