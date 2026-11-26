@@ -1,0 +1,85 @@
+{
+ "files": 1549,
+ "parsed": 1548,
+ "counts": {
+  "mesh-colocated-points (info)": 246,
+  "scene-no-geometry (info)": 140,
+  "transparent-open-mesh (info)": 50,
+  "mesh-zero-area-face (warning)": 38,
+  "interpolator-constant (info)": 29,
+  "mesh-unused-point (info)": 23,
+  "mesh-non-manifold-edge (warning)": 18,
+  "physics-joint-loop (info)": 11,
+  "mesh-unused-value (info)": 9,
+  "mesh-coincident (info)": 4,
+  "mesh-normal-against-winding (warning)": 4,
+  "physics-collider-overlap (info)": 4,
+  "coordinate-precision (warning)": 1
+ },
+ "examples": {
+  "mesh-colocated-points (info)": [
+   "x3d-blender-io/demo/investor_poc/blender_modern_poc.x3d: Coordinate 2 of 507 point(s) repeat the exact position of another point.",
+   "x3d-blender-io/docs/brag/showpieces/asterion/asterion.x3d: Coordinate 260 of 1284 point(s) repeat the exact position of another point.",
+   "x3d-blender-io/docs/brag/showpieces/lumen/lumen.x3d: Coordinate 26 of 178 point(s) repeat the exact position of another point."
+  ],
+  "mesh-zero-area-face (warning)": [
+   "x3d-blender-io/docs/brag/showpieces/lumen/lumen.x3d: IndexedFaceSet (DEF='ME_Exhibit_title') 8 of 1860 face(s) have distinct corners on one line and no area (first: [132, 131, 128]); their normal is undefined.",
+   "x3d.demo/docs/demos/atlas-bridge/v1/worlds/kings-chamber-atlas-mesh.x3d: IndexedTriangleSet 8 of 200000 face(s) have distinct corners on one line and no area (first: [23265, 23879, 23271]); their normal is undefined.",
+   "x3d.demo/docs/demos/atlas-bridge/v1/worlds/reading-room-atlas-mesh.x3d: IndexedTriangleSet 14 of 300000 face(s) have distinct corners on one line and no area (first: [19949, 19950, 19947]); their normal is undefined."
+  ],
+  "interpolator-constant (info)": [
+   "x3d-blender-io/tests/behaviour/route-demo.x3d: PositionInterpolator (DEF='SI_Beacon') has 48 keys that all hold the same value, so it animates nothing; set the field directly.",
+   "x3d.demo/docs/demos/blender-every-engine/v1/assets/orrery.x3d: PositionInterpolator (DEF='SI_Orbit_1') has 240 keys that all hold the same value, so it animates nothing; set the field directly.",
+   "x3d.demo/docs/demos/blender-flywheel-forge/v1/gens/gen1/orrery.x3d: PositionInterpolator (DEF='SI_Orbit_1') has 240 keys that all hold the same value, so it animates nothing; set the field directly."
+  ],
+  "transparent-open-mesh (info)": [
+   "x3d-blender-io/tests/golden/emissive_glass.c14n.x3d: IndexedFaceSet (DEF='ME_PaneMesh') is transparent (0.6) and has 4 open edge(s); light transmission and refraction need a closed (watertight) surface.",
+   "x3d.demo/docs/demos/blender-giza-crawl/v1/assets/crawl.x3d: IndexedFaceSet (DEF='ME_Great_Pyramid_shell') is transparent (0.82) and has 4 open edge(s); light transmission and refraction need a closed (watertight) surface.",
+   "x3d.demo/docs/demos/blender-giza-crawl/v2/assets/crawl.x3d: IndexedFaceSet (DEF='ME_Southern_shaft_beam') is transparent (0.9) and has 32 open edge(s); light transmission and refraction need a closed (watertight) surface."
+  ],
+  "scene-no-geometry (info)": [
+   "x3d-blender-io/tests/plants/schematron-missing-component.x3d: Scene contains no geometry, so nothing is drawn.",
+   "x3d-blender-io/tests/plants/schematron-route-to-nowhere.x3d: Scene contains no geometry, so nothing is drawn.",
+   "x3d.demo/docs/demos/geotiling/v1/converted/t.x3d: Scene contains no geometry, so nothing is drawn."
+  ],
+  "mesh-non-manifold-edge (warning)": [
+   "x3d.demo/docs/demos/atlas-bridge/v1/worlds/kings-chamber-atlas-mesh.x3d: IndexedTriangleSet 8 edge(s) are shared by more than two faces (first: points 95154 and 96085); smoothing, booleans and physics colliders assume two at most.",
+   "x3d.demo/docs/demos/atlas-bridge/v1/worlds/reading-room-atlas-mesh.x3d: IndexedTriangleSet 25 edge(s) are shared by more than two faces (first: points 57408 and 57481); smoothing, booleans and physics colliders assume two at most.",
+   "x3d.demo/docs/demos/atlas-bridge/v2/worlds/scriptorium-atlas-mesh.x3d: IndexedTriangleSet 36 edge(s) are shared by more than two faces (first: points 34493 and 34643); smoothing, booleans and physics colliders assume two at most."
+  ],
+  "coordinate-precision (warning)": [
+   "x3d.demo/docs/demos/blender-giza-numbers/v6/assets/celestial.x3d: Coordinate (DEF='RulerGlow') has a value of 9000 (9000 m from the origin); in 32-bit floats neighbouring values there are 1.1 mm apart, so the mesh will jitter. Move the origin near the geometry with a Transform, or use "
+  ],
+  "mesh-coincident (info)": [
+   "x3d.demo/docs/demos/blender-giza-numbers/v6/assets/celestial.x3d: Shape has the same TriangleStripSet as another Shape under the same parent, in the same place; the two surfaces z-fight and, as colliders, double every contact.",
+   "x3d.demo/docs/demos/gobbler-worlds-within/v1/source/bird.x3d: Shape has the same TriangleStripSet as another Shape under the same parent, in the same place; the two surfaces z-fight and, as colliders, double every contact.",
+   "x3d.demo/docs/demos/ontology-constellation/v1/ontology-constellation.x3d: Shape has the same Sphere as another Shape under the same parent, in the same place; the two surfaces z-fight and, as colliders, double every contact."
+  ],
+  "mesh-unused-point (info)": [
+   "x3d.demo/docs/demos/futures-profile-3d/v1/out/futures-scene.x3d: Coordinate 24 of 48 point(s) are used by no index; they cost memory and skew bounds.",
+   "x3d.demo/docs/demos/giza-osiris-hall/v4-horizon/horizon.x3d: Coordinate 25 of 3249 point(s) are used by no index; they cost memory and skew bounds.",
+   "x3d.demo/docs/demos/giza-osiris-hall/v5/horizon.x3d: Coordinate 25 of 3249 point(s) are used by no index; they cost memory and skew bounds."
+  ],
+  "mesh-unused-value (info)": [
+   "x3d.demo/docs/demos/gobbler-gyroscope-webgpu/v1/gobbler3.x3d: Normal (DEF='RibbonCodes') 8 of 16 value(s) are named by no entry of normalIndex.",
+   "x3d.demo/docs/demos/gobbler-gyroscope-webgpu/v2/gobbler3.x3d: Normal (DEF='RibbonCodes') 8 of 16 value(s) are named by no entry of normalIndex.",
+   "x3d.demo/docs/demos/gobbler-gyroscope-webgpu/v3/gobbler3.x3d: Normal (DEF='RibbonCodes') 8 of 16 value(s) are named by no entry of normalIndex."
+  ],
+  "mesh-normal-against-winding (warning)": [
+   "x3d.demo/docs/demos/medical-provenance/v4/hanim-skeleton.x3d: IndexedTriangleSet 3 of 520 face(s) have normals pointing to the back side their winding defines (ccw=true); they light as if turned inside out.",
+   "x3d.loom/x3d.brain/scenes/brain_hero_lite.x3d: IndexedTriangleSet (DEF='GEO_CORTEX_R') 1 of 18575 face(s) have normals pointing to the back side their winding defines (ccw=true); they light as if turned inside out.",
+   "x3d.loom/x3d.brain/scenes/torso_ct_lite.x3d: IndexedTriangleSet 1 of 298 face(s) have normals pointing to the back side their winding defines (ccw=true); they light as if turned inside out."
+  ],
+  "physics-collider-overlap (info)": [
+   "x3d.demo/docs/demos/rigid-engines/v1/data/avalanche/live.x3d: RigidBody (DEF='B_p7') has collision shapes that overlap those of RigidBody B_p8, which is not joined to it; the solver will push them apart on the first step.",
+   "x3d.loom/x3d.physics/flop-lab/level/skyline-seed-7.x3d: RigidBody (DEF='skyline_14_7_0') has collision shapes that overlap those of RigidBody skyline_22_7_14, which is not joined to it; the solver will push them apart on the first step.",
+   "x3d.loom/x3d.physics/physx-bridge/scenes/demos/galton-board.x3d: RigidBody (DEF='Bead3Body') has collision shapes that overlap those of RigidBody Bead9Body, which is not joined to it; the solver will push them apart on the first step."
+  ],
+  "physics-joint-loop (info)": [
+   "x3d.loom/x3d.physics/flop-lab/level/carnival-seed-7.x3d: BallJoint (DEF='carnival_catch_jelly_j13') closes a loop of joints; that is a closed kinematic chain, which reduced-coordinate solvers (articulations) cannot represent without cutting a joint.",
+   "x3d.loom/x3d.physics/flop-lab/level/default-level.x3d: BallJoint (DEF='jelly_stiff_j27') closes a loop of joints; that is a closed kinematic chain, which reduced-coordinate solvers (articulations) cannot represent without cutting a joint.",
+   "x3d.loom/x3d.physics/flop-lab/level/skyline-seed-7.x3d: BallJoint (DEF='skyline_23_7_j18') closes a loop of joints; that is a closed kinematic chain, which reduced-coordinate solvers (articulations) cannot represent without cutting a joint."
+  ]
+ },
+ "corpus": "x3d.loom@f4cc71c x3d.docs@6bd22d6 x3d_mcp@f0bde28 x3d.demo@b73d4a9 x3d.lab@62f3aab x3d.wgpu@091b2be x3d-blender-io@998f3bd"
+}
