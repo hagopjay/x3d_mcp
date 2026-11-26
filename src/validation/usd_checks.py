@@ -211,12 +211,24 @@ def check_unused_attribute_values(scene) -> list:
     return out
 
 
+_LINES_POINTS = ("LineSet", "IndexedLineSet", "PointSet")
+
+
 def check_colocated_points(scene) -> list:
     """Points at exactly the same position could be welded. OAV WeldChecker; SimReady VG.016. Information:
-    seams for texture coordinates and hard edges are legitimate reasons to keep them."""
+    seams for texture coordinates and hard edges are legitimate reasons to keep them.
+
+    Meshes only, as VG.016 (usdgeom-mesh-colocated-points) is: a polyline that closes on its first point and a
+    scatter plot with tied data repeat points on purpose, and welding means nothing without faces (x3d.downey,
+    26 Nov 2026: 7 of 7 findings on its 20 scenes were LineSet loops, a resting penny's trace and tied NSFG data).
+    A Coordinate under a line or point set still counts when a face set USEs it."""
     out = []
+    used_by_faces = {u.get("USE") for u in scene.iter() if _tag(u) in _COORDS and u.get("USE")
+                     and _tag(u.getparent()) not in _LINES_POINTS}
     for c in scene.iter():
         if _tag(c) not in _COORDS or c.get("USE"):
+            continue
+        if _tag(c.getparent()) in _LINES_POINTS and not (c.get("DEF") and c.get("DEF") in used_by_faces):
             continue
         pts = _points(c)
         if len(pts) < 2:
@@ -252,8 +264,15 @@ def check_coordinate_precision(scene) -> list:
         far = max(abs(x) for x in v)
         step = far * 2.0 ** -23 * mpu                     # float32 spacing at that magnitude, in metres
         size = max(max(v[k::3]) - min(v[k::3]) for k in range(3)) * mpu
-        if far >= 2.0 ** 38 or (step > 1e-3 and step > 1e-4 * size):   # RTX discards past 2^40; jitter shows when
-            # the spacing is a visible share of the object's own size (a 40 km terrain at 5 mm is fine, a 1 m part is not)
+        if far >= 2.0 ** 38:                               # RTX discards past 2^40; nothing draws it in place
+            # x3d.downey (26 Nov 2026): a LineSet held 2.7e25 because a float recurrence cancelled catastrophically;
+            # "the mesh will jitter" sent the reader to the origin when the value itself was wrong
+            out.append(_diag("warning", "coordinate-precision", c,
+                             f"has a value of {far:g} ({far * mpu:g} m from the origin), past 2^38 units: no renderer "
+                             f"draws it in place. A value this far is more often a computation that overflowed or "
+                             f"cancelled than a real position; check the numbers that made it before moving the origin."))
+        elif step > 1e-3 and step > 1e-4 * size:          # jitter shows when the spacing is a visible share of the
+            # object's own size (a 40 km terrain at 5 mm is fine, a 1 m part is not)
             out.append(_diag("warning", "coordinate-precision", c,
                              f"has a value of {far:g} ({far * mpu:g} m from the origin); in 32-bit floats neighbouring "
                              f"values there are {step * 1000:.2g} mm apart, so the mesh will jitter. Move the origin "
