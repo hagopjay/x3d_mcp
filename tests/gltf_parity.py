@@ -340,7 +340,7 @@ def markdown(results: dict) -> str:
          "## Count", "", "| What X3D does with the mistake | Codes |", "|---|---|",
          f"| The X3D 4.0 schema rejects it | {count['xsd']} |", f"| A semantic check that already existed reports it | {count['semantic']} |",
          f"| A check added in this work reports it | {count['new']} |", f"| The file does not parse | {count['parse']} |",
-         f"| **Covered, of the {stateable} mistakes X3D can state** | **{covered}** |", f"| Not covered (gap) | {count['gap']} |",
+         f"| **Covered: {covered} of the {len(MAP)} Khronos codes (the {stateable} the project judged X3D can state; the project, not an outside party, classified the other {len(MAP) - stateable})** | **{covered}** |", f"| Not covered (gap) | {count['gap']} |",
          f"| Cannot be written: byte layout (buffers, views, GLB) | {count['binary']} |", f"| Cannot be written: X3D's design has no place for it | {count['design']} |",
          f"| glTF feature X3D 4.0 does not have | {count['feature']} |", f"| Total | {len(MAP)} |", "",
          "The byte-layout and design rows are not a win for the validator. They are a property of the format: the mistake has no spelling in X3D XML.",

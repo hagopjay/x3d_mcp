@@ -14,7 +14,7 @@ Source of the code list: `ISSUES.md` in KhronosGroup/glTF-Validator (170 codes).
 | A semantic check that already existed reports it | 18 |
 | A check added in this work reports it | 48 |
 | The file does not parse | 1 |
-| **Covered, of the 88 mistakes X3D can state** | **88** |
+| **Covered: 88 of the 170 Khronos codes (the 88 the project judged X3D can state; the project, not an outside party, classified the other 82)** | **88** |
 | Not covered (gap) | 0 |
 | Cannot be written: byte layout (buffers, views, GLB) | 46 |
 | Cannot be written: X3D's design has no place for it | 21 |

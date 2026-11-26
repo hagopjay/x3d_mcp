@@ -22,7 +22,7 @@ below has one scene that must be reported and one that must pass (`tests/test_us
 | One simulator's runtime schema | 0 | 0 | 44 | 44 |
 | Pipeline or profile convention | 0 | 0 | 92 | 92 |
 | Needs a person or a render | 0 | 0 | 17 | 17 |
-| **Covered, of the mistakes X3D can state** | **7 of 7** | **20 of 20** | **39 of 39** | **66 of 66** |
+| **Covered, of the mistakes the project judged X3D can state (66 of the 340 rules; the project classified the other 274)** | **7 of 7** | **20 of 20** | **39 of 39** | **66 of 66** |
 | Rules | 30 | 40 | 270 | 340 |
 
 How to read it:
