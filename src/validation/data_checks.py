@@ -6,7 +6,8 @@ and, when the caller says where the scene lives, open the files its url fields n
 
 They were written to match what the Khronos glTF-Validator checks for glTF, concept for concept; the
 mapping is in docs/GLTF-VALIDATOR-PARITY.md and tests/test_gltf_parity.py runs one failing and one
-passing scene per mapped check.
+passing scene per mapped check. data_diagnostics also runs the checks in usd_checks.py, written to answer the
+USD rulebooks (docs/USD-VALIDATION-PARITY.md).
 
 Every check takes the Scene element and returns Diagnostics. File checks also take base_dir and
 are skipped when it is None, so validating a bare string never touches the disk.
@@ -1006,9 +1007,12 @@ SCENE_CHECKS += [check_unused_indices, check_route_fan_in, check_unreachable_key
 
 
 def data_diagnostics(scene, base_dir=None) -> list:
+    from validation.usd_checks import USD_FILE_CHECKS, USD_SCENE_CHECKS   # answers to the USD validators
     out = []
-    for fn in SCENE_CHECKS:
+    for fn in SCENE_CHECKS + USD_SCENE_CHECKS:
         out.extend(fn(scene))
     if base_dir is not None:
         out.extend(check_files(scene, base_dir))
+        for fn in USD_FILE_CHECKS:
+            out.extend(fn(scene, base_dir))
     return out

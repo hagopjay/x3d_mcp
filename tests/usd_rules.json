@@ -1,0 +1,2899 @@
+{
+ "pins": {
+  "usd-core": "0.26.11",
+  "omniverse-asset-validator": "1.18.0",
+  "simready-foundation": "NVIDIA/simready-foundation@c3bd1d8 (2026-11-23)"
+ },
+ "rules": [
+  {
+   "id": "usd:usdGeomValidators:EncapsulationChecker",
+   "source": "usd-core",
+   "name": "usdGeomValidators:EncapsulationChecker",
+   "summary": "Validates there are no nested Gprims."
+  },
+  {
+   "id": "usd:usdGeomValidators:StageMetadataChecker",
+   "source": "usd-core",
+   "name": "usdGeomValidators:StageMetadataChecker",
+   "summary": "All stages must declare their 'upAxis' and 'metersPerUnit'."
+  },
+  {
+   "id": "usd:usdGeomValidators:SubsetFamilies",
+   "source": "usd-core",
+   "name": "usdGeomValidators:SubsetFamilies",
+   "summary": "Validates all of the geom subset families authored beneath an Imageable prim."
+  },
+  {
+   "id": "usd:usdGeomValidators:SubsetParentIsImageable",
+   "source": "usd-core",
+   "name": "usdGeomValidators:SubsetParentIsImageable",
+   "summary": "Validates that GeomSubset prims are direct descendants of an Imageable prim."
+  },
+  {
+   "id": "usd:usdLuxValidators:EncapsulationRulesValidator",
+   "source": "usd-core",
+   "name": "usdLuxValidators:EncapsulationRulesValidator",
+   "summary": "Connectable prims in UsdLux (e.g. Light, LightFilters) can only be nested inside other Container-like Connectable prims (UsdShadeNodeGraph, UsdLuxLight or UsdLuxLightFilter)."
+  },
+  {
+   "id": "usd:usdMediaValidators:AuthorshipInputsPaired",
+   "source": "usd-core",
+   "name": "usdMediaValidators:AuthorshipInputsPaired",
+   "summary": "inputs on an authorship record must hold (name, value) pairs: its length must be a multiple of the tuple-length given by its arraySizeConstraint."
+  },
+  {
+   "id": "usd:usdMediaValidators:ShadowedOrDuplicateAuthorship",
+   "source": "usd-core",
+   "name": "usdMediaValidators:ShadowedOrDuplicateAuthorship",
+   "summary": "Warns about authorship records the composed prim can't report: an application shadowed by a stronger, explicit apiSchemas list, or an application authored in more than one prim spec, where composition"
+  },
+  {
+   "id": "usd:usdPhysicsValidators:ArticulationChecker",
+   "source": "usd-core",
+   "name": "usdPhysicsValidators:ArticulationChecker",
+   "summary": "Validates all of the UsdPhysicsArticulationRootAPIs applied to a prim."
+  },
+  {
+   "id": "usd:usdPhysicsValidators:ColliderChecker",
+   "source": "usd-core",
+   "name": "usdPhysicsValidators:ColliderChecker",
+   "summary": "Validates all of the UsdPhysicsCollisionAPIs applied to a prim."
+  },
+  {
+   "id": "usd:usdPhysicsValidators:PhysicsJointChecker",
+   "source": "usd-core",
+   "name": "usdPhysicsValidators:PhysicsJointChecker",
+   "summary": "Validates all of the UsdPhysicsJoint prims."
+  },
+  {
+   "id": "usd:usdPhysicsValidators:RigidBodyChecker",
+   "source": "usd-core",
+   "name": "usdPhysicsValidators:RigidBodyChecker",
+   "summary": "Validates all of the UsdPhysicsRigidBodyAPIs applied to a prim."
+  },
+  {
+   "id": "usd:usdShadeValidators:EncapsulationMaterialValidator",
+   "source": "usd-core",
+   "name": "usdShadeValidators:EncapsulationMaterialValidator",
+   "summary": "UsdShadeNodeGraph derived and UsdShadeShader derived are the only connectable types found within a UsdShadeMaterial prim, but not UsdShadeMaterial (which is UsdShadeNodeGraph derived) itself. Addition"
+  },
+  {
+   "id": "usd:usdShadeValidators:EncapsulationRulesValidator",
+   "source": "usd-core",
+   "name": "usdShadeValidators:EncapsulationRulesValidator",
+   "summary": "Connectable prims (e.g. Shader, Material, etc) can only be nested inside other Container-like Connectable prims. Container-like prims include Material, NodeGraph. Shader is not a Container-like prim."
+  },
+  {
+   "id": "usd:usdShadeValidators:MaterialBindingApiAppliedValidator",
+   "source": "usd-core",
+   "name": "usdShadeValidators:MaterialBindingApiAppliedValidator",
+   "summary": "Verify a prim has the MaterialBindingAPI applied if it has a material binding relationship."
+  },
+  {
+   "id": "usd:usdShadeValidators:MaterialBindingCollectionValidator",
+   "source": "usd-core",
+   "name": "usdShadeValidators:MaterialBindingCollectionValidator",
+   "summary": "Verify that a collection defining a material binding is well-formed"
+  },
+  {
+   "id": "usd:usdShadeValidators:MaterialBindingRelationships",
+   "source": "usd-core",
+   "name": "usdShadeValidators:MaterialBindingRelationships",
+   "summary": "All properties named 'material:binding' or in that namespace should be relationships."
+  },
+  {
+   "id": "usd:usdShadeValidators:NormalMapTextureValidator",
+   "source": "usd-core",
+   "name": "usdShadeValidators:NormalMapTextureValidator",
+   "summary": "UsdUVTexture nodes that feed the _inputs:normals_ of a UsdPreviewSurface must ensure that the data is encoded and scaled properly. Specifically, since normals are expected to be in the range [(-1,-1,-"
+  },
+  {
+   "id": "usd:usdShadeValidators:ShaderSdrCompliance",
+   "source": "usd-core",
+   "name": "usdShadeValidators:ShaderSdrCompliance",
+   "summary": "Shader prim's input types must be conforming to their appropriate sdf types in the respective sdr shader."
+  },
+  {
+   "id": "usd:usdShadeValidators:SubsetMaterialBindFamilyName",
+   "source": "usd-core",
+   "name": "usdShadeValidators:SubsetMaterialBindFamilyName",
+   "summary": "Geom subsets with authored material bindings should have the 'materialBind' family name."
+  },
+  {
+   "id": "usd:usdShadeValidators:SubsetsMaterialBindFamily",
+   "source": "usd-core",
+   "name": "usdShadeValidators:SubsetsMaterialBindFamily",
+   "summary": "Geom subsets of the 'materialBind' family should have a restricted family type."
+  },
+  {
+   "id": "usd:usdSkelValidators:SkelBindingApiAppliedValidator",
+   "source": "usd-core",
+   "name": "usdSkelValidators:SkelBindingApiAppliedValidator",
+   "summary": "Verify a prim has the SkelBindingAPI applied if it has a UsdSkelBinding property."
+  },
+  {
+   "id": "usd:usdSkelValidators:SkelBindingApiValidator",
+   "source": "usd-core",
+   "name": "usdSkelValidators:SkelBindingApiValidator",
+   "summary": "Verify that a prim with SkelBindingAPI applied, is either of SkelRoot type or parented by a SkelRoot prim."
+  },
+  {
+   "id": "usd:usdUtilsValidators:FileExtensionValidator",
+   "source": "usd-core",
+   "name": "usdUtilsValidators:FileExtensionValidator",
+   "summary": "Only valid core layer extensions (.usd, .usda, .usdc, .usdz), valid core texture extensions (.exr, .jpg, .jpeg, .png) and embedded audio files (.M4A, .MP3, .WAV) are allowed in a package."
+  },
+  {
+   "id": "usd:usdUtilsValidators:MissingReferenceValidator",
+   "source": "usd-core",
+   "name": "usdUtilsValidators:MissingReferenceValidator",
+   "summary": "The composed USD stage should not contain any unresolvable asset dependencies (in every possible variation of the asset), when using the default asset resolver."
+  },
+  {
+   "id": "usd:usdUtilsValidators:PackageEncapsulationValidator",
+   "source": "usd-core",
+   "name": "usdUtilsValidators:PackageEncapsulationValidator",
+   "summary": "If the root layer is a package, then its recommended for the composed stage to not contain references to files outside the package. The package should be self-contained, warn if not."
+  },
+  {
+   "id": "usd:usdUtilsValidators:RootPackageValidator",
+   "source": "usd-core",
+   "name": "usdUtilsValidators:RootPackageValidator",
+   "summary": "Files within the root layer of a usdz package should not be compressed or encrypted, and should be aligned to 64 bytes."
+  },
+  {
+   "id": "usd:usdUtilsValidators:UsdzPackageValidator",
+   "source": "usd-core",
+   "name": "usdUtilsValidators:UsdzPackageValidator",
+   "summary": "Files within all usdz packages within a stage should not be compressed or encrypted, and should be aligned to 64 bytes."
+  },
+  {
+   "id": "usd:usdValidation:AttributeTypeMismatch",
+   "source": "usd-core",
+   "name": "usdValidation:AttributeTypeMismatch",
+   "summary": "Validator that checks for attribute type mismatch with the schema definition."
+  },
+  {
+   "id": "usd:usdValidation:CompositionErrorTest",
+   "source": "usd-core",
+   "name": "usdValidation:CompositionErrorTest",
+   "summary": "Validator aims at providing all composition errors, which were generated while composing the stage."
+  },
+  {
+   "id": "usd:usdValidation:StageMetadataChecker",
+   "source": "usd-core",
+   "name": "usdValidation:StageMetadataChecker",
+   "summary": "Stages that can be consumed as referenceable assets must have a valid 'defaultPrim' specified."
+  },
+  {
+   "id": "oav:ArticulationChecker",
+   "source": "omniverse-asset-validator",
+   "name": "ArticulationChecker",
+   "category": "Physics",
+   "summary": "Implements validation of the following requirements: * JT.ART.002: Articulation roots cannot be nested. * JT.ART.004: Articulations are not allowed on static bodies."
+  },
+  {
+   "id": "oav:ColliderChecker",
+   "source": "omniverse-asset-validator",
+   "name": "ColliderChecker",
+   "category": "Physics",
+   "summary": "Implements validation of the following requirements: * RB.COL.004: The collision shape scale must be uniform for the following geometries: Sphere, Capsule, Cylinder, Cone & Points."
+  },
+  {
+   "id": "oav:DanglingOverPrimChecker",
+   "source": "omniverse-asset-validator",
+   "name": "DanglingOverPrimChecker",
+   "category": "Layout",
+   "summary": "Prims usually need a ``def`` or ``class`` specifier, not just ``over`` specifiers. However, such overs may be used to hold relationship targets, attribute connections, or speculative opinions."
+  },
+  {
+   "id": "oav:DefaultPrimChecker",
+   "source": "omniverse-asset-validator",
+   "name": "DefaultPrimChecker",
+   "category": "Layout",
+   "summary": "When working with layers that represent assets, it is often useful to have a single, active, Xformable or Scope type root prim as the layers default prim."
+  },
+  {
+   "id": "oav:ExtentsChecker",
+   "source": "omniverse-asset-validator",
+   "name": "ExtentsChecker",
+   "category": "Basic",
+   "summary": "Boundable prims have the extent attribute. For point based prims, the value of the extent must be correct at each time sample of the point attribute"
+  },
+  {
+   "id": "oav:IndexedPrimvarChecker",
+   "source": "omniverse-asset-validator",
+   "name": "IndexedPrimvarChecker",
+   "category": "Geometry",
+   "summary": "For Primvars with non-constant values of interpolation, it is often the case that the same value is repeated many times in the array. An indexed primvar can be used in such cases to optimize for data "
+  },
+  {
+   "id": "oav:KindChecker",
+   "source": "omniverse-asset-validator",
+   "name": "KindChecker",
+   "category": "Basic",
+   "summary": "All kinds must be registered and conform to the rules specified in the `USD Glossary`_. .. _`USD Glossary`: https://graphics.pixar.com/usd/release/glossary.html?#usdglossary-kind"
+  },
+  {
+   "id": "oav:LayerSpecChecker",
+   "source": "omniverse-asset-validator",
+   "name": "LayerSpecChecker",
+   "category": "Layer",
+   "summary": "This checker validates all LayerSpecs to ensure their type names and values types conform to SdfValueTypeNames. Also, their value types (including timesamples) should match the underlying type names."
+  },
+  {
+   "id": "oav:ManifoldChecker",
+   "source": "omniverse-asset-validator",
+   "name": "ManifoldChecker",
+   "category": "Geometry",
+   "summary": "Counts the number of non-manifold edges and vertices. A non-manifold edge has more than two adjacent faces. A non-manifold vertex as more than two adjacent border edges, where a border edge is an edge"
+  },
+  {
+   "id": "oav:MassChecker",
+   "source": "omniverse-asset-validator",
+   "name": "MassChecker",
+   "category": "Physics",
+   "summary": "Implements validation of the following requirements: * RB.007: Rigid bodies _or_ their descendent collision shapes should have a mass & their other inertial properties explicitly specified."
+  },
+  {
+   "id": "oav:MaterialOldMdlSchemaChecker",
+   "source": "omniverse-asset-validator",
+   "name": "MaterialOldMdlSchemaChecker",
+   "category": "Material",
+   "summary": "Rule ensuring that the deprecated MDL schema is not being used. The deprecated MDL schema worked by setting the 'info:implementationSource' property to 'mdlMaterial'. The location of the MDL module wa"
+  },
+  {
+   "id": "oav:MaterialOutOfScopeChecker",
+   "source": "omniverse-asset-validator",
+   "name": "MaterialOutOfScopeChecker",
+   "category": "Material",
+   "summary": "USD ignores material bindings which target materials that are outside the payloads' hierarchy."
+  },
+  {
+   "id": "oav:MaterialPathChecker",
+   "source": "omniverse-asset-validator",
+   "name": "MaterialPathChecker",
+   "category": "Material",
+   "summary": "MDL assets require absolute paths or relative paths prefixed with ``./`` to resolve properly. This Rule suggests to prefix ambiguous MDL asset path(s) with a ``./`` to enforce that it is a relative pa"
+  },
+  {
+   "id": "oav:MaterialUsdPreviewSurfaceChecker",
+   "source": "omniverse-asset-validator",
+   "name": "MaterialUsdPreviewSurfaceChecker",
+   "category": "Material",
+   "summary": "Rule ensuring that UsdShadeShader prims conform to the UsdPreviewSurface specification."
+  },
+  {
+   "id": "oav:MissingReferenceChecker",
+   "source": "omniverse-asset-validator",
+   "name": "MissingReferenceChecker",
+   "category": "Basic",
+   "summary": "The composed USD stage should not contain any unresolvable asset dependencies (in every possible variation of the asset), when using the default asset resolver."
+  },
+  {
+   "id": "oav:NormalMapTextureChecker",
+   "source": "omniverse-asset-validator",
+   "name": "NormalMapTextureChecker",
+   "category": "Basic",
+   "summary": "UsdUVTexture nodes that feed the `inputs:normals` of a UsdPreviewSurface must ensure that the data is encoded and scaled properly. Specifically: - Since normals are expected to be in the range [(-1,-1"
+  },
+  {
+   "id": "oav:NormalsExistChecker",
+   "source": "omniverse-asset-validator",
+   "name": "NormalsExistChecker",
+   "category": "Geometry",
+   "summary": "Check that meshes have normals. All meshes should have normals unless they have the subdivision scheme set. Meshes cannot have both normals and subdivision set."
+  },
+  {
+   "id": "oav:NormalsValidChecker",
+   "source": "omniverse-asset-validator",
+   "name": "NormalsValidChecker",
+   "category": "Geometry",
+   "summary": "Check that all normals have unit length, and that there are no non-finite values. Also checks that the supplied number of normal values agrees with the interpolation."
+  },
+  {
+   "id": "oav:NormalsWindingsChecker",
+   "source": "omniverse-asset-validator",
+   "name": "NormalsWindingsChecker",
+   "category": "Geometry",
+   "summary": "Check that the mesh has normals that are consistent with the face windings, taking into account the 'orientation' attribute. We define the meaning of agreement between a normal attribute value and the"
+  },
+  {
+   "id": "oav:PhysicsJointChecker",
+   "source": "omniverse-asset-validator",
+   "name": "PhysicsJointChecker",
+   "category": "Physics",
+   "summary": "Implements validation of the following requirements: * JT.002: Targets set to Body0 and Body1 relationships must exist. * JT.003: Body0 and Body1 relationships must not have more than one target."
+  },
+  {
+   "id": "oav:PrimEncapsulationChecker",
+   "source": "omniverse-asset-validator",
+   "name": "PrimEncapsulationChecker",
+   "category": "Basic",
+   "summary": "Check for basic prim encapsulation rules: - Boundables may not be nested under Gprims - Connectable prims (e.g. Shader, Material, etc) can only be nested inside other Container-like Connectable prims."
+  },
+  {
+   "id": "oav:RigidBodyChecker",
+   "source": "omniverse-asset-validator",
+   "name": "RigidBodyChecker",
+   "category": "Physics",
+   "summary": "Implements validation of the following requirements: * RB.005: Rigid bodies cannot be part of a scene graph instance. * RB.003: Rigid bodies have to be UsdGeomXformable prims. * RB.009: Rigid bodies h"
+  },
+  {
+   "id": "oav:ShaderImplementationSourceChecker",
+   "source": "omniverse-asset-validator",
+   "name": "ShaderImplementationSourceChecker",
+   "category": "Material",
+   "summary": "Shader prims require a source implementation, which can be one of \"id\" (for builtins), \"sourceAsset\" (for assets), or \"sourceCode\" (for inline JIT compiled shaders). Source Asset or Source Code Shader"
+  },
+  {
+   "id": "oav:SkelBindingAPIAppliedChecker",
+   "source": "omniverse-asset-validator",
+   "name": "SkelBindingAPIAppliedChecker",
+   "category": "Other",
+   "summary": "A prim providing skelBinding properties, must have SkelBindingAPI applied on the prim."
+  },
+  {
+   "id": "oav:StageMetadataChecker",
+   "source": "omniverse-asset-validator",
+   "name": "StageMetadataChecker",
+   "category": "Basic",
+   "summary": "All stages should declare their 'upAxis' and 'metersPerUnit'. Stages that can be consumed as referencable assets should furthermore have a valid 'defaultPrim' declared, and stages meant for consumer-l"
+  },
+  {
+   "id": "oav:SubdivisionSchemeChecker",
+   "source": "omniverse-asset-validator",
+   "name": "SubdivisionSchemeChecker",
+   "category": "Geometry",
+   "summary": "USD default value for subdivision scheme is Catmull-Clark. This is often overlooked and so set incorrectly for tessellated CAD geometry. This checker ensures that the subdivision scheme is explicitly "
+  },
+  {
+   "id": "oav:TextureChecker",
+   "source": "omniverse-asset-validator",
+   "name": "TextureChecker",
+   "category": "Basic",
+   "summary": "A RuleChecker which handles locating texture files automatically. Texture files should be readable by intended client (only .jpg or .png for consumer-level USDZ). Derived classes can reimplement `Text"
+  },
+  {
+   "id": "oav:TypeChecker",
+   "source": "omniverse-asset-validator",
+   "name": "TypeChecker",
+   "category": "Basic",
+   "summary": "All prims must have a type defined."
+  },
+  {
+   "id": "oav:UnicodeNameChecker",
+   "source": "omniverse-asset-validator",
+   "name": "UnicodeNameChecker",
+   "category": "Other",
+   "summary": "Checks prim, property, variant set, and variant names for ambiguities related to UTF encoding. UTF-8 encoded strings may have sequences of code points that describe equivalent text rendered to the use"
+  },
+  {
+   "id": "oav:UnusedMeshTopologyChecker",
+   "source": "omniverse-asset-validator",
+   "name": "UnusedMeshTopologyChecker",
+   "category": "Geometry",
+   "summary": "Points which are not referenced by the indices can be removed. Works on non time varying geometry."
+  },
+  {
+   "id": "oav:UnusedPrimvarChecker",
+   "source": "omniverse-asset-validator",
+   "name": "UnusedPrimvarChecker",
+   "category": "Geometry",
+   "summary": "Values which are not referenced by the indices in a primvar can be removed. Works on non time varying geometry."
+  },
+  {
+   "id": "oav:UsdAsciiPerformanceChecker",
+   "source": "omniverse-asset-validator",
+   "name": "UsdAsciiPerformanceChecker",
+   "category": "Layer",
+   "summary": "For performance reasons, large arrays and time samples are better stored in crate files. This alerts users to any layers which contain large arrays or time sample dictionaries stored in .usda or ASCII"
+  },
+  {
+   "id": "oav:UsdDanglingMaterialBinding",
+   "source": "omniverse-asset-validator",
+   "name": "UsdDanglingMaterialBinding",
+   "category": "Material",
+   "summary": "Rule ensuring that the bound material exists in the scene."
+  },
+  {
+   "id": "oav:UsdGeomSubsetChecker",
+   "source": "omniverse-asset-validator",
+   "name": "UsdGeomSubsetChecker",
+   "category": "Other",
+   "summary": "Ensures that a valid family name attribute is set for every UsdGeomSubset that has a material binding."
+  },
+  {
+   "id": "oav:UsdLuxSchemaChecker",
+   "source": "omniverse-asset-validator",
+   "name": "UsdLuxSchemaChecker",
+   "category": "Other",
+   "summary": "In USD 21.02, Lux attributes were prefixed with inputs: to make them connectable. This rule checker ensure that all UsdLux attributes have the appropriate prefix."
+  },
+  {
+   "id": "oav:UsdMaterialBindingApi",
+   "source": "omniverse-asset-validator",
+   "name": "UsdMaterialBindingApi",
+   "category": "Material",
+   "summary": "Rule ensuring that the MaterialBindingAPI is applied on all prims that have a material binding property."
+  },
+  {
+   "id": "oav:UsdzPackageValidator",
+   "source": "omniverse-asset-validator",
+   "name": "UsdzPackageValidator",
+   "category": "Basic",
+   "summary": "This is Base class for all the rule-checkers. Args: verbose: Deprecated parameter, kept for backward compatibility. Not used in new rules. consumerLevelChecks: Deprecated parameter, kept for backward "
+  },
+  {
+   "id": "oav:ValidateTopologyChecker",
+   "source": "omniverse-asset-validator",
+   "name": "ValidateTopologyChecker",
+   "category": "Geometry",
+   "summary": "Validate the topology of a mesh on all time samples."
+  },
+  {
+   "id": "oav:WeldChecker",
+   "source": "omniverse-asset-validator",
+   "name": "WeldChecker",
+   "category": "Geometry",
+   "summary": "If attributes contain equal values they can be unified and the indices adjusted accordingly. Works on non time varying geometry."
+  },
+  {
+   "id": "oav:ZeroAreaFaceChecker",
+   "source": "omniverse-asset-validator",
+   "name": "ZeroAreaFaceChecker",
+   "category": "Geometry",
+   "summary": "Faces with zero area can be removed. May produce welding after removal. Works on non time varying geometry."
+  },
+  {
+   "id": "sr:AA.001",
+   "source": "simready-foundation",
+   "name": "anchored-asset-paths",
+   "code": "AA.001",
+   "capability": "core/atomic_asset",
+   "compat": "core-usd",
+   "summary": "Asset references should use anchored paths"
+  },
+  {
+   "id": "sr:AA.002",
+   "source": "simready-foundation",
+   "name": "supported-file-types",
+   "code": "AA.002",
+   "capability": "core/atomic_asset",
+   "compat": "OpenUSD",
+   "summary": "Asset must use only supported file types"
+  },
+  {
+   "id": "sr:ADE.001",
+   "source": "simready-foundation",
+   "name": "ade20k-labels",
+   "code": "ADE.001",
+   "capability": "dataset_taxonomies",
+   "compat": "core-usd",
+   "summary": "Every `SemanticsLabelsAPI:ade20k` label value must be a member of the ADE20K (150) taxonomy."
+  },
+  {
+   "id": "sr:AF.001",
+   "source": "simready-foundation",
+   "name": "forward-direction",
+   "code": "AF.001",
+   "capability": "core/asset_frame",
+   "compat": "Open USD",
+   "summary": "An asset selecting Object Forward MUST declare its semantic facing on its defaultPrim."
+  },
+  {
+   "id": "sr:AFF.001",
+   "source": "simready-foundation",
+   "name": "object-affordance-valid",
+   "code": "AFF.001",
+   "capability": "physics_bodies/object_affordances",
+   "compat": "Open USD",
+   "summary": "If `SemanticsLabelsAPI:affordance` is applied to a prim, every authored value in `semantics:labels:affordance` must be one of the allowed affordance tokens."
+  },
+  {
+   "id": "sr:AFF.002",
+   "source": "simready-foundation",
+   "name": "object-affordance-state-valid",
+   "code": "AFF.002",
+   "capability": "physics_bodies/object_affordances",
+   "compat": "Open USD",
+   "summary": "If `SemanticsLabelsAPI:affordance_state` is applied to a prim, every authored value in `semantics:labels:affordance_state` must be one of the allowed state tokens."
+  },
+  {
+   "id": "sr:AM.001",
+   "source": "simready-foundation",
+   "name": "properties-sublayer-required",
+   "code": "AM.001",
+   "capability": "aif/metadata",
+   "compat": "AIF",
+   "summary": "The USD stage must include a sublayer with \"properties\" in its filename (e.g., `AssetName_Properties.usda`) and that sublayer must specify a `defaultPrim`."
+  },
+  {
+   "id": "sr:AM.002",
+   "source": "simready-foundation",
+   "name": "asset-class-required",
+   "code": "AM.002",
+   "capability": "aif/metadata",
+   "compat": "AIF",
+   "summary": "The default prim in the properties sublayer must have an `aif:core:assetClass` attribute identifying the equipment type."
+  },
+  {
+   "id": "sr:AM.003",
+   "source": "simready-foundation",
+   "name": "asset-identification-metadata",
+   "code": "AM.003",
+   "capability": "aif/metadata",
+   "compat": "AIF",
+   "summary": "The default prim must have `aif:core:manufacturer`, `aif:core:modelNumber`, and `aif:core:assetVersion` attributes."
+  },
+  {
+   "id": "sr:AM.004",
+   "source": "simready-foundation",
+   "name": "physical-dimensions-metadata",
+   "code": "AM.004",
+   "capability": "aif/metadata",
+   "compat": "AIF",
+   "summary": "The default prim must have all seven physical dimension attributes: `aif:core:height`, `aif:core:width`, `aif:core:depth`, `aif:core:weight`, `aif:core:overallGeometryDimensions`, `aif:core:installati"
+  },
+  {
+   "id": "sr:AM.005",
+   "source": "simready-foundation",
+   "name": "simready-version-tracking",
+   "code": "AM.005",
+   "capability": "aif/metadata",
+   "compat": "AIF",
+   "summary": "The default prim must have an `aif:core:simreadyVersion` attribute recording the SimReady specification version the asset was created against."
+  },
+  {
+   "id": "sr:AM.006",
+   "source": "simready-foundation",
+   "name": "asset-description-required",
+   "code": "AM.006",
+   "capability": "aif/metadata",
+   "compat": "AIF",
+   "summary": "The default prim must have `aif:core:assetDescription` and `aif:core:connectsToModelDocumentation` attributes."
+  },
+  {
+   "id": "sr:AM.007",
+   "source": "simready-foundation",
+   "name": "equipment-class-template-compliance",
+   "code": "AM.007",
+   "capability": "aif/metadata",
+   "compat": "AIF",
+   "summary": "The default prim must carry every `aif:spec:*` attribute that its declared equipment class defines."
+  },
+  {
+   "id": "sr:AV.001",
+   "source": "simready-foundation",
+   "name": "variation-discovery-metadata",
+   "code": "AV.001",
+   "capability": "core/asset_variants",
+   "compat": "Open USD",
+   "summary": "Every advertised variation variant set MUST be declared under `customLayerData.SimReady_Metadata.Variants.<Category>.<VariantSetName>` with its owning prim, category, default option, and impact class."
+  },
+  {
+   "id": "sr:AV.002",
+   "source": "simready-foundation",
+   "name": "variant-set-location",
+   "code": "AV.002",
+   "capability": "core/asset_variants",
+   "compat": "Open USD",
+   "summary": "A variation variant set MUST live on the asset's default (root) prim, declare at least two options, and author a valid default selection that names one of those options."
+  },
+  {
+   "id": "sr:AV.003",
+   "source": "simready-foundation",
+   "name": "option-composability",
+   "code": "AV.003",
+   "capability": "core/asset_variants",
+   "compat": "Open USD",
+   "summary": "Every option of a variation variant set MUST compose to a valid stage, and the category's content requirements MUST hold under **each** option, not only under the authored default."
+  },
+  {
+   "id": "sr:AV.004",
+   "source": "simready-foundation",
+   "name": "section-purity-isolation",
+   "code": "AV.004",
+   "capability": "core/asset_variants",
+   "compat": "Open USD",
+   "summary": "A per-part variation option MUST compose its content only through an isolated payload arc, and selecting one option MUST NOT change any content outside that part. A master option MUST author child var"
+  },
+  {
+   "id": "sr:AV.005",
+   "source": "simready-foundation",
+   "name": "visual-envelope-invariant",
+   "code": "AV.005",
+   "capability": "core/asset_variants",
+   "compat": "Open USD",
+   "summary": "Every option of a variation variant set MUST hold the asset's visual envelope size invariant within tolerance."
+  },
+  {
+   "id": "sr:AV.006",
+   "source": "simready-foundation",
+   "name": "collision-envelope-invariant",
+   "code": "AV.006",
+   "capability": "core/asset_variants",
+   "compat": "Open USD",
+   "summary": "Every option of a variation variant set that carries colliders MUST hold the asset's collision envelope size invariant within tolerance."
+  },
+  {
+   "id": "sr:AV.007",
+   "source": "simready-foundation",
+   "name": "impact-class-honesty",
+   "code": "AV.007",
+   "capability": "core/asset_variants",
+   "compat": "Open USD",
+   "summary": "A variant set's declared `impactClass` MUST match what its options actually change: a `visual-only` set changes no simulation-relevant data; a `simulation-affecting` set changes only the domain it dec"
+  },
+  {
+   "id": "sr:AV.008",
+   "source": "simready-foundation",
+   "name": "conditional-presence",
+   "code": "AV.008",
+   "capability": "core/asset_variants",
+   "compat": "Open USD",
+   "summary": "A variation variant set MUST exist if and only if its scope offers two or more options; a scope with a single representation carries no variant set."
+  },
+  {
+   "id": "sr:AV.009",
+   "source": "simready-foundation",
+   "name": "authored-physical-properties",
+   "code": "AV.009",
+   "capability": "core/asset_variants",
+   "compat": "Open USD",
+   "summary": "An asset with a `Collision` variation MUST author its mass, center of mass, and inertia explicitly with `UsdPhysics.MassAPI`, and those values MUST be identical across every collider option."
+  },
+  {
+   "id": "sr:AV.010",
+   "source": "simready-foundation",
+   "name": "variation-stability",
+   "code": "AV.010",
+   "capability": "core/asset_variants",
+   "compat": "Open USD",
+   "summary": "Across a variation set's options, no prim that is present in two or more options MAY change its prim **type** or its authored local **transform**. A variation MAY only add or remove geometry leaves un"
+  },
+  {
+   "id": "sr:BA.001",
+   "source": "simready-foundation",
+   "name": "has-articulation-root",
+   "code": "BA.001",
+   "capability": "physics_bodies/base_articulation",
+   "compat": "OpenUSD",
+   "summary": "An articulated USD stage must contain exactly one prim with the UsdPhysicsArticulationRootAPI applied."
+  },
+  {
+   "id": "sr:BA.002",
+   "source": "simready-foundation",
+   "name": "non-adjacent-collision-meshes-do-not-clash",
+   "code": "BA.002",
+   "capability": "physics_bodies/base_articulation",
+   "compat": "PhysX",
+   "summary": "Collision meshes on non-adjacent links in the articulation hierarchy must not overlap or intersect."
+  },
+  {
+   "id": "sr:CITY.001",
+   "source": "simready-foundation",
+   "name": "cityscapes-labels",
+   "code": "CITY.001",
+   "capability": "dataset_taxonomies",
+   "compat": "core-usd",
+   "summary": "Every `SemanticsLabelsAPI:cityscapes` label value must be a member of the Cityscapes (fine) taxonomy."
+  },
+  {
+   "id": "sr:CN.001",
+   "source": "simready-foundation",
+   "name": "connection-rels",
+   "code": "CN.001",
+   "capability": "assembly/connections",
+   "compat": "OpenUSD",
+   "summary": "The assembly default prim has a `Connections` Scope. Each connection prim under it authors exactly one `simready:mate:socket` relationship and exactly one `simready:mate:plug` relationship, each with "
+  },
+  {
+   "id": "sr:CN.002",
+   "source": "simready-foundation",
+   "name": "connection-targets-resolve",
+   "code": "CN.002",
+   "capability": "assembly/connections",
+   "compat": "OpenUSD",
+   "summary": "Each `socket` and `plug` relationship target must resolve on the composed stage and satisfy `MC.001` and `MC.002`."
+  },
+  {
+   "id": "sr:CN.003",
+   "source": "simready-foundation",
+   "name": "opposite-roles",
+   "code": "CN.003",
+   "capability": "assembly/connections",
+   "compat": "OpenUSD",
+   "summary": "The two targets of a connection must have opposite roles: one `Socket` and one `Plug`."
+  },
+  {
+   "id": "sr:CN.004",
+   "source": "simready-foundation",
+   "name": "interface-match",
+   "code": "CN.004",
+   "capability": "assembly/connections",
+   "compat": "OpenUSD",
+   "summary": "The socket and plug `simready:mate:mechanical:interface` tokens must be equal by exact string comparison."
+  },
+  {
+   "id": "sr:CN.005",
+   "source": "simready-foundation",
+   "name": "payload-capacity",
+   "code": "CN.005",
+   "capability": "assembly/connections",
+   "compat": "OpenUSD",
+   "summary": "Socket `simready:mate:mechanical:maxPayload` must be greater than or equal to the plug subtree mass. Incomplete mass on rigid bodies in that subtree warns rather than fails. Only `jointed` connections"
+  },
+  {
+   "id": "sr:CN.006",
+   "source": "simready-foundation",
+   "name": "mate-realization",
+   "code": "CN.006",
+   "capability": "assembly/connections",
+   "compat": "OpenUSD",
+   "summary": "Every connection prim must author `simready:mate:realization` as either `compound` or `jointed`, and the token must agree with how the two mate bodies resolve. `jointed` requires two distinct mate bod"
+  },
+  {
+   "id": "sr:CN.007",
+   "source": "simready-foundation",
+   "name": "exclusive-pairing",
+   "code": "CN.007",
+   "capability": "assembly/connections",
+   "compat": "OpenUSD",
+   "summary": "No mate site may appear in more than one connection: a socket holds at most one plug, and a plug sits in at most one socket."
+  },
+  {
+   "id": "sr:CN.008",
+   "source": "simready-foundation",
+   "name": "assembly-type",
+   "code": "CN.008",
+   "capability": "assembly/connections",
+   "compat": "OpenUSD",
+   "summary": "The assembly default prim must author `simready:mate:assemblyType` with exactly one value drawn from the closed list `robot`, `pallet_stack`. A missing attribute or an unrecognized token fails."
+  },
+  {
+   "id": "sr:CN.009",
+   "source": "simready-foundation",
+   "name": "connection-joint",
+   "code": "CN.009",
+   "capability": "assembly/connections",
+   "compat": "OpenUSD",
+   "summary": "Every connection with `realization = \"jointed\"` must author `simready:mate:joint` targeting exactly one `UsdPhysicsFixedJoint` whose `physics:body0` and `physics:body1` resolve to the connection's two"
+  },
+  {
+   "id": "sr:CN.010",
+   "source": "simready-foundation",
+   "name": "assembly-child-references",
+   "code": "CN.010",
+   "capability": "assembly/connections",
+   "compat": "OpenUSD",
+   "summary": "Each connected mate site must arrive on the assembly stage through a reference or payload arc to a separately published asset. Parts authored inline in the assembly's own root layer fail."
+  },
+  {
+   "id": "sr:CN.011",
+   "source": "simready-foundation",
+   "name": "compound-body",
+   "code": "CN.011",
+   "capability": "assembly/connections",
+   "compat": "OpenUSD",
+   "summary": "The mate body shared by a `compound` connection must be an assembly-local prim carrying no reference or payload arc, with an enabled `PhysicsRigidBodyAPI` and a `physics:mass` equal to the sum of the "
+  },
+  {
+   "id": "sr:CN.012",
+   "source": "simready-foundation",
+   "name": "assembly-model-hierarchy",
+   "code": "CN.012",
+   "capability": "assembly/connections",
+   "compat": "OpenUSD",
+   "summary": "The assembly default prim must have `kind = \"assembly\"`. Each composed-in child asset root must have `kind = \"component\"` or `kind = \"assembly\"`, and every prim between the default prim and a child as"
+  },
+  {
+   "id": "sr:COCO.001",
+   "source": "simready-foundation",
+   "name": "coco-labels",
+   "code": "COCO.001",
+   "capability": "dataset_taxonomies",
+   "compat": "core-usd",
+   "summary": "Every `SemanticsLabelsAPI:coco` label value must be a member of the COCO (instances) taxonomy."
+  },
+  {
+   "id": "sr:COL.001",
+   "source": "simready-foundation",
+   "name": "collider-approximation-sdf",
+   "code": "COL.001",
+   "capability": "physics_bodies/physics_colliders",
+   "compat": "OpenUSD",
+   "summary": "Every mesh collider (Mesh prim with USDPhysics.CollisionAPI and USDPhysics.MeshCollisionAPI) must have an SDF (Signed Distance Field) approximation for efficient collision detection."
+  },
+  {
+   "id": "sr:CP.001",
+   "source": "simready-foundation",
+   "name": "connectionpoints-scope-structure",
+   "code": "CP.001",
+   "capability": "aif/connection_points",
+   "compat": "AIF",
+   "summary": "Connection point prims must be organized under a `ConnectionPoints` Scope prim that is a direct child of the default prim."
+  },
+  {
+   "id": "sr:CP.002",
+   "source": "simready-foundation",
+   "name": "connection-point-geometry-type",
+   "code": "CP.002",
+   "capability": "aif/connection_points",
+   "compat": "AIF",
+   "summary": "Connection point prims must be Plane (rectangular) or Disk (circular) geometry only. The rule belongs to the v0.1.0 vocabulary: a v0.1.0 profile authors Plane and Disk geometry, a v0.2.0 profile autho"
+  },
+  {
+   "id": "sr:CP.003",
+   "source": "simready-foundation",
+   "name": "connection-point-purpose-guide",
+   "code": "CP.003",
+   "capability": "aif/connection_points",
+   "compat": "AIF",
+   "summary": "All connection point prims must have their `purpose` attribute set to `\"guide\"`. The rule carries across both vocabularies: under v0.2.0 CP.010 applies it to connection point Xforms."
+  },
+  {
+   "id": "sr:CP.004",
+   "source": "simready-foundation",
+   "name": "connection-point-naming-convention",
+   "code": "CP.004",
+   "capability": "aif/connection_points",
+   "compat": "AIF",
+   "summary": "All prims under the `ConnectionPoints` scope must follow the `<vendor>_<type>_<suffix>` naming pattern using a valid type prefix from the AIF connection point type table."
+  },
+  {
+   "id": "sr:CP.005",
+   "source": "simready-foundation",
+   "name": "connection-points-composition",
+   "code": "CP.005",
+   "capability": "aif/connection_points",
+   "compat": "AIF",
+   "summary": "Connection points must be saved as a separate `<AssetName>_ConnectionPoints.usd` file and composed into the main stage as a sublayer."
+  },
+  {
+   "id": "sr:CP.006",
+   "source": "simready-foundation",
+   "name": "connection-point-alignment",
+   "code": "CP.006",
+   "capability": "aif/connection_points",
+   "compat": "AIF",
+   "summary": "Connection point geometry must be positioned and sized to match the actual physical openings on the equipment. The requirement is documented normatively and is listed by neither the v0.1.0 nor the v0."
+  },
+  {
+   "id": "sr:CP.010",
+   "source": "simready-foundation",
+   "name": "connection-point-prim-structure",
+   "code": "CP.010",
+   "capability": "aif/connection_points",
+   "compat": "AIF",
+   "summary": "Connection points must be Xform prims under the `ConnectionPoints` scope with `purpose = \"guide\"`, each carrying at least `simready:connectionPoint:domain` and `simready:connectionPoint:direction`."
+  },
+  {
+   "id": "sr:CP.011",
+   "source": "simready-foundation",
+   "name": "connection-point-base-namespace",
+   "code": "CP.011",
+   "capability": "aif/connection_points",
+   "compat": "AIF",
+   "summary": "Every connection point must carry all five base namespace properties, which together state the semantic identity of the connection."
+  },
+  {
+   "id": "sr:CP.012",
+   "source": "simready-foundation",
+   "name": "connection-point-domain-namespace",
+   "code": "CP.012",
+   "capability": "aif/connection_points",
+   "compat": "AIF",
+   "summary": "A connection point's domain-specific properties must sit in the namespace named by its `simready:connectionPoint:domain` value, and a production-complete connection point carries every property that n"
+  },
+  {
+   "id": "sr:DISP.001",
+   "source": "simready-foundation",
+   "name": "display-color-coverage",
+   "code": "DISP.001",
+   "capability": "visualization/display_color",
+   "compat": "Open USD",
+   "summary": "Every renderable geometry prim must resolve a display colour, authored on the prim or inherited from an ancestor."
+  },
+  {
+   "id": "sr:DISP.002",
+   "source": "simready-foundation",
+   "name": "display-color-values",
+   "code": "DISP.002",
+   "capability": "visualization/display_color",
+   "compat": "Open USD",
+   "summary": "Authored display colour values must lie within the range a consumer can interpret."
+  },
+  {
+   "id": "sr:DISP.003",
+   "source": "simready-foundation",
+   "name": "display-opacity-values",
+   "code": "DISP.003",
+   "capability": "visualization/display_color",
+   "compat": "Open USD",
+   "summary": "Display opacity, where authored, must lie within its valid range and agree with its declared interpolation."
+  },
+  {
+   "id": "sr:DJ.001",
+   "source": "simready-foundation",
+   "name": "physics-drive-and-joint-state",
+   "code": "DJ.001",
+   "capability": "physics_bodies/physics_driven_joints",
+   "compat": "PhysX",
+   "summary": "Validate that each driven joint has correct drive configuration and joint state, including required limits and consistency checks against the current joint state values."
+  },
+  {
+   "id": "sr:DJ.002",
+   "source": "simready-foundation",
+   "name": "joint-has-joint-state-api",
+   "code": "DJ.002",
+   "capability": "physics_bodies/physics_driven_joints",
+   "compat": "PhysX",
+   "summary": "Driven joints must implement proper joint state API for simulation state management."
+  },
+  {
+   "id": "sr:DJ.003",
+   "source": "simready-foundation",
+   "name": "joint-has-correct-transform-and-state",
+   "code": "DJ.003",
+   "capability": "physics_bodies/physics_driven_joints",
+   "compat": "PhysX",
+   "summary": "Driven joints must maintain correct transform relationships and state consistency. ## Description"
+  },
+  {
+   "id": "sr:DJ.004",
+   "source": "simready-foundation",
+   "name": "physics-joint-has-drive-or-mimic-api",
+   "code": "DJ.004",
+   "capability": "physics_bodies/physics_driven_joints",
+   "compat": "PhysX",
+   "summary": "PhysX driven joints must implement drive API or mimic functionality for controlled motion."
+  },
+  {
+   "id": "sr:DJ.005",
+   "source": "simready-foundation",
+   "name": "physics-joint-max-velocity",
+   "code": "DJ.005",
+   "capability": "physics_bodies/physics_driven_joints",
+   "compat": "PhysX",
+   "summary": "PhysX driven joints must have appropriate maximum velocity limits configured."
+  },
+  {
+   "id": "sr:DJ.006",
+   "source": "simready-foundation",
+   "name": "drive-joint-value-reasonable",
+   "code": "DJ.006",
+   "capability": "physics_bodies/physics_driven_joints",
+   "compat": "PhysX",
+   "summary": "Drive joint parameters must be within reasonable ranges for stable simulation. The joint parameters should not be excessively big and should be natural numbers."
+  },
+  {
+   "id": "sr:DJ.007",
+   "source": "simready-foundation",
+   "name": "mimic-api-check",
+   "code": "DJ.007",
+   "capability": "physics_bodies/physics_driven_joints",
+   "compat": "PhysX",
+   "summary": "Mimic API configuration must be properly validated for coordinated joint motion."
+  },
+  {
+   "id": "sr:DJ.008",
+   "source": "simready-foundation",
+   "name": "robot-schema-joint-exist",
+   "code": "DJ.008",
+   "capability": "physics_bodies/physics_driven_joints",
+   "compat": "Isaac",
+   "summary": "Robot schema joints must exist and be properly defined for Isaac Sim integration."
+  },
+  {
+   "id": "sr:DJ.009",
+   "source": "simready-foundation",
+   "name": "robot-schema-links-exist",
+   "code": "DJ.009",
+   "capability": "physics_bodies/physics_driven_joints",
+   "compat": "Isaac",
+   "summary": "Robot schema links must exist and be properly connected to joints for kinematic chain definition."
+  },
+  {
+   "id": "sr:DJ.010",
+   "source": "simready-foundation",
+   "name": "check-robot-relationships",
+   "code": "DJ.010",
+   "capability": "physics_bodies/physics_driven_joints",
+   "compat": "Isaac",
+   "summary": "Robot joint and link relationships must be validated for proper kinematic tree structure."
+  },
+  {
+   "id": "sr:DJ.011",
+   "source": "simready-foundation",
+   "name": "no-articulation-loops",
+   "code": "DJ.011",
+   "capability": "physics_bodies/physics_driven_joints",
+   "compat": "OpenUSD",
+   "summary": "The articulation must have no loops and at most one joint between any two bodies. Only joints that participate in the articulation are checked; joints with `physics:excludeFromArticulation = true` are"
+  },
+  {
+   "id": "sr:EL.001",
+   "source": "simready-foundation",
+   "name": "nominal-voltage-required",
+   "code": "EL.001",
+   "capability": "aif/electrical",
+   "compat": "AIF",
+   "summary": "AC-powered equipment must declare its nominal input voltage. The attribute name varies by equipment class."
+  },
+  {
+   "id": "sr:EL.002",
+   "source": "simready-foundation",
+   "name": "power-rating-required",
+   "code": "EL.002",
+   "capability": "aif/electrical",
+   "compat": "AIF",
+   "summary": "AC-powered equipment must declare its power rating. The attribute name varies by equipment class."
+  },
+  {
+   "id": "sr:EL.003",
+   "source": "simready-foundation",
+   "name": "electrical-frequency-required",
+   "code": "EL.003",
+   "capability": "aif/electrical",
+   "compat": "AIF",
+   "summary": "AC-powered equipment must declare its input frequency. The attribute name varies by equipment class."
+  },
+  {
+   "id": "sr:EL.004",
+   "source": "simready-foundation",
+   "name": "electrical-connection-points",
+   "code": "EL.004",
+   "capability": "aif/electrical",
+   "compat": "AIF",
+   "summary": "AC-powered equipment must have at least one electrical connection point, identified by its name in AIF 0.1.0 or its domain property in AIF 0.2.0."
+  },
+  {
+   "id": "sr:GR.001",
+   "source": "simready-foundation",
+   "name": "gripper-socket-type",
+   "code": "GR.001",
+   "capability": "physics_bodies/physics_grippers",
+   "compat": "OpenUSD",
+   "summary": "Every gripper site prim must be an `Xform` with `token simready:attactment:socketType = \"Gripper\"` authored, positioned at the grasp center between the finger pads."
+  },
+  {
+   "id": "sr:GR.002",
+   "source": "simready-foundation",
+   "name": "gripper-forward-axis",
+   "code": "GR.002",
+   "capability": "physics_bodies/physics_grippers",
+   "compat": "OpenUSD",
+   "summary": "Every gripper site prim must contain a child `BasisCurves` prim named `gripper_forward_axis` with at least 2 points defining the gripper approach direction."
+  },
+  {
+   "id": "sr:GR.003",
+   "source": "simready-foundation",
+   "name": "gripper-grip-line",
+   "code": "GR.003",
+   "capability": "physics_bodies/physics_grippers",
+   "compat": "OpenUSD",
+   "summary": "Every gripper site prim must contain a child `BasisCurves` prim named `gripper_grip_line` with at least 2 points defining the axis of the imaginary tube the gripper can grasp."
+  },
+  {
+   "id": "sr:GR.004",
+   "source": "simready-foundation",
+   "name": "gripper-max-opening",
+   "code": "GR.004",
+   "capability": "physics_bodies/physics_grippers",
+   "compat": "OpenUSD",
+   "summary": "Every gripper site prim must declare a `gripper_maxOpening` float attribute with a positive value (in meters) recording the maximum jaw separation."
+  },
+  {
+   "id": "sr:GSP.001",
+   "source": "simready-foundation",
+   "name": "graspable-vector-line",
+   "code": "GSP.001",
+   "capability": "physics_bodies/physics_graspable",
+   "compat": "OpenUSD",
+   "summary": "In order for an asset to be considered graspable, an asset must have at least 1 line object defined within the asset. A line is at least 2 points in space, and this line must intersect the asset that "
+  },
+  {
+   "id": "sr:HI.001",
+   "source": "simready-foundation",
+   "name": "hierarchy-has-root",
+   "code": "HI.001",
+   "capability": "hierarchy",
+   "compat": "hierarchy-usd",
+   "summary": "All prims in the hierarchy must be direct or indirect descendents of a single root root prim, preventing scattered or disconnected Xform hierarchies."
+  },
+  {
+   "id": "sr:HI.002",
+   "source": "simready-foundation",
+   "name": "exclusive-xform-parent-for-usdgeom",
+   "code": "HI.002",
+   "capability": "hierarchy",
+   "compat": "hierarchy-usd",
+   "summary": "Every UsdGeomGprim must have a parent Xform with specific transform operations and hierarchy constraints."
+  },
+  {
+   "id": "sr:HI.003",
+   "source": "simready-foundation",
+   "name": "root-is-xformable",
+   "code": "HI.003",
+   "capability": "hierarchy",
+   "compat": "hierarchy-usd",
+   "summary": "The root prim of a hierarchy must be transformable, meaning its' prim type must inherit from UsdGeomXformable and be capable of receiving transform operations."
+  },
+  {
+   "id": "sr:HI.004",
+   "source": "simready-foundation",
+   "name": "stage-has-default-prim",
+   "code": "HI.004",
+   "capability": "hierarchy",
+   "compat": "hierarchy-usd",
+   "summary": "Stage must specify a default prim to define the root entry point."
+  },
+  {
+   "id": "sr:HI.005",
+   "source": "simready-foundation",
+   "name": "xform-common-api-usage",
+   "code": "HI.005",
+   "capability": "hierarchy",
+   "compat": "Core USD",
+   "summary": "Transformations (translate, rotate, scale, pivot) on prims that are intended to be translated, rotated or scaled by users (e.g. the root prim of an asset) should conform to the UsdGeomXformCommonAPI."
+  },
+  {
+   "id": "sr:HI.006",
+   "source": "simready-foundation",
+   "name": "placeable-posable-are-xformable",
+   "code": "HI.006",
+   "capability": "hierarchy",
+   "compat": "hierarchy-usd",
+   "summary": "All prims representing distinct objects or groups that require placement, posing or animation shall inherit from UsdGeomXformable."
+  },
+  {
+   "id": "sr:HI.007",
+   "source": "simready-foundation",
+   "name": "dummy-requirement",
+   "code": "HI.007",
+   "capability": "hierarchy",
+   "compat": "hierarchy-usd",
+   "summary": "This is a placeholder requirement to maintain sequential numbering in the hierarchy requirements."
+  },
+  {
+   "id": "sr:HI.008",
+   "source": "simready-foundation",
+   "name": "logical-geometry-grouping",
+   "code": "HI.008",
+   "capability": "hierarchy",
+   "compat": "hierarchy-usd",
+   "summary": "Geometry should be grouped under parent Xforms in a way that is logical for the object's structure and intended use in layouts or simulations."
+  },
+  {
+   "id": "sr:HI.009",
+   "source": "simready-foundation",
+   "name": "kinematic-chain-hierarchy",
+   "code": "HI.009",
+   "capability": "hierarchy",
+   "compat": "openusd",
+   "summary": "For assets (e.g., a robot with multiple articulated joints), the hierarchy should reflect the kinematic chain, with appropriate Xforms for each transformable link."
+  },
+  {
+   "id": "sr:HI.010",
+   "source": "simready-foundation",
+   "name": "undefined-prims",
+   "code": "HI.010",
+   "capability": "hierarchy",
+   "compat": "hierarchy-usd",
+   "summary": "Assets must not contain undefined prims (overs)"
+  },
+  {
+   "id": "sr:ISA.001",
+   "source": "simready-foundation",
+   "name": "composition",
+   "code": "ISA.001",
+   "capability": "isaac_sim/composition",
+   "compat": "OpenUSD",
+   "summary": "The asset must be composed correctly for Isaac Sim using one of the supported layer layouts and a reference or payload arc to its base layer."
+  },
+  {
+   "id": "sr:JT.001",
+   "source": "simready-foundation",
+   "name": "joint-capability",
+   "code": "JT.001",
+   "capability": "physics_bodies/physics_joints",
+   "compat": "OpenUSD",
+   "summary": "Rigid bodies which are not free floating should be connected using joints."
+  },
+  {
+   "id": "sr:JT.002",
+   "source": "simready-foundation",
+   "name": "joint-body-target-exists",
+   "code": "JT.002",
+   "capability": "physics_bodies/physics_joints",
+   "compat": "OpenUSD",
+   "summary": "Targets set to Body0 and Body1 relationships must exist."
+  },
+  {
+   "id": "sr:JT.003",
+   "source": "simready-foundation",
+   "name": "joint-no-multiple-body-targets",
+   "code": "JT.003",
+   "capability": "physics_bodies/physics_joints",
+   "compat": "OpenUSD",
+   "summary": "Body0 and Body1 relationships must not have more than one target."
+  },
+  {
+   "id": "sr:LI.001",
+   "source": "simready-foundation",
+   "name": "lidar-omni-lidar-schema",
+   "code": "LI.001",
+   "capability": "nonvisual_sensors/lidar",
+   "compat": "",
+   "summary": "LiDAR sensors must be represented as OmniLidar prims with OmniSensorGenericLidarCoreAPI applied. The legacy UsdGeom.Camera with cameraSensorType=\"lidar\" pattern is not allowed."
+  },
+  {
+   "id": "sr:LI.002",
+   "source": "simready-foundation",
+   "name": "lidar-emitter-state-length",
+   "code": "LI.002",
+   "capability": "nonvisual_sensors/lidar",
+   "compat": "",
+   "summary": "Every emitter state array attribute on an OmniLidar prim must have the same length as `omni:sensor:Core:numberOfEmitters`, and all emitter state arrays must be mutually consistent in length."
+  },
+  {
+   "id": "sr:LI.003",
+   "source": "simready-foundation",
+   "name": "lidar-scan-rate-minimum",
+   "code": "LI.003",
+   "capability": "nonvisual_sensors/lidar",
+   "compat": "",
+   "summary": "The `omni:sensor:Core:scanRateBaseHz` attribute on an OmniLidar prim must be at least 0.466 Hz."
+  },
+  {
+   "id": "sr:LI.004",
+   "source": "simready-foundation",
+   "name": "lidar-solid-state-rays-per-line",
+   "code": "LI.004",
+   "capability": "nonvisual_sensors/lidar",
+   "compat": "",
+   "summary": "For solid-state OmniLidar prims, the sum of all elements in `omni:sensor:Core:numRaysPerLine` must equal `omni:sensor:Core:numberOfEmitters`."
+  },
+  {
+   "id": "sr:MC.001",
+   "source": "simready-foundation",
+   "name": "mate-site-xform",
+   "code": "MC.001",
+   "capability": "assembly/mates",
+   "compat": "OpenUSD",
+   "summary": "A mate site is an `Xform` with authored `simready:mate:domain` and `simready:mate:role`. Those attributes are the discovery mechanism; prim names are unconstrained."
+  },
+  {
+   "id": "sr:MC.002",
+   "source": "simready-foundation",
+   "name": "mechanical-role",
+   "code": "MC.002",
+   "capability": "assembly/mates",
+   "compat": "OpenUSD",
+   "summary": "A mechanical mate site must author `simready:mate:domain = \"mechanical\"` and `simready:mate:role` of `Socket` or `Plug`. `Peer` is not part of this feature."
+  },
+  {
+   "id": "sr:MC.003",
+   "source": "simready-foundation",
+   "name": "mate-body-rigid-ancestor",
+   "code": "MC.003",
+   "capability": "assembly/mates",
+   "compat": "OpenUSD",
+   "summary": "Every mechanical mate site must have an ancestor with an enabled `PhysicsRigidBodyAPI`. That ancestor is the site's **mate body** — the rigid body a jointed connection attaches to, and the actor a com"
+  },
+  {
+   "id": "sr:MC.004",
+   "source": "simready-foundation",
+   "name": "mechanical-interface",
+   "code": "MC.004",
+   "capability": "assembly/mates",
+   "compat": "OpenUSD",
+   "summary": "Every mechanical mate site must author a non-empty `simready:mate:mechanical:interface` token."
+  },
+  {
+   "id": "sr:MC.005",
+   "source": "simready-foundation",
+   "name": "mate-insertion-vector",
+   "code": "MC.005",
+   "capability": "assembly/mates",
+   "compat": "OpenUSD",
+   "summary": "If a mate site has a child `mate_insertion_vector`, it must be a `BasisCurves` prim with `type = \"linear\"`, `curveVertexCounts = [2]`, and a non-zero direction `p1 - p0`."
+  },
+  {
+   "id": "sr:MC.006",
+   "source": "simready-foundation",
+   "name": "socket-max-payload",
+   "code": "MC.006",
+   "capability": "assembly/mates",
+   "compat": "OpenUSD",
+   "summary": "A mechanical Socket mate site must author `simready:mate:mechanical:maxPayload` as a positive float. The value is always kilograms, regardless of stage units."
+  },
+  {
+   "id": "sr:MC.007",
+   "source": "simready-foundation",
+   "name": "mechanical-kind",
+   "code": "MC.007",
+   "capability": "assembly/mates",
+   "compat": "OpenUSD",
+   "summary": "If `simready:mate:mechanical:kind` is authored, its value should be one of `Tool`, `Gripper`, `Sensor`, `ToolChanger`, `ManipulatorFlange`. Unrecognized tokens warn; they do not fail."
+  },
+  {
+   "id": "sr:NP.001",
+   "source": "simready-foundation",
+   "name": "prim-naming-convention",
+   "code": "NP.001",
+   "capability": "core/naming_paths",
+   "compat": "core-usd",
+   "summary": "Prims shall follow consistent naming conventions"
+  },
+  {
+   "id": "sr:NP.002",
+   "source": "simready-foundation",
+   "name": "file-naming-convention",
+   "code": "NP.002",
+   "capability": "core/naming_paths",
+   "compat": "core-usd",
+   "summary": "USD files shall follow consistent naming conventions"
+  },
+  {
+   "id": "sr:NP.003",
+   "source": "simready-foundation",
+   "name": "directory-structure",
+   "code": "NP.003",
+   "capability": "core/naming_paths",
+   "compat": "core-usd",
+   "summary": "Asset directories shall use consistent naming and logical organization"
+  },
+  {
+   "id": "sr:NP.004",
+   "source": "simready-foundation",
+   "name": "path-length-limits",
+   "code": "NP.004",
+   "capability": "core/naming_paths",
+   "compat": "core-usd",
+   "summary": "File and directory paths shall not exceed platform limits"
+  },
+  {
+   "id": "sr:NP.005",
+   "source": "simready-foundation",
+   "name": "asset-folder-structure",
+   "code": "NP.005",
+   "capability": "core/naming_paths",
+   "compat": "core-usd",
+   "summary": "The folder holding the main asset file must not contain any other USD file."
+  },
+  {
+   "id": "sr:NP.006",
+   "source": "simready-foundation",
+   "name": "metadata-location",
+   "code": "NP.006",
+   "capability": "core/naming_paths",
+   "compat": "core-usd",
+   "summary": "Asset metadata must be stored in the USD file or a sidecar JSON file"
+  },
+  {
+   "id": "sr:NP.007",
+   "source": "simready-foundation",
+   "name": "relative-paths",
+   "code": "NP.007",
+   "capability": "core/naming_paths",
+   "compat": "core-usd",
+   "summary": "All references must use relative paths"
+  },
+  {
+   "id": "sr:NP.008",
+   "source": "simready-foundation",
+   "name": "assetpath-validation",
+   "code": "NP.008",
+   "capability": "core/naming_paths",
+   "compat": "core-usd",
+   "summary": "All asset, reference, and payload paths must resolve to files that exist"
+  },
+  {
+   "id": "sr:NVM.001",
+   "source": "simready-foundation",
+   "name": "material-attributes",
+   "code": "NVM.001",
+   "capability": "nonvisual_sensors/nonvisual_materials",
+   "compat": "rtx",
+   "summary": "Materials must specify additional \"non-visual\" material attributes"
+  },
+  {
+   "id": "sr:NVM.002",
+   "source": "simready-foundation",
+   "name": "material-base",
+   "code": "NVM.002",
+   "capability": "nonvisual_sensors/nonvisual_materials",
+   "compat": "rtx",
+   "summary": "Materials must specify a base material type"
+  },
+  {
+   "id": "sr:NVM.003",
+   "source": "simready-foundation",
+   "name": "material-coating",
+   "code": "NVM.003",
+   "capability": "nonvisual_sensors/nonvisual_materials",
+   "compat": "rtx",
+   "summary": "Materials must specify surface coating"
+  },
+  {
+   "id": "sr:NVM.004",
+   "source": "simready-foundation",
+   "name": "material-binding",
+   "code": "NVM.004",
+   "capability": "nonvisual_sensors/nonvisual_materials",
+   "compat": "rtx",
+   "summary": "Attributes must be on bound materials"
+  },
+  {
+   "id": "sr:NVM.005",
+   "source": "simready-foundation",
+   "name": "material-consistency",
+   "code": "NVM.005",
+   "capability": "nonvisual_sensors/nonvisual_materials",
+   "compat": "rtx",
+   "summary": "Properties must be consistent with visual materials"
+  },
+  {
+   "id": "sr:NVM.006",
+   "source": "simready-foundation",
+   "name": "material-time",
+   "code": "NVM.006",
+   "capability": "nonvisual_sensors/nonvisual_materials",
+   "compat": "rtx",
+   "summary": "Properties must not be time-varying"
+  },
+  {
+   "id": "sr:OPT.001",
+   "source": "simready-foundation",
+   "name": "fixed-joint-no-mergeable-body-pair",
+   "code": "OPT.001",
+   "capability": "isaac_sim/optimizations",
+   "compat": "OpenUSD",
+   "summary": "The asset must contain no two dynamic rigid bodies joined by an unbreakable fixed joint, unless one of them carries `PhysxContactReportAPI`, or contains an `IsaacContactSensor`, `IsaacImuSensor`, `Isa"
+  },
+  {
+   "id": "sr:OPT.002",
+   "source": "simready-foundation",
+   "name": "rigid-body-no-multiple-visual-meshes",
+   "code": "OPT.002",
+   "capability": "isaac_sim/optimizations",
+   "compat": "OpenUSD",
+   "summary": "No rigid body may own two or more mergeable visual meshes."
+  },
+  {
+   "id": "sr:OPT.003",
+   "source": "simready-foundation",
+   "name": "render-only-no-inactive-collision-schemas",
+   "code": "OPT.003",
+   "capability": "isaac_sim/optimizations",
+   "compat": "OpenUSD",
+   "summary": "Renderable prims with no active collision shape must not retain collision API schemas."
+  },
+  {
+   "id": "sr:OPT.004",
+   "source": "simready-foundation",
+   "name": "material-no-materialx-render-context",
+   "code": "OPT.004",
+   "capability": "isaac_sim/optimizations",
+   "compat": "OpenUSD",
+   "summary": "Materials must have no connected MaterialX render-context outputs."
+  },
+  {
+   "id": "sr:PMT.001",
+   "source": "simready-foundation",
+   "name": "collider-material-binding",
+   "code": "PMT.001",
+   "capability": "physics_bodies/physics_materials",
+   "compat": "OpenUSD",
+   "summary": "Every collider (prim with PhysicsCollisionAPI) must have a material:binding:physics relationship to a physics material."
+  },
+  {
+   "id": "sr:PS.001",
+   "source": "simready-foundation",
+   "name": "imu-sensor-rigid-body",
+   "code": "PS.001",
+   "capability": "physics_bodies/physics_sensors",
+   "compat": "",
+   "summary": "An `IsaacImuSensor` prim must be a descendant of a prim that has `PhysicsRigidBodyAPI` applied."
+  },
+  {
+   "id": "sr:PS.002",
+   "source": "simready-foundation",
+   "name": "joint-sensor-articulation-root",
+   "code": "PS.002",
+   "capability": "physics_bodies/physics_sensors",
+   "compat": "",
+   "summary": "An `IsaacJointStateSensor` prim must also have `PhysicsArticulationRootAPI` applied."
+  },
+  {
+   "id": "sr:RB.001",
+   "source": "simready-foundation",
+   "name": "rigid-body-capability",
+   "code": "RB.001",
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "OpenUSD",
+   "summary": "Assets must contain at least one rigid body"
+  },
+  {
+   "id": "sr:RB.003",
+   "source": "simready-foundation",
+   "name": "rigid-body-schema-application",
+   "code": "RB.003",
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "OpenUSD",
+   "summary": "Rigid bodies have to be UsdGeomXformable prims."
+  },
+  {
+   "id": "sr:RB.005",
+   "source": "simready-foundation",
+   "name": "rigid-body-no-instancing",
+   "code": "RB.005",
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "OpenUSD",
+   "summary": "Rigid bodies cannot be part of a scene graph instance."
+  },
+  {
+   "id": "sr:RB.006",
+   "source": "simready-foundation",
+   "name": "rigid-body-no-nesting",
+   "code": "RB.006",
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "OpenUSD",
+   "summary": "Rigid bodies can not be nested unless xformOp reset xform stack is used."
+  },
+  {
+   "id": "sr:RB.007",
+   "source": "simready-foundation",
+   "name": "rigid-body-mass",
+   "code": "RB.007",
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "OpenUSD",
+   "summary": "Rigid bodies _or_ their descendant collision shapes must have a mass specification."
+  },
+  {
+   "id": "sr:RB.008",
+   "source": "simready-foundation",
+   "name": "rigid-body-detailed-mass",
+   "code": "RB.008",
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "OpenUSD",
+   "summary": "Rigid bodies _or_ their descendent collision shapes may have detailed mass properties including density, center of mass, and inertia tensor. When authored, these detailed mass properties must be inter"
+  },
+  {
+   "id": "sr:RB.009",
+   "source": "simready-foundation",
+   "name": "rigid-body-schema-no-skew-matrix",
+   "code": "RB.009",
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "OpenUSD",
+   "summary": "Rigid bodies have to be UsdGeomXformable prims without skew matrix."
+  },
+  {
+   "id": "sr:RB.010",
+   "source": "simready-foundation",
+   "name": "invisible-collision-mesh-has-purpose-guide",
+   "code": "RB.010",
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "OpenUSD",
+   "summary": "Invisible collision meshes must have their purpose attribute set to 'guide' to be properly excluded from rendering."
+  },
+  {
+   "id": "sr:RB.011",
+   "source": "simready-foundation",
+   "name": "nested-rigid-body-mass",
+   "code": "RB.011",
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "OpenUSD",
+   "summary": "Every rigid body must have a valid (positive) `physics:mass` on itself or on at least one of its child colliders. Nested rigid body subtrees are excluded from the traversal. Negative mass is always a "
+  },
+  {
+   "id": "sr:RB.012",
+   "source": "simready-foundation",
+   "name": "rigid-body-no-nesting-without-joint",
+   "code": "RB.012",
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "OpenUSD",
+   "summary": "Rigid bodies should not be nested unless they are connected by a joint."
+  },
+  {
+   "id": "sr:RB.013",
+   "source": "simready-foundation",
+   "name": "rigid-body-collider",
+   "code": "RB.013",
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "OpenUSD",
+   "summary": "Enabled rigid bodies must have collision geometry."
+  },
+  {
+   "id": "sr:RC.001",
+   "source": "simready-foundation",
+   "name": "clean-folder",
+   "code": "RC.001",
+   "capability": "isaac_sim/robot_core",
+   "compat": "Isaac Sim",
+   "summary": "Robot asset folders contain only referenced, required files. No stray or unused content. At the main level of a robot asset, only the interface layer is present. All other required content is bundled "
+  },
+  {
+   "id": "sr:RC.002",
+   "source": "simready-foundation",
+   "name": "no-overrides",
+   "code": "RC.002",
+   "capability": "isaac_sim/robot_core",
+   "compat": "Isaac Sim",
+   "summary": "Robot USDs avoid local override layers that mask upstream schemas or physics."
+  },
+  {
+   "id": "sr:RC.003",
+   "source": "simready-foundation",
+   "name": "robot-naming",
+   "code": "RC.003",
+   "capability": "isaac_sim/robot_core",
+   "compat": "Isaac Sim",
+   "summary": "Canonical robot and prim naming conventions for stable references and tools."
+  },
+  {
+   "id": "sr:RC.004",
+   "source": "simready-foundation",
+   "name": "thumbnail-exist",
+   "code": "RC.004",
+   "capability": "isaac_sim/robot_core",
+   "compat": "Isaac Sim",
+   "summary": "The robot interface asset file should contain a thumbnail. The thumbnail should be representative of the robot."
+  },
+  {
+   "id": "sr:RC.005",
+   "source": "simready-foundation",
+   "name": "verify-robot-physics-attribute-source-layer",
+   "code": "RC.005",
+   "capability": "isaac_sim/robot_core",
+   "compat": "Isaac Sim",
+   "summary": "Validates that physics attributes are authored in the physics layer."
+  },
+  {
+   "id": "sr:RC.006",
+   "source": "simready-foundation",
+   "name": "verify-robot-physics-schema-source-layer",
+   "code": "RC.006",
+   "capability": "isaac_sim/robot_core",
+   "compat": "Isaac Sim",
+   "summary": "Validates that physics schema are authored in the physics layer."
+  },
+  {
+   "id": "sr:RC.007",
+   "source": "simready-foundation",
+   "name": "robot-schema",
+   "code": "RC.007",
+   "capability": "isaac_sim/robot_core",
+   "compat": "Isaac Sim",
+   "summary": "Robot USDs declare and use the required schemas and physics attributes."
+  },
+  {
+   "id": "sr:RC.008",
+   "source": "simready-foundation",
+   "name": "robot-type",
+   "code": "RC.008",
+   "capability": "isaac_sim/robot_core",
+   "compat": "Isaac Sim",
+   "summary": "Robot assets must declare a valid robot type on the default prim. The `isaac:robotType` attribute must be present, must be one of the schema-defined allowed tokens, and must not be `\"Default\"`. Allowe"
+  },
+  {
+   "id": "sr:RC.009",
+   "source": "simready-foundation",
+   "name": "root-joint-pinned",
+   "code": "RC.009",
+   "capability": "isaac_sim/robot_core",
+   "compat": "Isaac Sim",
+   "summary": "The root joint (the first target of `isaac:physics:robotJoints`) must be pinned for robot types that require a fixed base (e.g. Manipulator, End Effector) and must not be pinned for other robot types."
+  },
+  {
+   "id": "sr:RM.001",
+   "source": "simready-foundation",
+   "name": "no-nested-materials",
+   "code": "RM.001",
+   "capability": "isaac_sim/robot_materials",
+   "compat": "OpenUSD",
+   "summary": "Materials must not contain nested materials to avoid unexpected rendering behavior."
+  },
+  {
+   "id": "sr:RM.002",
+   "source": "simready-foundation",
+   "name": "materials-on-top-level-only",
+   "code": "RM.002",
+   "capability": "isaac_sim/robot_materials",
+   "compat": "OpenUSD",
+   "summary": "Materials must only be defined in the top-level Looks prim following USD best practices for material organization."
+  },
+  {
+   "id": "sr:ROS.001",
+   "source": "simready-foundation",
+   "name": "ros2-bridge-nodes-present",
+   "code": "ROS.001",
+   "capability": "isaac_sim/ros_bridge",
+   "compat": "Isaac Sim",
+   "summary": "The stage must contain at least one OmniGraph node whose `node:type` starts with `isaacsim.ros2.bridge.`."
+  },
+  {
+   "id": "sr:RP.001",
+   "source": "simready-foundation",
+   "name": "render-product-camera",
+   "code": "RP.001",
+   "capability": "rendering/render_products",
+   "compat": "",
+   "summary": "A RenderProduct prim must have a `camera` relationship targeting a valid prim."
+  },
+  {
+   "id": "sr:RP.002",
+   "source": "simready-foundation",
+   "name": "render-product-ordered-vars",
+   "code": "RP.002",
+   "capability": "rendering/render_products",
+   "compat": "",
+   "summary": "A RenderProduct prim must have an `orderedVars` relationship containing at least one valid UsdRender.Var prim."
+  },
+  {
+   "id": "sr:RP.003",
+   "source": "simready-foundation",
+   "name": "render-var-source-name",
+   "code": "RP.003",
+   "capability": "rendering/render_products",
+   "compat": "",
+   "summary": "A `RenderVar` prim must have a non-empty `sourceName` attribute."
+  },
+  {
+   "id": "sr:RP.004",
+   "source": "simready-foundation",
+   "name": "semantic-aov-compression",
+   "code": "RP.004",
+   "capability": "rendering/render_products",
+   "compat": "",
+   "summary": "RenderVar prims whose `sourceName` starts with \"semantic\" must use BLOSC compression."
+  },
+  {
+   "id": "sr:RP.005",
+   "source": "simready-foundation",
+   "name": "compression-type-valid",
+   "code": "RP.005",
+   "capability": "rendering/render_products",
+   "compat": "",
+   "summary": "The `srtx:compression:type` attribute on a `RenderVar` prim, if present, must be one of the four supported codec values: `hevc`, `h264`, `av1`, or `blosc`."
+  },
+  {
+   "id": "sr:RP.006",
+   "source": "simready-foundation",
+   "name": "generic-model-output-compression",
+   "code": "RP.006",
+   "capability": "rendering/render_products",
+   "compat": "",
+   "summary": "`RenderVar` prims with `sourceName = \"GenericModelOutput\"` should use BLOSC compression (`srtx:compression:type = \"blosc\"`)."
+  },
+  {
+   "id": "sr:RV.001",
+   "source": "simready-foundation",
+   "name": "physx-variant-set",
+   "code": "RV.001",
+   "capability": "core/runtime_variants",
+   "compat": "OpenUSD",
+   "summary": "The asset's default prim must expose a `PhysX` physics runtime variant set with `Disabled` and `Enabled` options, defaulting to `Disabled`."
+  },
+  {
+   "id": "sr:RV.002",
+   "source": "simready-foundation",
+   "name": "physx-runtime-payload",
+   "code": "RV.002",
+   "capability": "core/runtime_variants",
+   "compat": "OpenUSD",
+   "summary": "The `PhysX` variant set's `Enabled` option must compose its runtime layer with an anchored `prepend payload` that resolves to `./runnables/physics/physx.usd(a)`."
+  },
+  {
+   "id": "sr:RV.003",
+   "source": "simready-foundation",
+   "name": "physx-variant-metadata",
+   "code": "RV.003",
+   "capability": "core/runtime_variants",
+   "compat": "OpenUSD",
+   "summary": "The `PhysX` variant set must be documented in `customLayerData.SimReady_Metadata.Variants.Physics.PhysX`, declaring its `prim`, `variantSetName`, and `activateOption`."
+  },
+  {
+   "id": "sr:RV.004",
+   "source": "simready-foundation",
+   "name": "newton-variant-set",
+   "code": "RV.004",
+   "capability": "core/runtime_variants",
+   "compat": "OpenUSD",
+   "summary": "The asset's default prim must expose a `Newton` physics runtime variant set with `Disabled` and `Enabled` options, defaulting to `Disabled`."
+  },
+  {
+   "id": "sr:RV.005",
+   "source": "simready-foundation",
+   "name": "newton-runtime-payload",
+   "code": "RV.005",
+   "capability": "core/runtime_variants",
+   "compat": "OpenUSD",
+   "summary": "The `Newton` variant set's `Enabled` option must compose its runtime layer with an anchored `prepend payload` that resolves to `./runnables/physics/newton.usd(a)`."
+  },
+  {
+   "id": "sr:RV.006",
+   "source": "simready-foundation",
+   "name": "newton-variant-metadata",
+   "code": "RV.006",
+   "capability": "core/runtime_variants",
+   "compat": "OpenUSD",
+   "summary": "The `Newton` variant set must be documented in `customLayerData.SimReady_Metadata.Variants.Physics.Newton`, declaring its `prim`, `variantSetName`, and `activateOption`."
+  },
+  {
+   "id": "sr:RV.007",
+   "source": "simready-foundation",
+   "name": "mujoco-variant-set",
+   "code": "RV.007",
+   "capability": "core/runtime_variants",
+   "compat": "OpenUSD",
+   "summary": "The asset's default prim must expose a `MuJoCo` physics runtime variant set with `Disabled` and `Enabled` options, defaulting to `Disabled`."
+  },
+  {
+   "id": "sr:RV.008",
+   "source": "simready-foundation",
+   "name": "mujoco-runtime-payload",
+   "code": "RV.008",
+   "capability": "core/runtime_variants",
+   "compat": "OpenUSD",
+   "summary": "The `MuJoCo` variant set's `Enabled` option must compose its runtime layer with an anchored `prepend payload` that resolves to `./runnables/physics/mujoco.usd(a)`."
+  },
+  {
+   "id": "sr:RV.009",
+   "source": "simready-foundation",
+   "name": "mujoco-variant-metadata",
+   "code": "RV.009",
+   "capability": "core/runtime_variants",
+   "compat": "OpenUSD",
+   "summary": "The `MuJoCo` variant set must be documented in `customLayerData.SimReady_Metadata.Variants.Physics.MuJoCo`, declaring its `prim`, `variantSetName`, and `activateOption`."
+  },
+  {
+   "id": "sr:RV.010",
+   "source": "simready-foundation",
+   "name": "runtime-variant-section-purity",
+   "code": "RV.010",
+   "capability": "core/runtime_variants",
+   "compat": "OpenUSD",
+   "summary": "Each physics runtime variant set must isolate all runtime data in its payload: the `Enabled` option may compose the runtime only through the `prepend payload` arc and must author no inline prim overri"
+  },
+  {
+   "id": "sr:RV.011",
+   "source": "simready-foundation",
+   "name": "runtime-physics-isolation",
+   "code": "RV.011",
+   "capability": "core/runtime_variants",
+   "compat": "OpenUSD",
+   "summary": "When a single physics runtime variant is selected, the composed stage must contain only that runtime's physics schemas and attributes plus the runtime-neutral base. Foreign-runtime schemas and conflic"
+  },
+  {
+   "id": "sr:SL.001",
+   "source": "simready-foundation",
+   "name": "semantic-label-capability",
+   "code": "SL.001",
+   "capability": "semantic_labels",
+   "compat": "core-usd",
+   "summary": "All renderable geometry must be semantically labeled."
+  },
+  {
+   "id": "sr:SL.002",
+   "source": "simready-foundation",
+   "name": "semantic-label-deprecated-schema",
+   "code": "SL.002",
+   "capability": "semantic_labels",
+   "compat": "open-usd",
+   "summary": "Deprecated SemanticsAPI labels must be migrated to the SemanticsLabelsAPI schema."
+  },
+  {
+   "id": "sr:SL.003",
+   "source": "simready-foundation",
+   "name": "semantic-label-schema",
+   "code": "SL.003",
+   "capability": "semantic_labels",
+   "compat": "open-usd",
+   "summary": "Semantic labels must use the SemanticsLabelsAPI schema"
+  },
+  {
+   "id": "sr:SPL.001",
+   "source": "simready-foundation",
+   "name": "splat-prim-type",
+   "code": "SPL.001",
+   "capability": "visualization/gaussian_splat",
+   "compat": "OpenUSD",
+   "summary": "The asset's visual representation must be a `ParticleField3DGaussianSplat` prim."
+  },
+  {
+   "id": "sr:SPL.002",
+   "source": "simready-foundation",
+   "name": "splat-has-positions",
+   "code": "SPL.002",
+   "capability": "visualization/gaussian_splat",
+   "compat": "OpenUSD",
+   "summary": "Each `ParticleField3DGaussianSplat` prim must author `positions`."
+  },
+  {
+   "id": "sr:SPL.003",
+   "source": "simready-foundation",
+   "name": "splat-has-scales",
+   "code": "SPL.003",
+   "capability": "visualization/gaussian_splat",
+   "compat": "OpenUSD",
+   "summary": "Each `ParticleField3DGaussianSplat` prim must author `scales`, one per Gaussian."
+  },
+  {
+   "id": "sr:SPL.004",
+   "source": "simready-foundation",
+   "name": "splat-has-orientations",
+   "code": "SPL.004",
+   "capability": "visualization/gaussian_splat",
+   "compat": "OpenUSD",
+   "summary": "Each `ParticleField3DGaussianSplat` prim must author `orientations`, one per Gaussian."
+  },
+  {
+   "id": "sr:SPL.005",
+   "source": "simready-foundation",
+   "name": "splat-has-opacities",
+   "code": "SPL.005",
+   "capability": "visualization/gaussian_splat",
+   "compat": "OpenUSD",
+   "summary": "Each `ParticleField3DGaussianSplat` prim must author `opacities`, one per Gaussian."
+  },
+  {
+   "id": "sr:SPL.006",
+   "source": "simready-foundation",
+   "name": "splat-has-radiance",
+   "code": "SPL.006",
+   "capability": "visualization/gaussian_splat",
+   "compat": "OpenUSD",
+   "summary": "Each `ParticleField3DGaussianSplat` prim must author view-dependent radiance: `radiance:sphericalHarmonicsDegree` and `radiance:sphericalHarmonicsCoefficients`, with a coefficient count consistent wit"
+  },
+  {
+   "id": "sr:SR.001",
+   "source": "simready-foundation",
+   "name": "metadata-whitelist",
+   "code": "SR.001",
+   "capability": "core/sim_ready",
+   "compat": "core-usd",
+   "summary": "The asset stage must contain all required metadata fields in root-layer `customLayerData`."
+  },
+  {
+   "id": "sr:SR.002",
+   "source": "simready-foundation",
+   "name": "thumbnail-exist",
+   "code": "SR.002",
+   "capability": "core/sim_ready",
+   "compat": "core-packaging",
+   "summary": "The SimReady asset file should contain a thumbnail that is representative of the asset."
+  },
+  {
+   "id": "sr:SR.003",
+   "source": "simready-foundation",
+   "name": "nested-simready-metadata",
+   "code": "SR.003",
+   "capability": "core/sim_ready",
+   "compat": "core-usd",
+   "summary": "Required SimReady provenance fields must be authored inside the root-layer `SimReady_Metadata` dictionary."
+  },
+  {
+   "id": "sr:SR.004",
+   "source": "simready-foundation",
+   "name": "metadata-union",
+   "code": "SR.004",
+   "capability": "core/sim_ready",
+   "compat": "core-usd",
+   "summary": "Required SimReady provenance fields must be present in the union of USD custom layer data and an optional sidecar JSON file."
+  },
+  {
+   "id": "sr:SUN.001",
+   "source": "simready-foundation",
+   "name": "sunrgbd-labels",
+   "code": "SUN.001",
+   "capability": "dataset_taxonomies",
+   "compat": "core-usd",
+   "summary": "Every `SemanticsLabelsAPI:sunrgbd` label value must be a member of the SUN RGB-D (10) taxonomy."
+  },
+  {
+   "id": "sr:TC.001",
+   "source": "simready-foundation",
+   "name": "nominal-cooling-capacity",
+   "code": "TC.001",
+   "capability": "aif/thermal_cooling",
+   "compat": "AIF",
+   "summary": "CDUs and CRAHs must declare `aif:spec:nominalCoolingCapacity`: the rated cooling capacity of the unit."
+  },
+  {
+   "id": "sr:TC.002",
+   "source": "simready-foundation",
+   "name": "thermal-cooling-connection-points",
+   "code": "TC.002",
+   "capability": "aif/thermal_cooling",
+   "compat": "AIF",
+   "summary": "Cooling equipment must have connection point prims matching its piping interface types: CDUs require FWS and TCS connection points; CRAHs require liquid supply and return connection points."
+  },
+  {
+   "id": "sr:TMP.001",
+   "source": "simready-foundation",
+   "name": "default-prim",
+   "code": "TMP.001",
+   "capability": "template/smoke",
+   "compat": "OpenUSD",
+   "summary": "The stage must declare a valid `defaultPrim` so consumers can resolve the asset root."
+  },
+  {
+   "id": "sr:UN.001",
+   "source": "simready-foundation",
+   "name": "upaxis",
+   "code": "UN.001",
+   "capability": "core/units",
+   "compat": "core-usd",
+   "summary": "Stage must specify upAxis to define the orientation of the stage"
+  },
+  {
+   "id": "sr:UN.002",
+   "source": "simready-foundation",
+   "name": "meters-per-unit",
+   "code": "UN.002",
+   "capability": "core/units",
+   "compat": "core-usd",
+   "summary": "Stage must specify metersPerUnit to define the linear unit scale"
+  },
+  {
+   "id": "sr:UN.003",
+   "source": "simready-foundation",
+   "name": "kilograms-per-unit",
+   "code": "UN.003",
+   "capability": "core/units",
+   "compat": "core-usd",
+   "summary": "Stage must specify kilogramsPerUnit to define the mass unit scale, if physics objects are present in the stage."
+  },
+  {
+   "id": "sr:UN.004",
+   "source": "simready-foundation",
+   "name": "corrective-transforms",
+   "code": "UN.004",
+   "capability": "core/units",
+   "compat": "core-usd",
+   "summary": "Must apply corrective transforms for different units"
+  },
+  {
+   "id": "sr:UN.005",
+   "source": "simready-foundation",
+   "name": "timecodes-per-second",
+   "code": "UN.005",
+   "capability": "core/units",
+   "compat": "core-usd",
+   "summary": "Stage must specify timeCodesPerSecond, if timesamples are present in the stage."
+  },
+  {
+   "id": "sr:UN.006",
+   "source": "simready-foundation",
+   "name": "upaxis-z",
+   "code": "UN.006",
+   "capability": "core/units",
+   "compat": "core-usd",
+   "summary": "Stage must specify upAxis = \"Z\" to define the orientation of the stage"
+  },
+  {
+   "id": "sr:UN.007",
+   "source": "simready-foundation",
+   "name": "meters-per-unit-1",
+   "code": "UN.007",
+   "capability": "core/units",
+   "compat": "core-usd",
+   "summary": "Stage must specify metersPerUnit = 1.0 to define the linear unit scale"
+  },
+  {
+   "id": "sr:VG.001",
+   "source": "simready-foundation",
+   "name": "at-least-one-imageable-geometry",
+   "code": "VG.001",
+   "capability": "visualization/geometry",
+   "compat": "core-usd",
+   "summary": "Assets must contain at least one Imageable Geometry"
+  },
+  {
+   "id": "sr:VG.002",
+   "source": "simready-foundation",
+   "name": "usdgeom-extent",
+   "code": "VG.002",
+   "capability": "visualization/geometry",
+   "compat": "OpenUSD",
+   "summary": "Boundable geometry primitives must have valid extent values."
+  },
+  {
+   "id": "sr:VG.003",
+   "source": "simready-foundation",
+   "name": "usdgeom-mesh-internal-geometry",
+   "code": "VG.003",
+   "capability": "visualization/geometry",
+   "compat": "OpenUSD",
+   "summary": "Only include geometry that contributes to visualization or simulation"
+  },
+  {
+   "id": "sr:VG.004",
+   "source": "simready-foundation",
+   "name": "usdgeom-mesh-empty-spaces",
+   "code": "VG.004",
+   "capability": "visualization/geometry",
+   "compat": "RTX",
+   "summary": "Use efficient mesh boundaries for performance"
+  },
+  {
+   "id": "sr:VG.005",
+   "source": "simready-foundation",
+   "name": "usdgeom-boundable-size",
+   "code": "VG.005",
+   "capability": "visualization/geometry",
+   "compat": "RTX",
+   "summary": "Meshes should maintain appropriate scale and boundary volumes"
+  },
+  {
+   "id": "sr:VG.006",
+   "source": "simready-foundation",
+   "name": "usdgeom-mesh-overlap",
+   "code": "VG.006",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "Meshes should not overlap unnecessarily"
+  },
+  {
+   "id": "sr:VG.007",
+   "source": "simready-foundation",
+   "name": "usdgeom-mesh-manifold",
+   "code": "VG.007",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "Mesh geometry must be manifold"
+  },
+  {
+   "id": "sr:VG.008",
+   "source": "simready-foundation",
+   "name": "usdgeom-mesh-coincident",
+   "code": "VG.008",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "Meshes should not share the exact same space"
+  },
+  {
+   "id": "sr:VG.009",
+   "source": "simready-foundation",
+   "name": "usdgeom-mesh-primvar-indexing",
+   "code": "VG.009",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "Use indexed primvars when values are repeated"
+  },
+  {
+   "id": "sr:VG.010",
+   "source": "simready-foundation",
+   "name": "usdgeom-mesh-subdivision",
+   "code": "VG.010",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "Use subdivision only when needed for smooth surfaces or displacement"
+  },
+  {
+   "id": "sr:VG.011",
+   "source": "simready-foundation",
+   "name": "usdgeom-mesh-primvar-usage",
+   "code": "VG.011",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "Only include primvars that are actively used"
+  },
+  {
+   "id": "sr:VG.012",
+   "source": "simready-foundation",
+   "name": "usdgeom-mesh-small",
+   "code": "VG.012",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "Combine small meshes into larger ones where appropriate"
+  },
+  {
+   "id": "sr:VG.013",
+   "source": "simready-foundation",
+   "name": "usdgeom-mesh-tessellation-density",
+   "code": "VG.013",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "Use appropriate tessellation density for geometry"
+  },
+  {
+   "id": "sr:VG.014",
+   "source": "simready-foundation",
+   "name": "usdgeom-mesh-topology",
+   "code": "VG.014",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "Mesh topology must be valid"
+  },
+  {
+   "id": "sr:VG.015",
+   "source": "simready-foundation",
+   "name": "usdgeom-mesh-identical-timesamples",
+   "code": "VG.015",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "Use time samples only when attribute values change"
+  },
+  {
+   "id": "sr:VG.016",
+   "source": "simready-foundation",
+   "name": "usdgeom-mesh-colocated-points",
+   "code": "VG.016",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "Each vertex position should be unique"
+  },
+  {
+   "id": "sr:VG.017",
+   "source": "simready-foundation",
+   "name": "usdgeom-mesh-primitive-tessellation",
+   "code": "VG.017",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "Avoid tessellating primitive shapes"
+  },
+  {
+   "id": "sr:VG.018",
+   "source": "simready-foundation",
+   "name": "usdgeom-mesh-unused-topology",
+   "code": "VG.018",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "Mesh topology should be without unused vertices, edges, or faces."
+  },
+  {
+   "id": "sr:VG.019",
+   "source": "simready-foundation",
+   "name": "usdgeom-mesh-zero-area",
+   "code": "VG.019",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "Faces should have non-zero area."
+  },
+  {
+   "id": "sr:VG.020",
+   "source": "simready-foundation",
+   "name": "usdgeom-pointbased-points-precision",
+   "code": "VG.020",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "The values of `points` must not exceed the limit at which a given precision can be represented using 32-bit floats."
+  },
+  {
+   "id": "sr:VG.021",
+   "source": "simready-foundation",
+   "name": "usdgeom-mesh-triangulation",
+   "code": "VG.021",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "Meshes must be triangulated for optimal rendering performance and compatibility when considering automatic collider creation (convex-hull, convex-decomposition, etc...). Triangulating mesh will provid"
+  },
+  {
+   "id": "sr:VG.022",
+   "source": "simready-foundation",
+   "name": "usdgeom-mesh-transparent-is-watertight",
+   "code": "VG.022",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "Transparent physical bodies should be watertight to allow for simulation of light transmission and refraction."
+  },
+  {
+   "id": "sr:VG.023",
+   "source": "simready-foundation",
+   "name": "mesh-xform-positioning",
+   "code": "VG.023",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "Meshes should be positioned with xform ops rather than by \"baking\" transformations into point positions."
+  },
+  {
+   "id": "sr:VG.024",
+   "source": "simready-foundation",
+   "name": "identical-mesh-consistency",
+   "code": "VG.024",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "Repeated occurrences of identically shaped objects should have identical mesh connectivity"
+  },
+  {
+   "id": "sr:VG.025",
+   "source": "simready-foundation",
+   "name": "asset-origin-positioning",
+   "code": "VG.025",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "Geometry shall be defined as such that the asset is correctly positioned and oriented at the origin (0,0,0)."
+  },
+  {
+   "id": "sr:VG.026",
+   "source": "simready-foundation",
+   "name": "asset-pivot-placement",
+   "code": "VG.026",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "The pivot point of an asset should be positioned logically: at the center of the object's base for ground plane objects, and at the center of rotation for objects that rotate around specific points."
+  },
+  {
+   "id": "sr:VG.027",
+   "source": "simready-foundation",
+   "name": "usdgeom-mesh-normals-exist",
+   "code": "VG.027",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "All non-subdivided meshes must have normals."
+  },
+  {
+   "id": "sr:VG.028",
+   "source": "simready-foundation",
+   "name": "usdgeom-mesh-normals-must-be-valid",
+   "code": "VG.028",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "Mesh normals values must be valid to produce correct shading."
+  },
+  {
+   "id": "sr:VG.029",
+   "source": "simready-foundation",
+   "name": "usdgeom-mesh-winding-order",
+   "code": "VG.029",
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "The winding order of faces in a mesh must correctly represent the orientation (front/back) of the face."
+  },
+  {
+   "id": "sr:VOC.001",
+   "source": "simready-foundation",
+   "name": "pascal-voc-labels",
+   "code": "VOC.001",
+   "capability": "dataset_taxonomies",
+   "compat": "core-usd",
+   "summary": "Every `SemanticsLabelsAPI:pascal_voc` label value must be a member of the PASCAL VOC (20) taxonomy."
+  },
+  {
+   "id": "sr:atomic_asset/ov-usdz-udim-limitation",
+   "source": "simready-foundation",
+   "name": "ov-usdz-udim-limitation",
+   "code": null,
+   "capability": "core/atomic_asset",
+   "compat": "kit",
+   "summary": "Texture UDIMs are not supported in USDZ files in NVIDIA Omniverse"
+  },
+  {
+   "id": "sr:base_articulation/mujoco-standard-articulation-root",
+   "source": "simready-foundation",
+   "name": "mujoco-standard-articulation-root",
+   "code": null,
+   "capability": "physics_bodies/base_articulation",
+   "compat": "MuJoCo",
+   "summary": "MuJoCo articulations must use standard `UsdPhysics.ArticulationRootAPI` and must not author unsupported MuJoCo-specific articulation-root schemas."
+  },
+  {
+   "id": "sr:base_articulation/newton-articulation-root-config",
+   "source": "simready-foundation",
+   "name": "newton-articulation-root-config",
+   "code": null,
+   "capability": "physics_bodies/base_articulation",
+   "compat": "Newton",
+   "summary": "Newton articulation roots must use standard `UsdPhysics.ArticulationRootAPI` and author explicit Newton self-collision configuration."
+  },
+  {
+   "id": "sr:conformance_metadata/conformance-metadata",
+   "source": "simready-foundation",
+   "name": "conformance-metadata",
+   "code": null,
+   "capability": "packaging/conformance_metadata",
+   "compat": "core-packaging",
+   "summary": "Packages MAY include conformance metadata files recording SimReady Foundations validation results, following defined naming and JSON schema conventions"
+  },
+  {
+   "id": "sr:conformance_metadata/root-usds",
+   "source": "simready-foundation",
+   "name": "root-usds",
+   "code": null,
+   "capability": "packaging/conformance_metadata",
+   "compat": "core-packaging",
+   "summary": "Packages MAY include an OpenUSD root layers metadata file declaring the top-level USD entry points that should be validated as self-contained assets"
+  },
+  {
+   "id": "sr:connections/mujoco-connection-joint",
+   "source": "simready-foundation",
+   "name": "mujoco-connection-joint",
+   "code": null,
+   "capability": "assembly/connections",
+   "compat": "MuJoCo",
+   "summary": "A `jointed` connection joint must remain a standard `UsdPhysicsFixedJoint` with explicit `physics:collisionEnabled = false`, must not apply `MjcJointAPI`, must not be targeted by an `MjcActuator`, and"
+  },
+  {
+   "id": "sr:connections/newton-connection-joint",
+   "source": "simready-foundation",
+   "name": "newton-connection-joint",
+   "code": null,
+   "capability": "assembly/connections",
+   "compat": "Newton",
+   "summary": "A `jointed` connection joint must remain a standard `UsdPhysicsFixedJoint` with explicit `physics:collisionEnabled = false`, must not apply `NewtonJointAPI` degree-of-freedom tuning, and when it fuses"
+  },
+  {
+   "id": "sr:connections/physx-connection-joint",
+   "source": "simready-foundation",
+   "name": "physx-connection-joint",
+   "code": null,
+   "capability": "assembly/connections",
+   "compat": "PhysX",
+   "summary": "A `jointed` connection joint must remain a standard `UsdPhysicsFixedJoint` with explicit `physics:collisionEnabled = false`, must not apply `PhysxJointAPI` degree-of-freedom tuning, and must leave `ph"
+  },
+  {
+   "id": "sr:dataset_taxonomies/imagenet-labels",
+   "source": "simready-foundation",
+   "name": "imagenet-labels",
+   "code": null,
+   "capability": "dataset_taxonomies",
+   "compat": "core-usd",
+   "summary": "Every `SemanticsLabelsAPI:imagenet_1k` label value must be a member of the ImageNet-1K taxonomy."
+  },
+  {
+   "id": "sr:geometry/geom-shall-be-mesh",
+   "source": "simready-foundation",
+   "name": "geom-shall-be-mesh",
+   "code": null,
+   "capability": "visualization/geometry",
+   "compat": "Core USD",
+   "summary": "All geometry shall be represented as non-subdivided mesh primitives using the UsdGeomMesh schema."
+  },
+  {
+   "id": "sr:geometry/usdgeom-boundable-size-rtx-limit",
+   "source": "simready-foundation",
+   "name": "usdgeom-boundable-size-rtx-limit",
+   "code": null,
+   "capability": "visualization/geometry",
+   "compat": "RTX",
+   "summary": "World space bounds must not exceed RTX limit."
+  },
+  {
+   "id": "sr:materials/material-assignment",
+   "source": "simready-foundation",
+   "name": "material-assignment",
+   "code": null,
+   "capability": "visualization/materials",
+   "compat": "Open USD",
+   "summary": "Each renderable GPrim must have a computed material bound to it"
+  },
+  {
+   "id": "sr:materials/material-bind-scope",
+   "source": "simready-foundation",
+   "name": "material-bind-scope",
+   "code": null,
+   "capability": "visualization/materials",
+   "compat": "Open USD",
+   "summary": "A material binding inside a payload must target a material inside that payload."
+  },
+  {
+   "id": "sr:materials/material-final-surface",
+   "source": "simready-foundation",
+   "name": "material-final-surface",
+   "code": null,
+   "capability": "visualization/materials",
+   "compat": "Open USD",
+   "summary": "A renderable GPrim's material must provide a physically based final surface."
+  },
+  {
+   "id": "sr:materials/material-mdl-schema",
+   "source": "simready-foundation",
+   "name": "material-mdl-schema",
+   "code": null,
+   "capability": "visualization/materials",
+   "compat": "Kit-107.0+",
+   "summary": "An MDL shader must use the current schema attributes, not the deprecated `mdlMaterial` form."
+  },
+  {
+   "id": "sr:materials/material-mdl-source-asset",
+   "source": "simready-foundation",
+   "name": "material-mdl-source-asset",
+   "code": null,
+   "capability": "visualization/materials",
+   "compat": "Open USD",
+   "summary": "An MDL shader's `info:mdl:sourceAsset` must name an existing `.mdl` file by an anchored path."
+  },
+  {
+   "id": "sr:materials/material-mdl-surface-present",
+   "source": "simready-foundation",
+   "name": "material-mdl-surface-present",
+   "code": null,
+   "capability": "visualization/materials",
+   "compat": "Omniverse",
+   "summary": "A renderable GPrim's material must connect an MDL surface on `outputs:mdl:surface`."
+  },
+  {
+   "id": "sr:materials/material-pbr-parameter-ranges",
+   "source": "simready-foundation",
+   "name": "material-pbr-parameter-ranges",
+   "code": null,
+   "capability": "visualization/materials",
+   "compat": "Open USD",
+   "summary": "OpenPBR input attributes must hold values within their defined min/max."
+  },
+  {
+   "id": "sr:materials/material-preview-surface",
+   "source": "simready-foundation",
+   "name": "material-preview-surface",
+   "code": null,
+   "capability": "visualization/materials",
+   "compat": "Open USD",
+   "summary": "UsdPreviewSurface inputs must use the types and token values the specification declares."
+  },
+  {
+   "id": "sr:materials/material-preview-surface-present",
+   "source": "simready-foundation",
+   "name": "material-preview-surface-present",
+   "code": null,
+   "capability": "visualization/materials",
+   "compat": "Open USD",
+   "summary": "A renderable GPrim's material must connect a UsdPreviewSurface on `outputs:surface`."
+  },
+  {
+   "id": "sr:materials/material-shader-inputs",
+   "source": "simready-foundation",
+   "name": "material-shader-inputs",
+   "code": null,
+   "capability": "visualization/materials",
+   "compat": "Open USD",
+   "summary": "Shader inputs must use the type their specification declares and hold a finite value."
+  },
+  {
+   "id": "sr:materials/material-shading-network-structure",
+   "source": "simready-foundation",
+   "name": "material-shading-network-structure",
+   "code": null,
+   "capability": "visualization/materials",
+   "compat": "Open USD",
+   "summary": "Shader ids must name a declared node, connections must have an existing target, and the material must connect a surface terminal."
+  },
+  {
+   "id": "sr:materials/material-texture-colorspace-mdl",
+   "source": "simready-foundation",
+   "name": "material-texture-colorspace-mdl",
+   "code": null,
+   "capability": "visualization/materials",
+   "compat": "Open USD",
+   "summary": "A texture's `colorSpace` must match how its MDL input reads the image."
+  },
+  {
+   "id": "sr:materials/material-texture-colorspace-mdl-deprecated",
+   "source": "simready-foundation",
+   "name": "material-texture-colorspace-mdl-deprecated",
+   "code": null,
+   "capability": "visualization/materials",
+   "compat": "Kit-107.0+",
+   "summary": "Deprecated. See VM.TEX.005 for the current requirement."
+  },
+  {
+   "id": "sr:materials/material-texture-colorspace-openpbr",
+   "source": "simready-foundation",
+   "name": "material-texture-colorspace-openpbr",
+   "code": null,
+   "capability": "visualization/materials",
+   "compat": "Open USD",
+   "summary": "A texture's `colorSpace` must match how its OpenPBR input reads the image."
+  },
+  {
+   "id": "sr:materials/material-texture-colorspace-preview",
+   "source": "simready-foundation",
+   "name": "material-texture-colorspace-preview",
+   "code": null,
+   "capability": "visualization/materials",
+   "compat": "Open USD",
+   "summary": "A texture's `inputs:sourceColorSpace` must match how its UsdPreviewSurface input reads the image."
+  },
+  {
+   "id": "sr:materials/material-texture-maxsize",
+   "source": "simready-foundation",
+   "name": "material-texture-maxsize",
+   "code": null,
+   "capability": "visualization/materials",
+   "compat": "Open USD",
+   "summary": "Texture dimensions must not exceed 16,384 pixels on either axis."
+  },
+  {
+   "id": "sr:packaging_core/hash-object-format",
+   "source": "simready-foundation",
+   "name": "hash-object-format",
+   "code": null,
+   "capability": "packaging/packaging_core",
+   "compat": "core-packaging",
+   "summary": "Hash fields MUST be objects containing at least a `sha256` key with lowercase hexadecimal value. Implementations SHOULD also include `blake3` and/or `blake2b` when available, for performance. When `co"
+  },
+  {
+   "id": "sr:packaging_core/metadata-files",
+   "source": "simready-foundation",
+   "name": "metadata-files",
+   "code": null,
+   "capability": "packaging/packaging_core",
+   "compat": "core-packaging",
+   "summary": "Metadata files MUST be JSON with UTF-8 encoding, use reverse domain naming, and follow write-once semantics"
+  },
+  {
+   "id": "sr:packaging_core/package-definition",
+   "source": "simready-foundation",
+   "name": "package-definition",
+   "code": null,
+   "capability": "packaging/packaging_core",
+   "compat": "core-packaging",
+   "summary": "Each package MUST have exactly one valid package definition with a globally unique, case-insensitive, immutable identity, placed at the package root alongside a `.metadata/` folder"
+  },
+  {
+   "id": "sr:packaging_introspection/bom-structure",
+   "source": "simready-foundation",
+   "name": "bom-structure",
+   "code": null,
+   "capability": "packaging/packaging_introspection",
+   "compat": "core-packaging",
+   "summary": "The BOM is a metadata file identified by the name `com.nvidia.simready.packaging.bom.json`. It MUST list all content files in the package with per-item fields, using forward-slash relative paths with "
+  },
+  {
+   "id": "sr:physics_driven_joints/mujoco-actuator-targets",
+   "source": "simready-foundation",
+   "name": "mujoco-actuator-targets",
+   "code": null,
+   "capability": "physics_bodies/physics_driven_joints",
+   "compat": "MuJoCo",
+   "summary": "MuJoCo actuator prims must target valid MuJoCo-driven USD physics joints and author valid actuator parameter values."
+  },
+  {
+   "id": "sr:physics_driven_joints/mujoco-joint-api",
+   "source": "simready-foundation",
+   "name": "mujoco-joint-api",
+   "code": null,
+   "capability": "physics_bodies/physics_driven_joints",
+   "compat": "MuJoCo",
+   "summary": "MuJoCo driven joints must use standard `UsdPhysics.Joint` prims with `MjcJointAPI` applied to every non-fixed articulation joint."
+  },
+  {
+   "id": "sr:physics_driven_joints/newton-joint-attributes",
+   "source": "simready-foundation",
+   "name": "newton-joint-attributes",
+   "code": null,
+   "capability": "physics_bodies/physics_driven_joints",
+   "compat": "Newton",
+   "summary": "Authored Newton joint tuning must use `NewtonJointAPI` (or the equivalent `newton:*` attributes) on `UsdPhysics.Joint` prims with valid values."
+  },
+  {
+   "id": "sr:physics_driven_joints/newton-joint-drive-api",
+   "source": "simready-foundation",
+   "name": "newton-joint-drive-api",
+   "code": null,
+   "capability": "physics_bodies/physics_driven_joints",
+   "compat": "Newton",
+   "summary": "Every actuated Newton articulation joint must be driven by a standard `UsdPhysics.DriveAPI`, by a `NewtonActuator`, or be coupled to a leader joint by `NewtonMimicAPI`, and those actuation values must"
+  },
+  {
+   "id": "sr:physics_driven_joints/newton-mimic-api",
+   "source": "simready-foundation",
+   "name": "newton-mimic-api",
+   "code": null,
+   "capability": "physics_bodies/physics_driven_joints",
+   "compat": "Newton",
+   "summary": "When `NewtonMimicAPI` is applied, it must be on a `UsdPhysics.Joint`, target a valid leader joint, and author valid mimic coefficients."
+  },
+  {
+   "id": "sr:physics_grippers/gripper-site-api",
+   "source": "simready-foundation",
+   "name": "gripper-site-api",
+   "code": null,
+   "capability": "physics_bodies/physics_grippers",
+   "compat": "Isaac",
+   "summary": "Every gripper site prim must have `IsaacSiteAPI` applied and `isaac:Description` authored so Isaac Sim tooling can discover and configure it automatically."
+  },
+  {
+   "id": "sr:physics_grippers/mujoco-gripper-site-api",
+   "source": "simready-foundation",
+   "name": "mujoco-gripper-site-api",
+   "code": null,
+   "capability": "physics_bodies/physics_grippers",
+   "compat": "MuJoCo",
+   "summary": "MuJoCo gripper site prims must apply `MjcSiteAPI`."
+  },
+  {
+   "id": "sr:physics_joints/articulation",
+   "source": "simready-foundation",
+   "name": "articulation",
+   "code": null,
+   "capability": "physics_bodies/physics_joints",
+   "compat": "OpenUSD",
+   "summary": "For stable and fast simulations of kinematic chains, an asset should define an articulation."
+  },
+  {
+   "id": "sr:physics_joints/articulation-no-nesting",
+   "source": "simready-foundation",
+   "name": "articulation-no-nesting",
+   "code": null,
+   "capability": "physics_bodies/physics_joints",
+   "compat": "OpenUSD",
+   "summary": "Articulation roots cannot be nested."
+  },
+  {
+   "id": "sr:physics_joints/articulation-not-on-kinematic-body",
+   "source": "simready-foundation",
+   "name": "articulation-not-on-kinematic-body",
+   "code": null,
+   "capability": "physics_bodies/physics_joints",
+   "compat": "OpenUSD",
+   "summary": "Articulations are not allowed on kinematic bodies."
+  },
+  {
+   "id": "sr:physics_joints/articulation-not-on-static-body",
+   "source": "simready-foundation",
+   "name": "articulation-not-on-static-body",
+   "code": null,
+   "capability": "physics_bodies/physics_joints",
+   "compat": "OpenUSD",
+   "summary": "Articulations are not allowed on static bodies."
+  },
+  {
+   "id": "sr:physics_materials/newton-material-attributes",
+   "source": "simready-foundation",
+   "name": "newton-material-attributes",
+   "code": null,
+   "capability": "physics_bodies/physics_materials",
+   "compat": "Newton",
+   "summary": "`NewtonMaterialAPI` must be applied on a physics `Material` — a `UsdShade.Material` that also carries `PhysicsMaterialAPI`."
+  },
+  {
+   "id": "sr:physics_rigid_bodies/collider-capability",
+   "source": "simready-foundation",
+   "name": "collider-capability",
+   "code": null,
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "OpenUSD",
+   "summary": "Colliding Gprims must apply the Collision API."
+  },
+  {
+   "id": "sr:physics_rigid_bodies/collider-mesh",
+   "source": "simready-foundation",
+   "name": "collider-mesh",
+   "code": null,
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "OpenUSD",
+   "summary": "The Mesh Collision API can only be assigned to Mesh Prims."
+  },
+  {
+   "id": "sr:physics_rigid_bodies/collider-non-uniform-scale",
+   "source": "simready-foundation",
+   "name": "collider-non-uniform-scale",
+   "code": null,
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "OpenUSD",
+   "summary": "The collision shape scale must be uniform for the following geometries: Sphere, Capsule, Cylinder, Cone & Points."
+  },
+  {
+   "id": "sr:physics_rigid_bodies/mesh-collision-api",
+   "source": "simready-foundation",
+   "name": "mesh-collision-api",
+   "code": null,
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "OpenUSD",
+   "summary": "**UsdPhysicsMeshCollisionAPI** may only be applied to **UsdGeom.Mesh** prims, and any prim with MeshCollisionAPI must also have **UsdPhysicsCollisionAPI** applied."
+  },
+  {
+   "id": "sr:physics_rigid_bodies/mujoco-collider-api",
+   "source": "simready-foundation",
+   "name": "mujoco-collider-api",
+   "code": null,
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "MuJoCo",
+   "summary": "MuJoCo collision shapes must apply `MjcCollisionAPI` on valid USD collision geometry."
+  },
+  {
+   "id": "sr:physics_rigid_bodies/mujoco-mesh-collision-api",
+   "source": "simready-foundation",
+   "name": "mujoco-mesh-collision-api",
+   "code": null,
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "MuJoCo",
+   "summary": "MuJoCo mesh collision data must use valid `MjcMeshCollisionAPI` and convex-hull mesh collision authoring."
+  },
+  {
+   "id": "sr:physics_rigid_bodies/newton-collider-api",
+   "source": "simready-foundation",
+   "name": "newton-collider-api",
+   "code": null,
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "Newton",
+   "summary": "Newton colliders must use a valid Newton collision schema."
+  },
+  {
+   "id": "sr:physics_rigid_bodies/newton-mass-attributes",
+   "source": "simready-foundation",
+   "name": "newton-mass-attributes",
+   "code": null,
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "Newton",
+   "summary": "`NewtonMassAPI` must be applied on an `Xformable`, and any authored Newton mass attributes must be valid."
+  },
+  {
+   "id": "sr:physics_rigid_bodies/newton-sdf-attributes",
+   "source": "simready-foundation",
+   "name": "newton-sdf-attributes",
+   "code": null,
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "Newton",
+   "summary": "Authored Newton SDF attributes must be valid."
+  },
+  {
+   "id": "sr:physics_rigid_bodies/physx-collider-capability",
+   "source": "simready-foundation",
+   "name": "physx-collider-capability",
+   "code": null,
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "PhysX",
+   "summary": "CollisionAPI may only be applied to a UsdGeom Gprim or to an Xform that has PhysxMeshMergeCollisionAPI and whose collisionmeshes collection includes at least one Gprim."
+  },
+  {
+   "id": "sr:physics_rigid_bodies/physx-collider-mesh",
+   "source": "simready-foundation",
+   "name": "physx-collider-mesh",
+   "code": null,
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "PhysX",
+   "summary": "MeshCollisionAPI may only be applied to a UsdGeom Mesh or to a prim that has PhysxMeshMergeCollisionAPI. CollisionAPI is required whenever MeshCollisionAPI is applied."
+  },
+  {
+   "id": "sr:physics_rigid_bodies/rigid-body-multibody-capability",
+   "source": "simready-foundation",
+   "name": "rigid-body-multibody-capability",
+   "code": null,
+   "capability": "physics_bodies/physics_rigid_bodies",
+   "compat": "OpenUSD",
+   "summary": "Assets must contain at least two rigid bodies"
+  },
+  {
+   "id": "sr:semantic_labels/semantic-label-material",
+   "source": "simready-foundation",
+   "name": "semantic-label-material",
+   "code": null,
+   "capability": "semantic_labels",
+   "compat": "nvidia-omniverse",
+   "summary": "Visual material prims must be labeled with a non-empty `SemanticsLabelsAPI:material` label."
+  },
+  {
+   "id": "sr:semantic_labels/semantic-label-qcode-valid",
+   "source": "simready-foundation",
+   "name": "semantic-label-qcode-valid",
+   "code": null,
+   "capability": "semantic_labels",
+   "compat": "nvidia-omniverse",
+   "summary": "If the Wikidata ontology is used, Q-Codes must be well-formed (`Q` followed by one or more digits). Values should reference a real Wikidata entity, but the validator checks format only — it does not c"
+  },
+  {
+   "id": "sr:semantic_labels/semantic-label-time",
+   "source": "simready-foundation",
+   "name": "semantic-label-time",
+   "code": null,
+   "capability": "semantic_labels",
+   "compat": "rtx",
+   "summary": "For the NVIDIA RTX perception pipeline, semantic label attributes must use static (non-time-varying) values."
+  }
+ ]
+}
