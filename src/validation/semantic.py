@@ -1652,6 +1652,16 @@ def semantic_diagnostics(xml_string: str) -> list[Diagnostic]:
     or count the findings themselves. Raises etree.XMLSyntaxError when the
     document is not well-formed and NoSceneError when it has no Scene.
     """
+    return _diagnostics(xml_string, None)
+
+
+def semantic_diagnostics_with_files(xml_string: str, base_dir) -> list[Diagnostic]:
+    """semantic_diagnostics plus the file checks: base_dir is the folder the scene lives in,
+    and the textures and Inline files its url fields name (inside that folder) are opened."""
+    return _diagnostics(xml_string, base_dir)
+
+
+def _diagnostics(xml_string: str, base_dir) -> list[Diagnostic]:
     root = etree.fromstring(xml_string.encode("utf-8"), _PARSER)
     scene = _find_scene(root)
     if scene is None:
@@ -1659,6 +1669,8 @@ def semantic_diagnostics(xml_string: str) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = _check_profile_components(root)
     for check_fn in _ALL_CHECKS:
         diagnostics.extend(check_fn(scene))
+    from validation.data_checks import data_diagnostics
+    diagnostics.extend(data_diagnostics(scene, base_dir))
     return diagnostics
 
 
