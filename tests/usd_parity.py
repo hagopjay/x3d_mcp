@@ -150,6 +150,11 @@ F = {
                          doc(f"<Shape><Appearance><Material transparency='0.5'/></Appearance><IndexedFaceSet coordIndex='{TET_IDX}'>{TET}</IndexedFaceSet></Shape>")),
     "coincident": ("sem-info", "mesh-coincident", doc(f"<Group>{shape('<Box/>')}{shape('<Box/>')}</Group>"),
                    doc(f"<Group>{shape('<Box/>')}{shape(chr(60) + 'Sphere/>')}</Group>")),
+    # Q12 run 2 (26 Nov 2026): SimReady VG.008 found identical spheres in one world place under separate Transforms
+    # (d3-bridge scatter.x3d), which the same-parent pass could not see
+    "coincident-across": ("sem-info", "mesh-coincident",
+                          doc(f"<Transform translation='1 2 3'>{shape('<Sphere/>')}</Transform><Transform translation='1 2 3'>{shape('<Sphere/>')}</Transform>"),
+                          doc(f"<Transform translation='1 2 3'>{shape('<Sphere/>')}</Transform><Transform translation='1 2 4'>{shape('<Sphere/>')}</Transform>")),
     "unicode-name": ("sem", "def-name-unicode-ambiguous",
                      doc(f"<Transform DEF='Caf\u00e9'>{shape('<Box/>')}</Transform><Transform DEF='Cafe\u0301'>{shape('<Box/>')}</Transform>"),
                      doc(f"<Transform DEF='Cafe1'>{shape('<Box/>')}</Transform><Transform DEF='Cafe2'>{shape('<Box/>')}</Transform>")),
@@ -293,7 +298,7 @@ SR = {
     "SPL.002": (X41, "splat-positions", ""), "SPL.003": (X41, "splat-scales", ""), "SPL.004": (X41, "splat-orientations", ""),
     "SPL.005": (X41, "splat-opacities", ""), "SPL.006": (X41, "splat-radiance", ""),
     "VG.001": (N, "no-geometry", ""), "VG.002": (S, "bbox", ""), "VG.003": (J, None, ""), "VG.004": (J, None, ""),
-    "VG.005": (J, None, ""), "VG.006": (J, None, ""), "VG.007": (N, "manifold", ""), "VG.008": (N, "coincident", "same geometry under one parent"),
+    "VG.005": (J, None, ""), "VG.006": (J, None, ""), "VG.007": (N, "manifold", ""), "VG.008": (N, "coincident", "same geometry in the same place, under one parent or (fixture coincident-across) under different Transforms"),
     "VG.009": (FIX, None, "indexed by construction"), "VG.010": (D, None, "no subdivision schemes"), "VG.011": (N, "unused-value", ""),
     "VG.012": (J, None, ""), "VG.013": (J, None, ""), "VG.014": (S, "index-oob", ""), "VG.015": (N, "constant-interp", ""),
     "VG.016": (N, "colocated", ""), "VG.017": (J, None, ""), "VG.018": (N, "unused-point", ""), "VG.019": (N, "zero-area", ""),

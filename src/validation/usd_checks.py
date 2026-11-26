@@ -333,13 +333,21 @@ def check_coincident_shapes(scene) -> list:
     purpose, are common X3D idioms (survey of 1,548 files, 26 Nov 2026)."""
     defs, out = _defs(scene), []
 
+    def canon(n, d=0):
+        """The geometry and everything under it (USE resolved), so two geometries are 'the same' only when every
+        child agrees: NURBS control points, colours, texture coordinates, not only a Coordinate (survey of
+        1,538 files, 26 Nov 2026: NURBS fixtures with different controlPoint read as identical)."""
+        n = _resolve(n, defs)
+        if n is None or d > 32:
+            return ()
+        attrs = tuple(sorted((k, v) for k, v in n.attrib.items() if k not in ("DEF", "USE", "containerField")))
+        return (_tag(n), attrs, tuple(canon(c, d + 1) for c in n if isinstance(c.tag, str) and not _tag(c).startswith("Metadata")))
+
     def key(g):
         g = _resolve(g, defs)
         if g is None:
             return None
-        coord = _kid(g, _COORDS, defs)
-        attrs = tuple(sorted((k, v) for k, v in g.attrib.items() if k not in ("DEF", "USE", "containerField")))
-        return (_tag(g), attrs, coord.get("point") if coord is not None else None)
+        return (_tag(g), canon(g))
 
     for parent in scene.iter():
         if _tag(parent) in ("LOD", "Switch", "GeoLOD", "CADLayer"):
@@ -358,6 +366,86 @@ def check_coincident_shapes(scene) -> list:
                                  f"has the same {k[0]} as another Shape under the same parent, in the same place; "
                                  f"the two surfaces z-fight and, as colliders, double every contact."))
             seen.setdefault(k, s)
+    # Across parents: the same geometry in the same world place under different Transforms. Found by SimReady VG.008
+    # on real files after a Blender USD export (Q12 run 2, 26 Nov 2026): d3-bridge's scatter.x3d puts 495 of its 619
+    # spheres in 69 groups that share translation and radius, each in its own Transform, which the same-parent pass
+    # above cannot see. One finding per group, on its second member.
+    groups = {}
+    root = scene.getroottree().getroot() if hasattr(scene, "getroottree") else scene
+    routed = {r.get("toNode") for r in root.iter() if isinstance(r.tag, str) and _tag(r) == "ROUTE"}
+    for shape, m, parent in _world_shapes(scene, defs, routed):
+        geo = next((c for c in shape if isinstance(c.tag, str) and _tag(c) not in ("Appearance",) and not _tag(c).startswith("Metadata")), None)
+        k = key(geo) if geo is not None else None
+        if k is None or k[0] in _NOT_SURFACES:
+            continue
+        groups.setdefault((k, tuple(round(v, 6) for row in m for v in row)), []).append((shape, parent))
+    for (k, _m), members in groups.items():
+        if len(members) > 1 and len({id(p) for _s, p in members}) > 1:
+            out.append(_diag("info", "mesh-coincident", members[1][0],
+                             f"has the same {k[0]} as {len(members) - 1} other Shape(s) in the same world place, under "
+                             f"different Transforms; the surfaces z-fight and, as colliders, double every contact."))
+    return out
+
+
+_GROUPS = {"Scene", "Transform", "Group", "StaticGroup", "Anchor", "Billboard", "Collision", "CADAssembly", "CADLayer",
+           "CADPart", "CADFace", "HAnimHumanoid", "HAnimJoint", "HAnimSegment", "HAnimSite"}
+_MOVES = {"Transform", "CADPart", "HAnimHumanoid", "HAnimJoint", "HAnimSite"}
+
+
+def _mat_of(node):
+    """X3D Transform matrix T C R SR S -SR -C, as a 4x4 list (column vectors)."""
+    def tr(v):
+        return [[1, 0, 0, v[0]], [0, 1, 0, v[1]], [0, 0, 1, v[2]], [0, 0, 0, 1]]
+
+    def rot(r, inv=False):
+        x, y, z, a = (r + [0, 0, 1, 0])[:4]
+        m3 = _rot_matrix([x, y, z, -a if inv else a])
+        return [m3[0] + [0], m3[1] + [0], m3[2] + [0], [0, 0, 0, 1]]
+
+    def sc(v):
+        return [[v[0], 0, 0, 0], [0, v[1], 0, 0], [0, 0, v[2], 0], [0, 0, 0, 1]]
+    def vec(name, d):                                    # a malformed field (too few numbers) is padded, never fatal
+        return (list(_nums(node.get(name)) or []) + list(d))[:len(d)] if len(_nums(node.get(name)) or []) < len(d) \
+            else list(_nums(node.get(name)))[:len(d)]
+    t, c, s_ = vec("translation", (0, 0, 0)), vec("center", (0, 0, 0)), vec("scale", (1, 1, 1))
+    r, so = vec("rotation", (0, 0, 1, 0)), vec("scaleOrientation", (0, 0, 1, 0))
+    m = tr(t)
+    for f in (tr(c), rot(r), rot(so), sc(s_), rot(so, True), tr([-c[0], -c[1], -c[2]])):
+        m = _mul(m, f)
+    return m
+
+
+def _mul(a, b):
+    return [[sum(a[i][k] * b[k][j] for k in range(4)) for j in range(4)] for i in range(4)]
+
+
+def _world_shapes(scene, defs, routed=(), depth=0):
+    """(Shape, world matrix, parent) for every Shape reached through grouping nodes. LOD, Switch and GeoLOD hold
+    alternatives and are not entered; nor are prototypes, or the collidables of a RigidBody (they have no scene place).
+    Two idioms are left out (survey of 1,538 files, 26 Nov 2026): a grouping node a ROUTE drives (its place is set at
+    run time: a pool of particles parked in one spot) and a Transform scaled to zero (a hidden shape)."""
+    out = []
+    eye = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
+
+    def walk(node, m, d):
+        if d > 64:
+            return
+        for c in node:
+            if not isinstance(c.tag, str):
+                continue
+            c = _resolve(c, defs)
+            if c is None:
+                continue
+            t = _tag(c)
+            if t == "Shape":
+                out.append((c, m, node))
+            elif t in _GROUPS:
+                if c.get("DEF") and c.get("DEF") in routed:
+                    continue
+                if t in _MOVES and any(abs(v) < 1e-12 for v in ((_nums(c.get("scale")) or []) + [1, 1, 1])[:3]):
+                    continue
+                walk(c, _mul(m, _mat_of(c)) if t in _MOVES else m, d + 1)
+    walk(scene, eye, depth)
     return out
 
 

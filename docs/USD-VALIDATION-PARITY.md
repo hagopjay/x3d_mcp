@@ -302,7 +302,7 @@ How to read it:
 | VG.005 usdgeom-boundable-size | SimReady | judgement |  |  |  |
 | VG.006 usdgeom-mesh-overlap | SimReady | judgement |  |  |  |
 | VG.007 usdgeom-mesh-manifold | SimReady | new | `mesh-non-manifold-edge` | manifold |  |
-| VG.008 usdgeom-mesh-coincident | SimReady | new | `mesh-coincident` | coincident | same geometry under one parent |
+| VG.008 usdgeom-mesh-coincident | SimReady | new | `mesh-coincident` | coincident | same geometry in the same place, under one parent or (fixture coincident-across) under different Transforms |
 | VG.009 usdgeom-mesh-primvar-indexing | SimReady | fixed |  |  | indexed by construction |
 | VG.010 usdgeom-mesh-subdivision | SimReady | design |  |  | no subdivision schemes |
 | VG.011 usdgeom-mesh-primvar-usage | SimReady | new | `mesh-unused-value` | unused-value |  |
