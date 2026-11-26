@@ -405,7 +405,9 @@ def markdown(results: dict) -> str:
          "## Count", "", "| What X3D does with the mistake | OpenUSD | Omniverse AV | SimReady | All |", "|---|---|---|---|---|"]
     for label, k in rows:
         L.append(f"| {label} | " + " | ".join(str(per[s][k]) for s, _ in srcs) + f" | {tot[k]} |")
-    L.append("| **Covered, of the mistakes X3D can state** | " + " | ".join(
+    n_all = sum(tot.values())
+    L.append(f"| **Covered, of the mistakes the project judged X3D can state ({stateable(tot)} of the {n_all} rules; "
+             f"the project classified the other {n_all - stateable(tot)})** | " + " | ".join(
         f"**{stateable(per[s]) - per[s]['gap']} of {stateable(per[s])}**" for s, _ in srcs) +
         f" | **{stateable(tot) - tot['gap']} of {stateable(tot)}** |")
     L.append("| Rules | " + " | ".join(str(sum(per[s].values())) for s, _ in srcs) + f" | {sum(tot.values())} |")
