@@ -57,25 +57,29 @@ reported, because it looks like a wrap. The check prefers silence to a false ala
 
 ## Survey on real files (26 Nov 2026)
 
-Every distinct `.x3d` file in the project's checked-out repositories (2,562 by text hash; `node_modules`
-left out). 443 hold an OrientationInterpolator.
+Every distinct `.x3d` file in the project's repositories, each at the head of its default branch
+(2,587 by text hash; `node_modules` left out). 463 hold an OrientationInterpolator.
 
 | | Scenes |
 |---|---|
-| With a warning | 136 of 443 (31%) |
-| `orientation-step-long-way` | 111 |
-| `orientation-half-turn-step` (warning) | 104 |
+| With a warning | 41 of 463 (9%) |
+| `orientation-step-long-way` | 16 |
+| `orientation-half-turn-step` (warning) | 7 |
 | `orientation-never-turns` | 25 |
-| Note only (plays as written, fragile) | 30 |
+| Note only (plays as written, fragile) | 31 |
 
-By source: 98 of 98 turntables written by one generator (keys 0, 3.14159265, 6.28318531: they rock),
-29 of 190 scenes written by language models in earlier experiments (25 of them spins that never turn),
-4 hand-written game levels (fans turning the wrong way), and 5 others. Before the wrap rule above was
+By source: 29 of 190 scenes written by language models in earlier experiments (25 of them spins that
+never turn), 4 hand-written game levels (fans turning the wrong way), 4 files of a Blender add-on (two
+deliberate probes, two gallery demos), 2 simulation worlds, 1 archived turntable world and 1 older example.
+
+**Correction, same day.** The first run of this survey reported 136 of 443. It read a checkout of x3d.accrete that was one commit behind: 97 of those were turntables the generator fix (x3d.accrete #1, made from failure mode 361) had already regenerated that morning. The numbers here are from every repository at the head of its default branch.
+
+Before the wrap rule above was
 added the check also reported 10 scenes with baked animation (sampled paths, a camera track, a crank).
 Eight are plain wrapped angles that play as meant. Two are a rolling ball with one step of 10.5 rad among
-smaller ones, where the intent cannot be read from the file; they are left silent as well. The 13 warnings outside the two large families were read one by one and are real.
+smaller ones, where the intent cannot be read from the file; they are left silent as well. The 16 warnings other than the 25 still spins were read one by one and are real.
 
-Limits: these are one project's files, and two families make up most of the count. It is a count of
+Limits: these are one project's files, and one family makes up most of the count. It is a count of
 scenes that play differently from how they are written, not a rate for X3D at large.
 
 Tests: `tests/test_orientation_steps.py` (14). Origin: x3d.loom failure modes 357, 361 and 451.
