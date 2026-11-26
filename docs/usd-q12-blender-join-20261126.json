@@ -1,0 +1,347 @@
+{
+ "pins": {
+  "usd-core": "0.26.11",
+  "omniverse-asset-validator": "1.18.0",
+  "simready-foundation": "NVIDIA/simready-foundation@c3bd1d8 (2026-11-23)",
+  "blender": "5.3.0",
+  "rulebook_runner": {
+   "usd-core": "26.11",
+   "omniverse-asset-validator": "1.18.0",
+   "python": "3.12.3"
+  },
+  "x3d_mcp_commit": "9e21c4c",
+  "x3d_blender_io_commit": "3e3c1e8"
+ },
+ "scenes": 84,
+ "exported_ok": 84,
+ "executed_rules_mapped_to_x3d": 27,
+ "executed_rules_total": 70,
+ "pair_totals": {
+  "agree-pass": 1748,
+  "x3d-only": 17,
+  "agree-fail": 8,
+  "export-made": 1,
+  "x3d-missed?": 2
+ },
+ "scenes_agreeing_on_every_mapped_rule": 70,
+ "per_rule": {
+  "oav:ExtentsChecker": {
+   "agree-pass": 83,
+   "x3d-only": 1
+  },
+  "oav:LayerSpecChecker": {
+   "agree-pass": 1,
+   "x3d-only": 1
+  },
+  "oav:ManifoldChecker": {
+   "agree-pass": 81,
+   "agree-fail": 1,
+   "export-made": 1,
+   "x3d-missed?": 1
+  },
+  "oav:MassChecker": {
+   "agree-pass": 83,
+   "x3d-only": 1
+  },
+  "oav:MaterialUsdPreviewSurfaceChecker": {
+   "agree-pass": 1,
+   "x3d-only": 1
+  },
+  "oav:MissingReferenceChecker": {
+   "agree-pass": 84
+  },
+  "oav:NormalsValidChecker": {
+   "agree-pass": 83,
+   "x3d-only": 1
+  },
+  "oav:NormalsWindingsChecker": {
+   "agree-fail": 1,
+   "agree-pass": 83
+  },
+  "oav:PhysicsJointChecker": {
+   "agree-pass": 83,
+   "x3d-only": 1
+  },
+  "oav:PrimEncapsulationChecker": {
+   "agree-pass": 1,
+   "x3d-only": 1
+  },
+  "oav:RigidBodyChecker": {
+   "agree-pass": 83,
+   "x3d-only": 1
+  },
+  "oav:TextureChecker": {
+   "agree-pass": 84
+  },
+  "oav:TypeChecker": {
+   "agree-pass": 1,
+   "x3d-only": 1
+  },
+  "oav:UnicodeNameChecker": {
+   "agree-pass": 83,
+   "agree-fail": 1
+  },
+  "oav:UnusedMeshTopologyChecker": {
+   "agree-pass": 82,
+   "agree-fail": 2
+  },
+  "oav:UnusedPrimvarChecker": {
+   "agree-pass": 83,
+   "x3d-only": 1
+  },
+  "oav:UsdDanglingMaterialBinding": {
+   "agree-pass": 83,
+   "x3d-only": 1
+  },
+  "oav:ValidateTopologyChecker": {
+   "agree-pass": 83,
+   "x3d-only": 1
+  },
+  "oav:WeldChecker": {
+   "agree-pass": 82,
+   "agree-fail": 1,
+   "x3d-missed?": 1
+  },
+  "oav:ZeroAreaFaceChecker": {
+   "agree-pass": 82,
+   "agree-fail": 2
+  },
+  "usd:usdGeomValidators:EncapsulationChecker": {
+   "agree-pass": 1,
+   "x3d-only": 1
+  },
+  "usd:usdPhysicsValidators:PhysicsJointChecker": {
+   "agree-pass": 83,
+   "x3d-only": 1
+  },
+  "usd:usdPhysicsValidators:RigidBodyChecker": {
+   "agree-pass": 83,
+   "x3d-only": 1
+  },
+  "usd:usdUtilsValidators:FileExtensionValidator": {
+   "agree-pass": 84
+  },
+  "usd:usdUtilsValidators:MissingReferenceValidator": {
+   "agree-pass": 84
+  },
+  "usd:usdValidation:AttributeTypeMismatch": {
+   "agree-pass": 1,
+   "x3d-only": 1
+  },
+  "usd:usdValidation:CompositionErrorTest": {
+   "agree-pass": 83,
+   "x3d-only": 1
+  }
+ },
+ "unmapped_failures": {
+  "oav:IndexedPrimvarChecker": [
+   "alpha-range__bad",
+   "alpha-range__good",
+   "coincident__bad",
+   "coincident__good",
+   "colocated__bad",
+   "colour-range__bad",
+   "colour-range__good",
+   "constant-interp__bad",
+   "constant-interp__good",
+   "index-oob__bad",
+   "manifold__bad",
+   "nested-geometry__bad",
+   "nested-geometry__good",
+   "nested-material__bad",
+   "nested-material__good",
+   "no-geometry__good",
+   "pbr-range__bad",
+   "pbr-range__good",
+   "proto-undeclared__bad",
+   "proto-undeclared__good",
+   "splat-opacities__bad",
+   "splat-opacities__good",
+   "splat-orientations__bad",
+   "splat-orientations__good",
+   "splat-positions__good",
+   "splat-radiance__bad",
+   "splat-radiance__good",
+   "splat-scales__bad",
+   "splat-scales__good",
+   "unicode-name__bad",
+   "unicode-name__good",
+   "unknown-node__bad",
+   "unknown-node__good",
+   "unused-value__bad",
+   "unused-value__good",
+   "use-undefined__bad",
+   "use-undefined__good"
+  ]
+ },
+ "disagreements": [
+  {
+   "rule": "oav:ExtentsChecker",
+   "scene": "bbox__bad",
+   "class": "x3d-only",
+   "x3d_codes": [
+    "bbox-too-small"
+   ],
+   "usd": "pass"
+  },
+  {
+   "rule": "oav:LayerSpecChecker",
+   "scene": "type__bad",
+   "class": "x3d-only",
+   "x3d_codes": [],
+   "usd": "pass"
+  },
+  {
+   "rule": "oav:ManifoldChecker",
+   "scene": "unused-point__bad",
+   "class": "export-made",
+   "x3d_codes": [],
+   "usd": "fail"
+  },
+  {
+   "rule": "oav:ManifoldChecker",
+   "scene": "index-oob__bad",
+   "class": "x3d-missed?",
+   "x3d_codes": [
+    "index-out-of-range"
+   ],
+   "usd": "fail"
+  },
+  {
+   "rule": "oav:MassChecker",
+   "scene": "inertia__bad",
+   "class": "x3d-only",
+   "x3d_codes": [
+    "physics-inertia"
+   ],
+   "usd": "pass"
+  },
+  {
+   "rule": "oav:MaterialUsdPreviewSurfaceChecker",
+   "scene": "pbr-range__bad",
+   "class": "x3d-only",
+   "x3d_codes": [],
+   "usd": "pass"
+  },
+  {
+   "rule": "oav:NormalsValidChecker",
+   "scene": "normal-unit__bad",
+   "class": "x3d-only",
+   "x3d_codes": [
+    "normal-not-unit"
+   ],
+   "usd": "pass"
+  },
+  {
+   "rule": "oav:PhysicsJointChecker",
+   "scene": "joint-body__bad",
+   "class": "x3d-only",
+   "x3d_codes": [
+    "physics-joint-body"
+   ],
+   "usd": "pass"
+  },
+  {
+   "rule": "oav:PrimEncapsulationChecker",
+   "scene": "nested-geometry__bad",
+   "class": "x3d-only",
+   "x3d_codes": [
+    "containerfield-unknown"
+   ],
+   "usd": "pass"
+  },
+  {
+   "rule": "oav:RigidBodyChecker",
+   "scene": "body-shared__bad",
+   "class": "x3d-only",
+   "x3d_codes": [
+    "physics-body-shared"
+   ],
+   "usd": "pass"
+  },
+  {
+   "rule": "oav:TypeChecker",
+   "scene": "unknown-node__bad",
+   "class": "x3d-only",
+   "x3d_codes": [],
+   "usd": "pass"
+  },
+  {
+   "rule": "oav:UnusedPrimvarChecker",
+   "scene": "unused-value__bad",
+   "class": "x3d-only",
+   "x3d_codes": [],
+   "usd": "pass"
+  },
+  {
+   "rule": "oav:UsdDanglingMaterialBinding",
+   "scene": "use-undefined__bad",
+   "class": "x3d-only",
+   "x3d_codes": [
+    "use-undefined-def"
+   ],
+   "usd": "pass"
+  },
+  {
+   "rule": "oav:ValidateTopologyChecker",
+   "scene": "index-oob__bad",
+   "class": "x3d-only",
+   "x3d_codes": [
+    "index-out-of-range"
+   ],
+   "usd": "pass"
+  },
+  {
+   "rule": "oav:WeldChecker",
+   "scene": "index-oob__bad",
+   "class": "x3d-missed?",
+   "x3d_codes": [
+    "index-out-of-range"
+   ],
+   "usd": "fail"
+  },
+  {
+   "rule": "usd:usdGeomValidators:EncapsulationChecker",
+   "scene": "nested-geometry__bad",
+   "class": "x3d-only",
+   "x3d_codes": [
+    "containerfield-unknown"
+   ],
+   "usd": "pass"
+  },
+  {
+   "rule": "usd:usdPhysicsValidators:PhysicsJointChecker",
+   "scene": "joint-body__bad",
+   "class": "x3d-only",
+   "x3d_codes": [
+    "physics-joint-body"
+   ],
+   "usd": "pass"
+  },
+  {
+   "rule": "usd:usdPhysicsValidators:RigidBodyChecker",
+   "scene": "body-shared__bad",
+   "class": "x3d-only",
+   "x3d_codes": [
+    "physics-body-shared"
+   ],
+   "usd": "pass"
+  },
+  {
+   "rule": "usd:usdValidation:AttributeTypeMismatch",
+   "scene": "type__bad",
+   "class": "x3d-only",
+   "x3d_codes": [],
+   "usd": "pass"
+  },
+  {
+   "rule": "usd:usdValidation:CompositionErrorTest",
+   "scene": "proto-undeclared__bad",
+   "class": "x3d-only",
+   "x3d_codes": [
+    "proto-undeclared"
+   ],
+   "usd": "pass"
+  }
+ ]
+}
