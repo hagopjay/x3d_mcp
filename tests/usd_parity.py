@@ -204,7 +204,7 @@ def sr_scene(*bodies, **meta):
 
 F.update({
     "sr-provenance": ("sem", "simready-metadata-missing", sr_scene(creator=None, license=None), sr_scene()),
-    "sr-thumbnail": ("file-info", "simready-thumbnail-missing", sr_scene(Image="absent.png"), sr_scene(Image="tex.png")),
+    "sr-thumbnail": ("file", "simready-thumbnail-missing", sr_scene(Image="absent.png"), sr_scene(Image="tex.png")),
     "sr-unit": ("sem", "simready-unit-not-metres",
                 sr_doc(world(sr_body()), unit="<unit category='length' name='centimetre' conversionFactor='0.01'/>"), sr_scene()),
     "sr-mesh": ("sem", "simready-geometry-not-mesh", sr_scene(sr_body(geo="<Sphere radius='0.5'/>")), sr_scene()),
@@ -224,6 +224,13 @@ F.update({
                           sr_scene(sr_body(app=f"<Appearance>{labels(material='plastic')}<Material/></Appearance>"),
                                    simready__features="material_labels")),
 })
+# two pairs for the warning side of a SimReady rule (not a rule of their own): a mesh beside a primitive, and a label that
+# is in the vocabulary under a non-canonical spelling
+F["sr-mesh-mixed"] = ("sem", "simready-geometry-not-mesh", sr_scene(sr_body("A"), sr_body("B", 2, geo="<Sphere radius='0.5'/>")),
+                      sr_scene(sr_body("A"), sr_body("B", 2)))
+F["sr-vocab-alias"] = ("sem", "simready-label-not-in-vocabulary", sr_scene(sr_body(shape_meta=labels(cityscapes="Traffic_Light"))),
+                       sr_scene(sr_body(shape_meta=labels(cityscapes="traffic light"))))
+SR_WARNING_SIDE = {"sr-mesh-mixed": "geometry/geom-shall-be-mesh", "sr-vocab-alias": "CITY.001"}      # fixture -> rule it also crosses
 # one closed vocabulary each: a word that is in none of them, then a canonical name
 SR_VOCAB = {"coco": "chair", "cityscapes": "car", "ade20k": "wall", "pascal_voc": "chair", "sunrgbd": "chair",
             "imagenet_1k": "goldfish", "affordance": "openable", "affordance_state": "open"}

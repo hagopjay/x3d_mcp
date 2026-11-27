@@ -30,20 +30,20 @@ def test_the_same_file_opted_in_is_reported_for_each_open_question():
 
 
 def test_a_feature_not_claimed_is_not_asked():
-    assert sim(up.sr_scene(up.sr_body(attrs="fixed='true'")), levels=("error", "warning")) == []
+    assert sim(up.sr_scene(up.sr_body(attrs="fixed='true'"), Image="pic.png")) == []
 
 
 def test_labels_are_judged_without_opting_in():
     assert sim(doc(up.world(up.sr_body(shape_meta=up.labels(coco="gizmo"))))) == ["simready-label-not-in-vocabulary"]
 
 
-def test_a_non_canonical_spelling_is_information_and_names_the_canonical_one():
+def test_a_non_canonical_spelling_is_a_warning_as_in_simready_and_names_the_canonical_one():
     from lxml import etree
     from validation.simready_checks import check_simready_labels
     text = doc(up.world(up.sr_body(shape_meta=up.labels(cityscapes="Traffic_Light"))))
     scene = etree.fromstring(text.encode()).find("Scene")
     ds = check_simready_labels(scene)
-    assert [(d.level, d.check) for d in ds] == [("info", "simready-label-not-in-vocabulary")]
+    assert [(d.level, d.check) for d in ds] == [("warning", "simready-label-not-in-vocabulary")]
     assert "'traffic light'" in ds[0].message
 
 
@@ -52,8 +52,8 @@ def test_a_label_above_the_shape_or_on_its_material_covers_it():
     on_body = up.sr_scene(f"<RigidBody DEF='A'>{up.labels(wikidata_qcode='Q111')}<CollidableShape containerField='geometry'>"
                           f"<Shape containerField='shape'>{up.APP}{up.MESH}</Shape></CollidableShape></RigidBody>", **feat)
     on_material = up.sr_scene(up.sr_body(app=f"<Appearance><Material>{up.labels(material='steel')}</Material></Appearance>"), **feat)
-    assert sim(on_body, levels=("error", "warning")) == []
-    assert sim(on_material, levels=("error", "warning")) == []
+    assert "simready-shape-unlabelled" not in sim(on_body)
+    assert "simready-shape-unlabelled" not in sim(on_material)
 
 
 def test_a_malformed_head_qcode_is_reported():
@@ -80,3 +80,13 @@ def test_vocabularies_are_generated_from_the_pinned_rulebook():
 def test_the_ledger_counts_the_profile_apart(results=None):
     c = up.counts(up.run_all())
     assert sum(c[k] for k in up.STATEABLE) == 66 and c["profile"] == 20 and c["gap"] == 0
+
+
+def test_a_mesh_beside_a_primitive_is_one_warning_however_many_primitives():
+    two = up.sr_scene(up.sr_body("A"), up.sr_body("B", 2, geo="<Sphere radius='0.5'/>"), up.sr_body("C", 4, geo="<Box/>"), Image="p.png")
+    assert sim(two) == ["simready-geometry-not-mesh"]
+
+
+def test_untriangulated_is_information_only():
+    quad = up.sr_scene(up.sr_body(geo=f"<IndexedFaceSet coordIndex='0 1 2 3 -1'>{up.QUAD}</IndexedFaceSet>"), Image="p.png")
+    assert sim(quad, levels=("error", "warning")) == [] and sim(quad) == ["simready-mesh-not-triangulated"]

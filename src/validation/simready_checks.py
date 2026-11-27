@@ -132,14 +132,14 @@ def check_simready_thumbnail(scene, base_dir=None) -> list:
         return []
     url = head.get("image")
     if not url:
-        return [_diag("info", "simready-thumbnail-missing", _anchor(scene),
+        return [_diag("warning", "simready-thumbnail-missing", _anchor(scene),
                       "is bound for SimReady but names no thumbnail. Add <meta name=\"Image\" content=\"picture.png\"/> to <head> "
                       "(SimReady SR.002).")]
     if base_dir is not None and not re.match(r"^[a-z][a-z0-9+.-]*:", url, re.I):
         from pathlib import Path
         p = _inside(Path(base_dir), url)
         if p is None or not p.is_file():
-            return [_diag("info", "simready-thumbnail-missing", _anchor(scene),
+            return [_diag("warning", "simready-thumbnail-missing", _anchor(scene),
                           f"names thumbnail {url!r} in <meta name=\"Image\">, which is not a file beside the scene (SimReady SR.002).")]
     return []
 
@@ -170,7 +170,8 @@ def _geometry(scene):
 
 def check_simready_mesh_form(scene) -> list:
     """SimReady VG.MESH.001 (geometry shall be meshes): a stage with no mesh fails, and a mesh beside other geometry
-    is warned about. VG.021: meshes are triangulated."""
+    is warned about; both are a warning here, once. VG.021: meshes are triangulated (information: no SimReady rule
+    enforces it at c3bd1d8)."""
     head = _head(scene)
     if not _bound(head):
         return []
@@ -184,9 +185,10 @@ def check_simready_mesh_form(scene) -> list:
                          f"and every other geometry here is a primitive ({', '.join(names)}); the scene has no mesh. SimReady "
                          f"VG.MESH.001 wants the asset's geometry as meshes: use IndexedFaceSet or IndexedTriangleSet."))
     elif prims:
-        for p in prims:
-            out.append(_diag("info", "simready-geometry-not-mesh", p,
-                             "is not a mesh; SimReady VG.MESH.001 warns about geometry other than meshes in an asset."))
+        names = sorted({_tag(p) for p in prims})
+        out.append(_diag("warning", "simready-geometry-not-mesh", prims[0],
+                         f"is not a mesh ({len(prims)} such geometry node(s) here: {', '.join(names)}). The scene has a mesh as "
+                         f"SimReady VG.MESH.001 requires, and the same rule warns about any other kind of geometry beside it."))
     for el in meshes:
         t = _tag(el)
         if t == "IndexedFaceSet":
@@ -258,8 +260,8 @@ def check_simready_labels(scene) -> list:
                     continue
                 n = _WS.sub(" ", v.strip().lower())
                 canon = n if n in names else voc["alias"].get(n)
-                if canon:
-                    out.append(_diag("info", "simready-label-not-in-vocabulary", ms,
+                if canon:                                    # SimReady accepts it with a warning; so does this check
+                    out.append(_diag("warning", "simready-label-not-in-vocabulary", ms,
                                      f"holds {v!r}, which is not the canonical spelling in {voc['title']}; use {canon!r}."))
                 else:
                     out.append(_diag("warning", "simready-label-not-in-vocabulary", ms,
