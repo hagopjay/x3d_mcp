@@ -28,8 +28,11 @@ and the rest are not a validator matter in X3D, each for a stated reason:
     feature    a USD or Omniverse feature X3D 4.0 does not have (MDL, MaterialX, articulations, lidar, render products,
                texture colour space)
     engine     tied to one simulator's runtime schema (PhysX, Newton, MuJoCo, Isaac Sim, OmniGraph)
-    policy     a pipeline or profile convention (names, folders, thumbnails, required metadata keys, label
-               vocabularies), checkable only against a profile X3D does not yet define
+    profile    plain X3D leaves it open, the X3D SimReady profile (draft 2) closes it, and a file that opts in is
+               checked (src/validation/simready_checks.py): provenance, thumbnail, metres, mesh form, body counts,
+               semantic labels and their closed vocabularies. Counted apart from the six above
+    policy     a pipeline or profile convention (names, folders, package files, mate and gripper annotation, the AIF
+               equipment profile) that the X3D SimReady profile does not define
     judgement  needs a person or a render (tessellation density, pivot placement, logical grouping)
 """
 from __future__ import annotations
@@ -170,9 +173,75 @@ F = {
     "texture-large": ("file", "texture-too-large", doc(gp.tex('"huge.png"')), doc(gp.tex('"tex.png"'))),
 }
 
+# ---- the X3D SimReady profile, draft 2 (src/validation/simready_checks.py). Every scene here is also converted to USD
+# and judged by NVIDIA's validator in x3d.nvidia (q12/profile_crossing.py), so each is a physics scene the writer reads.
+MESH = f"<IndexedFaceSet coordIndex='{TET_IDX}'>{TET}</IndexedFaceSet>"
+SR_META = {"creator": "Proof Author", "license": "CC-BY-4.0", "simready:category": "Toys", "simready:qcode": "Q111"}
+
+
+def sr_doc(body_xml, unit="", **meta):
+    """A scene bound for SimReady: the four provenance fields, then any override (None removes a field)."""
+    m = dict(SR_META)
+    m.update({k.replace("__", ":"): v for k, v in meta.items()})
+    return doc(body_xml, head=unit + "".join(f'<meta name="{k}" content="{v}"/>' for k, v in m.items() if v is not None))
+
+
+def labels(**tax):
+    """A semantics:labels set; a value of None writes the taxonomy with no value."""
+    return ("<MetadataSet containerField='metadata' name='semantics:labels'>" + "".join(
+        f"<MetadataString containerField='value' name='{k}'" + (f" value='\"{v}\"'" if v is not None else "") + "/>"
+        for k, v in tax.items()) + "</MetadataSet>")
+
+
+def sr_body(name="A", x=0, geo=MESH, shape_meta="", app=APP, attrs=""):
+    return (f"<RigidBody DEF='{name}' position='{x} 0 0' {attrs}><CollidableShape containerField='geometry'>"
+            f"<Shape containerField='shape'>{shape_meta}{app}{geo}</Shape></CollidableShape></RigidBody>")
+
+
+def sr_scene(*bodies, **meta):
+    return sr_doc(world(*(bodies or (sr_body(),))), **meta)
+
+
+F.update({
+    "sr-provenance": ("sem", "simready-metadata-missing", sr_scene(creator=None, license=None), sr_scene()),
+    "sr-thumbnail": ("file", "simready-thumbnail-missing", sr_scene(Image="absent.png"), sr_scene(Image="tex.png")),
+    "sr-unit": ("sem", "simready-unit-not-metres",
+                sr_doc(world(sr_body()), unit="<unit category='length' name='centimetre' conversionFactor='0.01'/>"), sr_scene()),
+    "sr-mesh": ("sem", "simready-geometry-not-mesh", sr_scene(sr_body(geo="<Sphere radius='0.5'/>")), sr_scene()),
+    "sr-triangles": ("sem-info", "simready-mesh-not-triangulated",
+                     sr_scene(sr_body(geo=f"<IndexedFaceSet coordIndex='0 1 2 3 -1'>{QUAD}</IndexedFaceSet>")), sr_scene()),
+    "sr-one-body": ("sem", "simready-no-rigid-body", sr_scene(sr_body(attrs="fixed='true'"), simready__features="rigid_bodies"),
+                    sr_scene(simready__features="rigid_bodies")),
+    "sr-two-bodies": ("sem", "simready-single-body", sr_scene(simready__features="multibody"),
+                      sr_scene(sr_body("A"), sr_body("B", 2), simready__features="multibody")),
+    "sr-unlabelled": ("sem", "simready-shape-unlabelled", sr_scene(simready__features="semantic_labels"),
+                      sr_scene(sr_body(shape_meta=labels(wikidata_qcode="Q111")), simready__features="semantic_labels")),
+    "sr-label-empty": ("sem", "simready-label-empty", sr_scene(sr_body(shape_meta=labels(wikidata_qcode=None))),
+                       sr_scene(sr_body(shape_meta=labels(wikidata_qcode="Q111")))),
+    "sr-label-qcode": ("sem", "simready-qcode-malformed", sr_scene(sr_body(shape_meta=labels(wikidata_qcode="chair"))),
+                       sr_scene(sr_body(shape_meta=labels(wikidata_qcode="Q15026")))),
+    "sr-material-label": ("sem", "simready-material-unlabelled", sr_scene(simready__features="material_labels"),
+                          sr_scene(sr_body(app=f"<Appearance>{labels(material='plastic')}<Material/></Appearance>"),
+                                   simready__features="material_labels")),
+})
+# two pairs for the warning side of a SimReady rule (not a rule of their own): a mesh beside a primitive, and a label that
+# is in the vocabulary under a non-canonical spelling
+F["sr-mesh-mixed"] = ("sem", "simready-geometry-not-mesh", sr_scene(sr_body("A"), sr_body("B", 2, geo="<Sphere radius='0.5'/>")),
+                      sr_scene(sr_body("A"), sr_body("B", 2)))
+F["sr-vocab-alias"] = ("sem", "simready-label-not-in-vocabulary", sr_scene(sr_body(shape_meta=labels(cityscapes="Traffic_Light"))),
+                       sr_scene(sr_body(shape_meta=labels(cityscapes="traffic light"))))
+SR_WARNING_SIDE = {"sr-mesh-mixed": "geometry/geom-shall-be-mesh", "sr-vocab-alias": "CITY.001"}      # fixture -> rule it also crosses
+# one closed vocabulary each: a word that is in none of them, then a canonical name
+SR_VOCAB = {"coco": "chair", "cityscapes": "car", "ade20k": "wall", "pascal_voc": "chair", "sunrgbd": "chair",
+            "imagenet_1k": "goldfish", "affordance": "openable", "affordance_state": "open"}
+for _tax, _word in SR_VOCAB.items():
+    F[f"sr-vocab-{_tax}"] = ("sem", "simready-label-not-in-vocabulary", sr_scene(sr_body(shape_meta=labels(**{_tax: "gizmo"}))),
+                             sr_scene(sr_body(shape_meta=labels(**{_tax: _word}))))
+
 # rule id -> (status, fixture or None, note)
 X, S, N, G, P = "xsd", "semantic", "new", "gap", "parse"
 FIX, CONV, D, B, FEAT, ENG, POL, J, X41 = "fixed", "convention", "design", "binary", "feature", "engine", "policy", "judgement", "x3d-4.1"
+PRO = "profile"
 
 MAP: dict[str, tuple[str, str | None, str]] = {
     # ---- usd-core 26.11 (Pixar)
@@ -272,7 +341,7 @@ SR = {
     "UN.003": (FIX, None, "kilograms unless a UNIT statement says otherwise"),
     "UN.004": (FIX, None, "(L) each scene's UNIT statements apply to its own content"),
     "UN.005": (FIX, None, "time is in seconds"), "UN.006": (CONV, None, "X3D is +Y up; SimReady wants Z: the exporter rotates (Blender's USD export writes Z)"),
-    "UN.007": (POL, None, "a UNIT length other than 1 is legal X3D; SimReady wants metres"),
+    "UN.007": (PRO, "sr-unit", "a UNIT length other than 1 is legal X3D; the profile wants metres"),
     "HI.001": (FIX, None, "one Scene root"), "HI.002": (POL, None, ""), "HI.003": (POL, None, ""), "HI.004": (FIX, None, "one Scene root"),
     "HI.005": (D, None, "no xformOp stacks"), "HI.006": (J, None, ""), "HI.007": (POL, None, "placeholder requirement"),
     "HI.008": (J, None, ""), "HI.009": (J, None, ""), "HI.010": (D, None, "no over specifiers"),
@@ -282,7 +351,7 @@ SR = {
     "BA.001": (FEAT, None, "articulation root"), "BA.002": (N, "collider-overlap", "primitive collidables: spheres exact, others as oriented boxes"),
     "DJ.006": (J, None, "what is reasonable depends on the robot"), "DJ.011": (N, "joint-loop", ""),
     "JT.001": (J, None, "free-floating is a design choice"), "JT.002": (S, "joint-body", ""), "JT.003": (S, "joint-two-targets", ""),
-    "RB.001": (POL, None, "profile asks for at least one body"), "RB.003": (FIX, None, "RigidBody has position and orientation"),
+    "RB.001": (PRO, "sr-one-body", "asked of a file that claims the feature rigid_bodies"), "RB.003": (FIX, None, "RigidBody has position and orientation"),
     "RB.005": (N, "body-shared", ""), "RB.006": (FIX, None, "bodies are a flat list in RigidBodyCollection"),
     "RB.007": (FIX, None, "mass defaults to 1 kg"), "RB.008": (N, "inertia", ""),
     "RB.009": (FIX, None, "(L) a body's pose has no scale or skew field"), "RB.010": (FIX, None, "collidable geometry is not drawn"),
@@ -290,7 +359,7 @@ SR = {
     "physics_rigid_bodies/collider-capability": (D, None, "no API schemas"), "physics_rigid_bodies/collider-mesh": (D, None, "no API schemas"),
     "physics_rigid_bodies/collider-non-uniform-scale": (FIX, None, "collidables carry no scale"),
     "physics_rigid_bodies/mesh-collision-api": (D, None, "no API schemas"),
-    "physics_rigid_bodies/rigid-body-multibody-capability": (POL, None, "profile asks for two bodies"),
+    "physics_rigid_bodies/rigid-body-multibody-capability": (PRO, "sr-two-bodies", "asked of a file that claims the feature multibody"),
     "physics_joints/articulation": (FEAT, None, "articulation"),
     "DISP.001": (FIX, None, "a Shape without Appearance is drawn unlit white"), "DISP.002": (X, "colour-range", ""),
     "DISP.003": (X, "alpha-range", "counts: attribute-count-mismatch"),
@@ -302,10 +371,10 @@ SR = {
     "VG.009": (FIX, None, "indexed by construction"), "VG.010": (D, None, "no subdivision schemes"), "VG.011": (N, "unused-value", ""),
     "VG.012": (J, None, ""), "VG.013": (J, None, ""), "VG.014": (S, "index-oob", ""), "VG.015": (N, "constant-interp", ""),
     "VG.016": (N, "colocated", ""), "VG.017": (J, None, ""), "VG.018": (N, "unused-point", ""), "VG.019": (N, "zero-area", ""),
-    "VG.020": (N, "precision", "1 mm at the point's distance from the origin"), "VG.021": (POL, None, "polygons are legal X3D"),
+    "VG.020": (N, "precision", "1 mm at the point's distance from the origin"), "VG.021": (PRO, "sr-triangles", "polygons are legal X3D; the profile wants triangles (no executable SimReady rule at c3bd1d8)"),
     "VG.022": (N, "transparent-open", ""), "VG.023": (J, None, ""), "VG.024": (J, None, ""), "VG.025": (J, None, ""),
     "VG.026": (J, None, ""), "VG.027": (FIX, None, "normals are computed when absent"), "VG.028": (S, "normal-unit", ""),
-    "VG.029": (N, "winding", ""), "geometry/geom-shall-be-mesh": (POL, None, "primitives are legal X3D"),
+    "VG.029": (N, "winding", ""), "geometry/geom-shall-be-mesh": (PRO, "sr-mesh", "primitives are legal X3D; the profile wants a mesh"),
     "geometry/usdgeom-boundable-size-rtx-limit": (N, "precision", "partial: point values only; a far Transform is not followed"),
     "materials/material-assignment": (FIX, None, "a Shape without Appearance is drawn unlit white"),
     "materials/material-bind-scope": (FIX, None, "a USE cannot reach across an Inline boundary"),
@@ -320,6 +389,27 @@ SR = {
     "materials/material-texture-colorspace-preview": (FEAT, None, "texture colour space (an X_ITE extension, not X3D 4.0)"),
     "materials/material-texture-maxsize": (N, "texture-large", ""),
 }
+# the X3D SimReady profile, draft 2: rules a file states in <head> meta and semantics:labels metadata
+SR.update({
+    "SR.002": (PRO, "sr-thumbnail", "<meta name='Image'>, the Web3D authoring-hints name for the scene's picture"),
+    "SR.003": (PRO, "sr-provenance", "author, licence, category and Q-code in <head> meta; the writer measures the rest"),
+    "SR.004": (PRO, "sr-provenance", "author, licence, category and Q-code in <head> meta; the writer measures the rest"),
+    "SL.001": (PRO, "sr-unlabelled", "asked of a file that claims the feature semantic_labels"),
+    "SL.003": (PRO, "sr-label-empty", "a label written with no value"),
+    "semantic_labels/semantic-label-qcode-valid": (PRO, "sr-label-qcode", ""),
+    "semantic_labels/semantic-label-material": (PRO, "sr-material-label", "asked of a file that claims the feature material_labels"),
+    "ADE.001": (PRO, "sr-vocab-ade20k", "150 names"), "CITY.001": (PRO, "sr-vocab-cityscapes", "35 names"),
+    "COCO.001": (PRO, "sr-vocab-coco", "80 names"), "SUN.001": (PRO, "sr-vocab-sunrgbd", "10 names"),
+    "VOC.001": (PRO, "sr-vocab-pascal_voc", "20 names"),
+    "dataset_taxonomies/imagenet-labels": (PRO, "sr-vocab-imagenet_1k", "998 distinct names"),
+    "AFF.001": (PRO, "sr-vocab-affordance", "9 names"), "AFF.002": (PRO, "sr-vocab-affordance_state", "12 names"),
+    "SR.001": (POL, None, "asset name, type, source file and date: the X3D-to-USD writer authors all of them itself"),
+    "NP.006": (POL, None, "where the metadata is stored: the writer always writes it into the layer"),
+    "NP.001": (POL, None, "naming convention; SimReady's own checker rejects the conventional prim names World and Looks"),
+    "SL.002": (D, None, "the deprecated SemanticsAPI schema; X3D has one way to write a label"),
+    "semantic_labels/semantic-label-time": (POL, None, "a label animated over time; an X3D label is a static metadata value "
+                                            "unless a ROUTE writes to it, which this profile does not check"),
+})
 for r in RULES["rules"]:
     if r["source"] != "simready-foundation":
         continue
@@ -333,9 +423,10 @@ for r in RULES["rules"]:
         raise SystemExit(f"unmapped SimReady requirement {r['id']} ({r['capability']})")
     MAP[r["id"]] = entry
 
-STATEABLE = ("xsd", "semantic", "new", "parse", "x3d-4.1", "gap")
-ORDER = ["xsd", "semantic", "new", "parse", "x3d-4.1", "gap", "fixed", "convention", "design", "binary", "feature", "engine",
-         "policy", "judgement"]
+STATEABLE = ("xsd", "semantic", "new", "parse", "x3d-4.1", "gap")      # plain X3D states the mistake
+CHECKED = STATEABLE + ("profile",)                                       # a proof scene pair must exist
+ORDER = ["xsd", "semantic", "new", "parse", "x3d-4.1", "gap", "profile", "fixed", "convention", "design", "binary", "feature",
+         "engine", "policy", "judgement"]
 
 
 def run_fixture(name: str, folder: Path) -> dict:
@@ -371,7 +462,7 @@ def status_of(rid: str, results: dict) -> str:
     status, fx, _ = MAP[rid]
     if fx and F[fx][0] == "any" and status in ("semantic", "xsd"):
         return "xsd" if results[fx].get("bad_by") == "xsd" else "semantic"
-    if fx and status in STATEABLE and not (results[fx]["bad"] and not results[fx]["good"]):
+    if fx and status in CHECKED and not (results[fx]["bad"] and not results[fx]["good"]):
         return "gap"
     return status
 
@@ -388,7 +479,9 @@ def markdown(results: dict) -> str:
     tot = counts(results)
     rows = [("The X3D 4.0 schema rejects it", "xsd"), ("A check that existed before this work reports it", "semantic"),
             ("A check added in this work reports it", "new"), ("Stated with an X3D 4.1 node (GaussianSplats), checked", "x3d-4.1"),
-            ("Not covered (gap)", "gap"), ("X3D's standard fixes the answer, so the mistake cannot be made", "fixed"),
+            ("Not covered (gap)", "gap"),
+            ("Open in plain X3D, closed by the X3D SimReady profile (opt-in), and a check reports it", "profile"),
+            ("X3D's standard fixes the answer, so the mistake cannot be made", "fixed"),
             ("SimReady fixes it differently from X3D; the exporter converts", "convention"),
             ("USD structure with no X3D counterpart", "design"), ("usdc/usdz byte layout and packaging", "binary"),
             ("USD or Omniverse feature X3D 4.0 does not have", "feature"), ("One simulator's runtime schema", "engine"),
@@ -410,6 +503,9 @@ def markdown(results: dict) -> str:
              f"the project classified the other {n_all - stateable(tot)})** | " + " | ".join(
         f"**{stateable(per[s]) - per[s]['gap']} of {stateable(per[s])}**" for s, _ in srcs) +
         f" | **{stateable(tot) - tot['gap']} of {stateable(tot)}** |")
+    L.append(f"| **Stated and checked once the profile is counted ({stateable(tot) - tot['gap'] + tot['profile']} of the {n_all} rules)** | "
+             + " | ".join(f"**{stateable(per[s]) - per[s]['gap'] + per[s]['profile']}**" for s, _ in srcs)
+             + f" | **{stateable(tot) - tot['gap'] + tot['profile']}** |")
     L.append("| Rules | " + " | ".join(str(sum(per[s].values())) for s, _ in srcs) + f" | {sum(tot.values())} |")
     L += ["", "How to read it:", "",
           "- **Most USD rules are not about mistakes X3D can make.** OpenUSD's own validators are mostly about USD's composition",
@@ -419,8 +515,12 @@ def markdown(results: dict) -> str:
           "- **The convention row is the exporter's job.** SimReady wants Z up; X3D is +Y up. Blender's USD export writes Z up, so the X3D →",
           "  Blender → USD road meets it; a direct X3D → USD writer must rotate.",
           "- **Engine and policy rows are where SimReady is a profile, not a validator.** They name PhysX, Newton, MuJoCo and Isaac Sim",
-          "  schemas, file and folder layouts, thumbnails and label vocabularies. An X3D SimReady profile (metadata conventions checked here)",
-          "  would move many policy rows into the covered column; it does not exist yet.",
+          "  schemas, file and folder layouts, package files and annotation conventions.",
+          "- **The profile row is kept apart on purpose.** Plain X3D does not ask for a licence, a thumbnail, metres, triangles or labels,",
+          "  so these are not mistakes in X3D. The X3D SimReady profile (draft 2, `src/validation/simready_checks.py`) defines where an",
+          "  X3D file writes each fact, and checks a file only when it opts in with a `simready:` meta element. A file that does not opt in",
+          "  is never reported. Each profile row has its proof scene pair here, and the same pair is converted to USD and judged by NVIDIA's",
+          "  validator in x3d.nvidia (`q12/profile_crossing.py`), where the receipts live.",
           "- **The feature rows count against X3D as a language**: MDL and MaterialX materials, texture colour space, articulations, fixed",
           "  joints, lidar and render products cannot be written in X3D 4.0.", "",
           "## Every rule", "", "| Rule | Source | X3D | X3D check | Proof scene | Note |", "|---|---|---|---|---|---|"]

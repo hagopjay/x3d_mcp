@@ -1202,11 +1202,14 @@ SCENE_CHECKS += [check_angle_units, check_extrusion_spine, check_light_direction
 def data_diagnostics(scene, base_dir=None) -> list:
     from validation.usd_checks import USD_FILE_CHECKS, USD_SCENE_CHECKS   # answers to the USD validators
     from validation.inert_checks import INERT_CHECKS                       # wired legally, does nothing
+    from validation.simready_checks import SIMREADY_FILE_CHECKS, SIMREADY_SCENE_CHECKS   # opt-in SimReady profile
     out = []
-    for fn in SCENE_CHECKS + USD_SCENE_CHECKS + INERT_CHECKS:
+    for fn in SCENE_CHECKS + USD_SCENE_CHECKS + INERT_CHECKS + SIMREADY_SCENE_CHECKS:
         out.extend(fn(scene))
     if base_dir is not None:
         out.extend(check_files(scene, base_dir))
         for fn in USD_FILE_CHECKS:
             out.extend(fn(scene, base_dir))
+    for fn in SIMREADY_FILE_CHECKS:                                        # judge the name without a folder, the file with one
+        out.extend(fn(scene, base_dir))
     return out
