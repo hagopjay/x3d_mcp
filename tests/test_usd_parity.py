@@ -27,7 +27,7 @@ def test_map_covers_every_rule_and_names_real_fixtures():
     assert set(up.MAP) == set(ids)
     for rid, (status, fixture, _) in up.MAP.items():
         assert status in up.ORDER, rid
-        if status in up.STATEABLE and status != "gap":
+        if status in up.CHECKED and status != "gap":
             assert fixture in up.F, rid
         else:
             assert fixture is None, rid
@@ -50,9 +50,10 @@ def test_every_new_check_is_claimed():
     import inspect
     import re
 
-    from validation import usd_checks
+    from validation import simready_checks, usd_checks
     claimed = {up.F[fx][1] for _, fx, _ in up.MAP.values() if fx}
-    for fn in usd_checks.USD_SCENE_CHECKS + usd_checks.USD_FILE_CHECKS:
+    for fn in (usd_checks.USD_SCENE_CHECKS + usd_checks.USD_FILE_CHECKS
+               + simready_checks.SIMREADY_SCENE_CHECKS + simready_checks.SIMREADY_FILE_CHECKS):
         ids = set(re.findall(r'_diag\("(?:error|warning|info)", "([a-z0-9-]+)"', inspect.getsource(fn)))
         assert ids and ids <= claimed, (fn.__name__, ids - claimed)
 

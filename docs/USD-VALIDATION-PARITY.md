@@ -14,15 +14,17 @@ below has one scene that must be reported and one that must pass (`tests/test_us
 | A check added in this work reports it | 1 | 9 | 18 | 28 |
 | Stated with an X3D 4.1 node (GaussianSplats), checked | 0 | 0 | 5 | 5 |
 | Not covered (gap) | 0 | 0 | 0 | 0 |
+| Open in plain X3D, closed by the X3D SimReady profile (opt-in), and a check reports it | 0 | 0 | 20 | 20 |
 | X3D's standard fixes the answer, so the mistake cannot be made | 5 | 7 | 20 | 32 |
 | SimReady fixes it differently from X3D; the exporter converts | 0 | 0 | 1 | 1 |
-| USD structure with no X3D counterpart | 14 | 9 | 22 | 45 |
+| USD structure with no X3D counterpart | 14 | 9 | 23 | 46 |
 | usdc/usdz byte layout and packaging | 3 | 1 | 1 | 5 |
 | USD or Omniverse feature X3D 4.0 does not have | 1 | 3 | 34 | 38 |
 | One simulator's runtime schema | 0 | 0 | 44 | 44 |
-| Pipeline or profile convention | 0 | 0 | 92 | 92 |
+| Pipeline or profile convention | 0 | 0 | 71 | 71 |
 | Needs a person or a render | 0 | 0 | 17 | 17 |
 | **Covered, of the mistakes the project judged X3D can state (66 of the 340 rules; the project classified the other 274)** | **7 of 7** | **20 of 20** | **39 of 39** | **66 of 66** |
+| **Stated and checked once the profile is counted (86 of the 340 rules)** | **7** | **20** | **59** | **86** |
 | Rules | 30 | 40 | 270 | 340 |
 
 How to read it:
@@ -34,8 +36,12 @@ How to read it:
 - **The convention row is the exporter's job.** SimReady wants Z up; X3D is +Y up. Blender's USD export writes Z up, so the X3D →
   Blender → USD road meets it; a direct X3D → USD writer must rotate.
 - **Engine and policy rows are where SimReady is a profile, not a validator.** They name PhysX, Newton, MuJoCo and Isaac Sim
-  schemas, file and folder layouts, thumbnails and label vocabularies. An X3D SimReady profile (metadata conventions checked here)
-  would move many policy rows into the covered column; it does not exist yet.
+  schemas, file and folder layouts, package files and annotation conventions.
+- **The profile row is kept apart on purpose.** Plain X3D does not ask for a licence, a thumbnail, metres, triangles or labels,
+  so these are not mistakes in X3D. The X3D SimReady profile (draft 2, `src/validation/simready_checks.py`) defines where an
+  X3D file writes each fact, and checks a file only when it opts in with a `simready:` meta element. A file that does not opt in
+  is never reported. Each profile row has its proof scene pair here, and the same pair is converted to USD and judged by NVIDIA's
+  validator in x3d.nvidia (`q12/profile_crossing.py`), where the receipts live.
 - **The feature rows count against X3D as a language**: MDL and MaterialX materials, texture colour space, articulations, fixed
   joints, lidar and render products cannot be written in X3D 4.0.
 
@@ -115,10 +121,10 @@ How to read it:
 | ZeroAreaFaceChecker | Omniverse AV | new | `mesh-zero-area-face` | zero-area | degenerate-face covers a repeated index |
 | AA.001 anchored-asset-paths | SimReady | semantic | `url-absolute-path` | url-absolute | anchored (relative) paths |
 | AA.002 supported-file-types | SimReady | semantic | `image-unrecognized` | not-image |  |
-| ADE.001 ade20k-labels | SimReady | policy |  |  | label vocabulary |
+| ADE.001 ade20k-labels | SimReady | profile | `simready-label-not-in-vocabulary` | sr-vocab-ade20k | 150 names |
 | AF.001 forward-direction | SimReady | policy |  |  | facing metadata |
-| AFF.001 object-affordance-valid | SimReady | policy |  |  | affordance labels |
-| AFF.002 object-affordance-state-valid | SimReady | policy |  |  | affordance labels |
+| AFF.001 object-affordance-valid | SimReady | profile | `simready-label-not-in-vocabulary` | sr-vocab-affordance | 9 names |
+| AFF.002 object-affordance-state-valid | SimReady | profile | `simready-label-not-in-vocabulary` | sr-vocab-affordance_state | 12 names |
 | AM.001 properties-sublayer-required | SimReady | policy |  |  | AIF data-centre equipment profile |
 | AM.002 asset-class-required | SimReady | policy |  |  | AIF data-centre equipment profile |
 | AM.003 asset-identification-metadata | SimReady | policy |  |  | AIF data-centre equipment profile |
@@ -138,7 +144,7 @@ How to read it:
 | AV.010 variation-stability | SimReady | design |  |  | variant sets |
 | BA.001 has-articulation-root | SimReady | feature |  |  | articulation root |
 | BA.002 non-adjacent-collision-meshes-do-not-clash | SimReady | new | `physics-collider-overlap` | collider-overlap | primitive collidables: spheres exact, others as oriented boxes |
-| CITY.001 cityscapes-labels | SimReady | policy |  |  | label vocabulary |
+| CITY.001 cityscapes-labels | SimReady | profile | `simready-label-not-in-vocabulary` | sr-vocab-cityscapes | 35 names |
 | CN.001 connection-rels | SimReady | policy |  |  | SimReady mate and connection profile |
 | CN.002 connection-targets-resolve | SimReady | policy |  |  | SimReady mate and connection profile |
 | CN.003 opposite-roles | SimReady | policy |  |  | SimReady mate and connection profile |
@@ -151,7 +157,7 @@ How to read it:
 | CN.010 assembly-child-references | SimReady | policy |  |  | SimReady mate and connection profile |
 | CN.011 compound-body | SimReady | policy |  |  | SimReady mate and connection profile |
 | CN.012 assembly-model-hierarchy | SimReady | policy |  |  | SimReady mate and connection profile |
-| COCO.001 coco-labels | SimReady | policy |  |  | label vocabulary |
+| COCO.001 coco-labels | SimReady | profile | `simready-label-not-in-vocabulary` | sr-vocab-coco | 80 names |
 | COL.001 collider-approximation-sdf | SimReady | engine |  |  | collider approximation |
 | CP.001 connectionpoints-scope-structure | SimReady | policy |  |  | AIF data-centre equipment profile |
 | CP.002 connection-point-geometry-type | SimReady | policy |  |  | AIF data-centre equipment profile |
@@ -210,12 +216,12 @@ How to read it:
 | MC.005 mate-insertion-vector | SimReady | policy |  |  | SimReady mate and connection profile |
 | MC.006 socket-max-payload | SimReady | policy |  |  | SimReady mate and connection profile |
 | MC.007 mechanical-kind | SimReady | policy |  |  | SimReady mate and connection profile |
-| NP.001 prim-naming-convention | SimReady | policy |  |  | naming and folder convention |
+| NP.001 prim-naming-convention | SimReady | policy |  |  | naming convention; SimReady's own checker rejects the conventional prim names World and Looks |
 | NP.002 file-naming-convention | SimReady | policy |  |  | naming and folder convention |
 | NP.003 directory-structure | SimReady | policy |  |  | naming and folder convention |
 | NP.004 path-length-limits | SimReady | policy |  |  | naming and folder convention |
 | NP.005 asset-folder-structure | SimReady | policy |  |  | naming and folder convention |
-| NP.006 metadata-location | SimReady | policy |  |  | naming and folder convention |
+| NP.006 metadata-location | SimReady | policy |  |  | where the metadata is stored: the writer always writes it into the layer |
 | NP.007 relative-paths | SimReady | semantic | `url-absolute-path` | url-absolute |  |
 | NP.008 assetpath-validation | SimReady | semantic | `url-unresolved` | url-missing |  |
 | NVM.001 material-attributes | SimReady | feature |  |  | non-visual sensor materials and lidar |
@@ -231,7 +237,7 @@ How to read it:
 | PMT.001 collider-material-binding | SimReady | design |  |  | contact parameters live on CollisionCollection |
 | PS.001 imu-sensor-rigid-body | SimReady | feature |  |  | IMU and joint-state sensors |
 | PS.002 joint-sensor-articulation-root | SimReady | feature |  |  | IMU and joint-state sensors |
-| RB.001 rigid-body-capability | SimReady | policy |  |  | profile asks for at least one body |
+| RB.001 rigid-body-capability | SimReady | profile | `simready-no-rigid-body` | sr-one-body | asked of a file that claims the feature rigid_bodies |
 | RB.003 rigid-body-schema-application | SimReady | fixed |  |  | RigidBody has position and orientation |
 | RB.005 rigid-body-no-instancing | SimReady | new | `physics-body-shared` | body-shared |  |
 | RB.006 rigid-body-no-nesting | SimReady | fixed |  |  | bodies are a flat list in RigidBodyCollection |
@@ -271,20 +277,20 @@ How to read it:
 | RV.009 mujoco-variant-metadata | SimReady | engine |  |  | per-simulator variant sets |
 | RV.010 runtime-variant-section-purity | SimReady | engine |  |  | per-simulator variant sets |
 | RV.011 runtime-physics-isolation | SimReady | engine |  |  | per-simulator variant sets |
-| SL.001 semantic-label-capability | SimReady | policy |  |  | labels can ride in X3D metadata; no standard vocabulary |
-| SL.002 semantic-label-deprecated-schema | SimReady | policy |  |  | labels can ride in X3D metadata; no standard vocabulary |
-| SL.003 semantic-label-schema | SimReady | policy |  |  | labels can ride in X3D metadata; no standard vocabulary |
+| SL.001 semantic-label-capability | SimReady | profile | `simready-shape-unlabelled` | sr-unlabelled | asked of a file that claims the feature semantic_labels |
+| SL.002 semantic-label-deprecated-schema | SimReady | design |  |  | the deprecated SemanticsAPI schema; X3D has one way to write a label |
+| SL.003 semantic-label-schema | SimReady | profile | `simready-label-empty` | sr-label-empty | a label written with no value |
 | SPL.001 splat-prim-type | SimReady | policy |  |  | the asset's chosen representation |
 | SPL.002 splat-has-positions | SimReady | x3d-4.1 | `splat-array-length` | splat-positions |  |
 | SPL.003 splat-has-scales | SimReady | x3d-4.1 | `splat-array-length` | splat-scales |  |
 | SPL.004 splat-has-orientations | SimReady | x3d-4.1 | `splat-array-length` | splat-orientations |  |
 | SPL.005 splat-has-opacities | SimReady | x3d-4.1 | `splat-array-length` | splat-opacities |  |
 | SPL.006 splat-has-radiance | SimReady | x3d-4.1 | `splat-no-color` | splat-radiance |  |
-| SR.001 metadata-whitelist | SimReady | policy |  |  | SimReady metadata and thumbnail |
-| SR.002 thumbnail-exist | SimReady | policy |  |  | SimReady metadata and thumbnail |
-| SR.003 nested-simready-metadata | SimReady | policy |  |  | SimReady metadata and thumbnail |
-| SR.004 metadata-union | SimReady | policy |  |  | SimReady metadata and thumbnail |
-| SUN.001 sunrgbd-labels | SimReady | policy |  |  | label vocabulary |
+| SR.001 metadata-whitelist | SimReady | policy |  |  | asset name, type, source file and date: the X3D-to-USD writer authors all of them itself |
+| SR.002 thumbnail-exist | SimReady | profile | `simready-thumbnail-missing` | sr-thumbnail | <meta name='Image'>, the Web3D authoring-hints name for the scene's picture |
+| SR.003 nested-simready-metadata | SimReady | profile | `simready-metadata-missing` | sr-provenance | author, licence, category and Q-code in <head> meta; the writer measures the rest |
+| SR.004 metadata-union | SimReady | profile | `simready-metadata-missing` | sr-provenance | author, licence, category and Q-code in <head> meta; the writer measures the rest |
+| SUN.001 sunrgbd-labels | SimReady | profile | `simready-label-not-in-vocabulary` | sr-vocab-sunrgbd | 10 names |
 | TC.001 nominal-cooling-capacity | SimReady | policy |  |  | AIF data-centre equipment profile |
 | TC.002 thermal-cooling-connection-points | SimReady | policy |  |  | AIF data-centre equipment profile |
 | TMP.001 default-prim | SimReady | fixed |  |  | one Scene root |
@@ -294,7 +300,7 @@ How to read it:
 | UN.004 corrective-transforms | SimReady | fixed |  |  | (L) each scene's UNIT statements apply to its own content |
 | UN.005 timecodes-per-second | SimReady | fixed |  |  | time is in seconds |
 | UN.006 upaxis-z | SimReady | convention |  |  | X3D is +Y up; SimReady wants Z: the exporter rotates (Blender's USD export writes Z) |
-| UN.007 meters-per-unit-1 | SimReady | policy |  |  | a UNIT length other than 1 is legal X3D; SimReady wants metres |
+| UN.007 meters-per-unit-1 | SimReady | profile | `simready-unit-not-metres` | sr-unit | a UNIT length other than 1 is legal X3D; the profile wants metres |
 | VG.001 at-least-one-imageable-geometry | SimReady | new | `scene-no-geometry` | no-geometry |  |
 | VG.002 usdgeom-extent | SimReady | semantic | `bbox-too-small` | bbox |  |
 | VG.003 usdgeom-mesh-internal-geometry | SimReady | judgement |  |  |  |
@@ -315,7 +321,7 @@ How to read it:
 | VG.018 usdgeom-mesh-unused-topology | SimReady | new | `mesh-unused-point` | unused-point |  |
 | VG.019 usdgeom-mesh-zero-area | SimReady | new | `mesh-zero-area-face` | zero-area |  |
 | VG.020 usdgeom-pointbased-points-precision | SimReady | new | `coordinate-precision` | precision | 1 mm at the point's distance from the origin |
-| VG.021 usdgeom-mesh-triangulation | SimReady | policy |  |  | polygons are legal X3D |
+| VG.021 usdgeom-mesh-triangulation | SimReady | profile | `simready-mesh-not-triangulated` | sr-triangles | polygons are legal X3D; the profile wants triangles (no executable SimReady rule at c3bd1d8) |
 | VG.022 usdgeom-mesh-transparent-is-watertight | SimReady | new | `transparent-open-mesh` | transparent-open |  |
 | VG.023 mesh-xform-positioning | SimReady | judgement |  |  |  |
 | VG.024 identical-mesh-consistency | SimReady | judgement |  |  |  |
@@ -324,7 +330,7 @@ How to read it:
 | VG.027 usdgeom-mesh-normals-exist | SimReady | fixed |  |  | normals are computed when absent |
 | VG.028 usdgeom-mesh-normals-must-be-valid | SimReady | semantic | `normal-not-unit` | normal-unit |  |
 | VG.029 usdgeom-mesh-winding-order | SimReady | new | `mesh-normal-against-winding` | winding |  |
-| VOC.001 pascal-voc-labels | SimReady | policy |  |  | label vocabulary |
+| VOC.001 pascal-voc-labels | SimReady | profile | `simready-label-not-in-vocabulary` | sr-vocab-pascal_voc | 20 names |
 | atomic_asset/ov-usdz-udim-limitation | SimReady | binary |  |  | usdz |
 | base_articulation/mujoco-standard-articulation-root | SimReady | feature |  |  | articulation |
 | base_articulation/newton-articulation-root-config | SimReady | feature |  |  | articulation |
@@ -333,8 +339,8 @@ How to read it:
 | connections/mujoco-connection-joint | SimReady | policy |  |  | SimReady mate and connection profile |
 | connections/newton-connection-joint | SimReady | policy |  |  | SimReady mate and connection profile |
 | connections/physx-connection-joint | SimReady | policy |  |  | SimReady mate and connection profile |
-| dataset_taxonomies/imagenet-labels | SimReady | policy |  |  | label vocabulary |
-| geometry/geom-shall-be-mesh | SimReady | policy |  |  | primitives are legal X3D |
+| dataset_taxonomies/imagenet-labels | SimReady | profile | `simready-label-not-in-vocabulary` | sr-vocab-imagenet_1k | 998 distinct names |
+| geometry/geom-shall-be-mesh | SimReady | profile | `simready-geometry-not-mesh` | sr-mesh | primitives are legal X3D; the profile wants a mesh |
 | geometry/usdgeom-boundable-size-rtx-limit | SimReady | new | `coordinate-precision` | precision | partial: point values only; a far Transform is not followed |
 | materials/material-assignment | SimReady | fixed |  |  | a Shape without Appearance is drawn unlit white |
 | materials/material-bind-scope | SimReady | fixed |  |  | a USE cannot reach across an Inline boundary |
@@ -379,7 +385,7 @@ How to read it:
 | physics_rigid_bodies/newton-sdf-attributes | SimReady | engine |  |  | simulator collision schema |
 | physics_rigid_bodies/physx-collider-capability | SimReady | engine |  |  | simulator collision schema |
 | physics_rigid_bodies/physx-collider-mesh | SimReady | engine |  |  | simulator collision schema |
-| physics_rigid_bodies/rigid-body-multibody-capability | SimReady | policy |  |  | profile asks for two bodies |
-| semantic_labels/semantic-label-material | SimReady | policy |  |  | labels can ride in X3D metadata; no standard vocabulary |
-| semantic_labels/semantic-label-qcode-valid | SimReady | policy |  |  | labels can ride in X3D metadata; no standard vocabulary |
-| semantic_labels/semantic-label-time | SimReady | policy |  |  | labels can ride in X3D metadata; no standard vocabulary |
+| physics_rigid_bodies/rigid-body-multibody-capability | SimReady | profile | `simready-single-body` | sr-two-bodies | asked of a file that claims the feature multibody |
+| semantic_labels/semantic-label-material | SimReady | profile | `simready-material-unlabelled` | sr-material-label | asked of a file that claims the feature material_labels |
+| semantic_labels/semantic-label-qcode-valid | SimReady | profile | `simready-qcode-malformed` | sr-label-qcode |  |
+| semantic_labels/semantic-label-time | SimReady | policy |  |  | a label animated over time; an X3D label is a static metadata value unless a ROUTE writes to it, which this profile does not check |
