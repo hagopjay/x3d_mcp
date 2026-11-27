@@ -1115,10 +1115,95 @@ def check_orientation_steps(scene) -> list:
 SCENE_CHECKS.append(check_orientation_steps)
 
 
+# --------------------------------------------------------------------------- third pass: units and empty shapes
+# Three checks written from the misses of the blind structure test (x3d.loom flywheel/sprint-20261126/fault-court-2b:
+# creaseAngle 30, a rotation of 90, an Extrusion with one spine point, a light pointing nowhere). All four files are
+# schema-valid, so on that set these are a fix confirmation and not a score.
+
+_ANGLE_FIELDS = {          # node -> ((field, index of the angle in the value, largest sensible value in radians), ...)
+    "Transform": (("rotation", 3, 2 * math.pi), ("scaleOrientation", 3, 2 * math.pi)),
+    "Viewpoint": (("orientation", 3, 2 * math.pi), ("fieldOfView", 0, math.pi)),
+    "OrthoViewpoint": (("orientation", 3, 2 * math.pi),),
+    "GeoViewpoint": (("orientation", 3, 2 * math.pi), ("fieldOfView", 0, math.pi)),
+    "Billboard": (),
+    "HAnimJoint": (("rotation", 3, 2 * math.pi),),
+    "TextureTransform": (("rotation", 0, 2 * math.pi),),
+    "SpotLight": (("cutOffAngle", 0, math.pi / 2), ("beamWidth", 0, math.pi / 2)),
+    "IndexedFaceSet": (("creaseAngle", 0, math.pi),), "ElevationGrid": (("creaseAngle", 0, math.pi),),
+    "Extrusion": (("creaseAngle", 0, math.pi),), "IndexedTriangleSet": (), "GeoElevationGrid": (("creaseAngle", 0, math.pi),),
+    "Arc2D": (("startAngle", 0, 2 * math.pi), ("endAngle", 0, 2 * math.pi)),
+    "ArcClose2D": (("startAngle", 0, 2 * math.pi), ("endAngle", 0, 2 * math.pi)),
+}
+
+
+def _degree_like(v: float, top: float) -> bool:
+    """Past the largest sensible radian value and a whole number of degrees a person would write (a multiple of 5)."""
+    a = abs(v)
+    return a > top and a >= 15 and abs(a - round(a)) < 1e-9 and round(a) % 5 == 0
+
+
+def check_angle_units(scene) -> list:
+    """Every angle in X3D is in radians unless a UNIT statement says otherwise (19775-1 4.3.6). A value such as 90,
+    45 or 30 in an angle field is almost always degrees: rotation 0 1 0 90 turns 14.3 times round and lands 116
+    degrees away from where the author meant, and creaseAngle 30 smooths every edge."""
+    root = scene.getroottree().getroot()
+    if any(_tag(u) == "unit" and (u.get("category") or "").lower() == "angle" for u in root.iter()):
+        return []                                             # the file declares its own angle unit
+    out = []
+    for el in scene.iter():
+        spec = _ANGLE_FIELDS.get(_tag(el))
+        if not spec or el.get("USE"):
+            continue
+        for field, i, top in spec:
+            v = _nums(el.get(field))
+            if not v or len(v) <= i or not _degree_like(v[i], top):
+                continue
+            rad = math.radians(v[i])
+            out.append(_diag("warning", "angle-looks-like-degrees", el,
+                             f"has {field} with the angle {v[i]:g}. X3D angles are in radians, and {v[i]:g} reads as "
+                             f"degrees: write {rad:.6g} for {v[i]:g} degrees, or add a UNIT statement for angles."))
+    return out
+
+
+def check_extrusion_spine(scene) -> list:
+    """An Extrusion sweeps its crossSection along its spine; with fewer than two spine points there is no path and
+    with fewer than two crossSection points no outline, so nothing is drawn (19775-1 13.3.5)."""
+    out = []
+    for el in scene.iter():
+        if _tag(el) != "Extrusion" or el.get("USE") or any(_tag(c) == "IS" for c in el):
+            continue
+        for field, width, what in (("spine", 3, "path"), ("crossSection", 2, "outline")):
+            v = _nums(el.get(field))
+            if v is not None and el.get(field) is not None and len(v) // width < 2:
+                out.append(_diag("error", "extrusion-too-few-points", el,
+                                 f"has {len(v) // width} {field} point(s); it needs at least two to make a {what}, so "
+                                 f"nothing is drawn."))
+    return out
+
+
+def check_light_direction(scene) -> list:
+    """A DirectionalLight or SpotLight whose direction is 0 0 0 points nowhere; what a browser then does is not
+    defined, and most light nothing."""
+    out = []
+    for el in scene.iter():
+        if _tag(el) not in ("DirectionalLight", "SpotLight") or el.get("USE"):
+            continue
+        v = _nums(el.get("direction"))
+        if v and len(v) == 3 and all(abs(x) < 1e-12 for x in v):
+            out.append(_diag("warning", "light-direction-zero", el,
+                             "has direction 0 0 0, which points nowhere, so it lights nothing in most browsers. "
+                             "Give it a direction such as 0 0 -1."))
+    return out
+
+
+SCENE_CHECKS += [check_angle_units, check_extrusion_spine, check_light_direction]
+
+
 def data_diagnostics(scene, base_dir=None) -> list:
     from validation.usd_checks import USD_FILE_CHECKS, USD_SCENE_CHECKS   # answers to the USD validators
+    from validation.inert_checks import INERT_CHECKS                       # wired legally, does nothing
     out = []
-    for fn in SCENE_CHECKS + USD_SCENE_CHECKS:
+    for fn in SCENE_CHECKS + USD_SCENE_CHECKS + INERT_CHECKS:
         out.extend(fn(scene))
     if base_dir is not None:
         out.extend(check_files(scene, base_dir))
