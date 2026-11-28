@@ -1,7 +1,8 @@
 """Legal X3D that plays or draws wrong (validation/plays_checks.py).
 
-Written from the 15 misses of blind court 3 in x3d.loom flywheel/court-3, so these are regression tests, not a
-held-out score. Each check has the mistake, its corrected twin, and the cases it must leave alone."""
+The first thirteen checks were written from the 15 misses of blind court 3 in x3d.loom flywheel/court-3, so their
+tests are regression tests, not a held-out score. The last seven come from the editor's own list. Each check has the
+mistake, its corrected twin, and the cases it must leave alone."""
 from validation.semantic import semantic_diagnostics
 
 TAIL = "</Scene></X3D>"
@@ -350,3 +351,103 @@ def test_clock_running_before_the_toggle_that_should_start_it():
 def test_toggle_and_clock_that_start_in_step_are_quiet():
     assert checks(toggle(clock_attrs="enabled='false'")) == []
     assert checks(toggle(toggle_attrs="toggle='true'")) == []
+
+
+# ====================================================================== from the editor's own list
+MORE = ("switch-shows-nothing", "face-concave", "mesh-faces-away", "light-scope-empty", "timesensor-stopped-in-past",
+        "timesensor-paused-forever", "shape-fully-transparent", "viewpoint-sees-nothing")
+
+
+def more(body, profile="Immersive"):
+    text = f"<X3D profile='{profile}' version='4.0'><Scene>{body}{TAIL}"
+    return [(d.level, d.check) for d in semantic_diagnostics(text) if d.check in MORE]
+
+
+def test_switch_with_no_which_choice_shows_nothing():
+    assert more(f"<Switch>{BALL}{BALL}</Switch>") == [("warning", "switch-shows-nothing")]
+    assert more(f"<Switch whichChoice='0'>{BALL}{BALL}</Switch>") == []
+
+
+def test_switch_left_alone_when_minus_one_is_written_routed_or_a_shelf():
+    assert more(f"<Switch whichChoice='-1'>{BALL}</Switch>") == []
+    routed = (f"<Switch DEF='S'>{BALL}{BALL}</Switch><TimeSensor DEF='C' loop='true'/>"
+              "<IntegerSequencer DEF='Q' key='0 1' keyValue='0 1'/>"
+              "<ROUTE fromNode='C' fromField='fraction_changed' toNode='Q' toField='set_fraction'/>"
+              "<ROUTE fromNode='Q' fromField='value_changed' toNode='S' toField='set_whichChoice'/>")
+    assert more(routed) == []
+    shelf = "<Switch><Shape DEF='Part'><Box/></Shape></Switch><Transform><Shape USE='Part'/></Transform>"
+    assert more(shelf) == []
+
+
+L_SHAPE = "0 0 0, 2 0 0, 2 1 0, 1 1 0, 1 2 0, 0 2 0"
+
+
+def face(attrs="", pts=L_SHAPE, index="0 1 2 3 4 5 -1"):
+    return f"<Shape><IndexedFaceSet solid='false' coordIndex='{index}' {attrs}><Coordinate point='{pts}'/></IndexedFaceSet></Shape>"
+
+
+def test_l_shaped_face_declared_convex():
+    assert more(face()) == [("warning", "face-concave")]
+    assert more(face("convex='false'")) == []
+
+
+def test_convex_and_bent_faces_are_left_alone():
+    assert more(face(pts="0 0 0, 2 0 0, 2 2 0, 0 2 0", index="0 1 2 3 -1")) == []
+    assert more(face(pts="0 0 0, 2 0 0, 2 2 1, 0 2 0", index="0 1 2 3 -1")) == []      # not flat: no outline to judge
+
+
+def floor(index, attrs=""):
+    return (f"<Viewpoint position='0 5 10'/><Shape><IndexedFaceSet coordIndex='{index}' {attrs}>"
+            "<Coordinate point='-5 0 -5, 5 0 -5, 5 0 5, -5 0 5'/></IndexedFaceSet></Shape>")
+
+
+def test_floor_wound_to_face_down_is_noted():
+    assert more(floor("0 1 2 3 -1")) == [("info", "mesh-faces-away")]
+    assert more(floor("3 2 1 0 -1")) == []
+    assert more(floor("0 1 2 3 -1", "ccw='false'")) == []
+    assert more(floor("0 1 2 3 -1", "solid='false'")) == []
+
+
+def test_floor_seen_from_below_by_a_second_viewpoint_is_quiet():
+    assert more("<Viewpoint position='0 -5 0'/>" + floor("0 1 2 3 -1")) == []
+
+
+def test_directional_light_alone_in_its_group():
+    assert more(f"<Group><DirectionalLight/></Group><Transform>{BALL}</Transform>") == [("warning", "light-scope-empty")]
+
+
+def test_lights_that_reach_a_shape_are_quiet():
+    assert more(f"<DirectionalLight/><Transform>{BALL}</Transform>") == []
+    assert more(f"<Group><DirectionalLight/>{BALL}</Group>") == []
+    assert more(f"<Group><DirectionalLight global='true'/></Group><Transform>{BALL}</Transform>") == []
+    assert more(f"<Group><PointLight/></Group><Transform>{BALL}</Transform>") == []
+
+
+def test_clock_stopped_in_1970():
+    assert more(clock("loop='true' startTime='0' stopTime='5'")) == [("warning", "timesensor-stopped-in-past")]
+    assert more(clock("loop='true'")) == []
+
+
+def test_clock_paused_as_soon_as_it_starts():
+    assert more(clock("loop='true' pauseTime='2'")) == [("warning", "timesensor-paused-forever")]
+    assert more(clock("loop='true' pauseTime='2' resumeTime='4'")) == []
+
+
+GHOST = "<Shape><Appearance><Material transparency='1'/></Appearance><Box/></Shape>"
+
+
+def test_shape_with_transparency_one():
+    assert more(GHOST) == [("warning", "shape-fully-transparent")]
+    assert more(GHOST.replace("'1'", "'0.5'")) == []
+
+
+def test_invisible_click_target_and_collision_proxy_are_left_alone():
+    assert more(f"<Group><TouchSensor/>{GHOST}</Group>") == []
+    assert more(f"<Collision>{GHOST}</Collision>") == []
+
+
+def test_first_viewpoint_looking_away_from_everything():
+    assert more(f"<Viewpoint position='0 0 10' orientation='0 1 0 3.14159'/>{BALL}") == [("warning", "viewpoint-sees-nothing")]
+    assert more(f"<Viewpoint position='0 0 10'/>{BALL}") == []
+    assert more(f"<Viewpoint position='0 0 -10'/>{BALL}") == [("warning", "viewpoint-sees-nothing")]
+    assert more(f"<Viewpoint position='0 0 -10' orientation='0 1 0 3.14159'/>{BALL}") == []

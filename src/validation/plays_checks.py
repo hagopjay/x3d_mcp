@@ -13,6 +13,11 @@ written for the family of the mistake, not for the one file. Two are left out on
 intent tells right from wrong: which StringSensor output feeds a label, and which Viewpoint comes first. That set is
 a fix confirmation for these checks, not a score.
 
+Seven more checks at the end of the file come from no test set: mistakes of the same kind that the kernel editor
+expected, written before blind court 4 was opened. A Switch with no whichChoice, a dented face declared convex, a
+flat patch facing away from every viewpoint (a note), a scoped light with nothing in its scope, a clock stopped or
+paused in 1970, a fully transparent shape, and a first viewpoint with everything behind it.
+
 Each check takes the Scene element (or any ancestor of it) and returns Diagnostics.
 """
 from __future__ import annotations
@@ -22,7 +27,7 @@ import math
 import re
 
 from validation.data_checks import _defs, _diag, _ints, _nums, _sem, _tag, _urls
-from validation.inert_checks import _field, _has_is, _into, _level, _route_els, _routes
+from validation.inert_checks import _field, _has_is, _into, _level, _outside, _route_els, _routes
 
 _BOOL = {"true": True, "false": False}
 _EPOCH_RECENT = 1.5e9          # 14 July 2017 as X3D time (seconds since 1970); a literal startTime below it is long past
@@ -570,6 +575,312 @@ def check_toggle_out_of_step(scene) -> list:
     return out
 
 
+# ====================================================================== from the editor's own list
+# The checks below were not written from any test set. They are mistakes of the same kind (legal, plays or draws
+# wrong) that the kernel editor expected a hurried author to make, added before blind court 4 was opened.
+
+_SHAPE_SOURCES = ("IndexedFaceSet", "IndexedTriangleSet", "IndexedQuadSet")
+
+
+def _moving(scene) -> set:
+    return {r.get("toNode") for r in _route_els(scene)}
+
+
+def _static_chain(el, moving) -> bool:
+    e = el
+    while e is not None:
+        if e.get("DEF") in moving or _tag(e) in ("Switch", "LOD", "Billboard", "ProtoBody", "ProtoDeclare", "Collision", "HAnimHumanoid"):
+            return False
+        e = e.getparent()
+    return True
+
+
+def _eyes(scene, moving):
+    """World positions of the static Viewpoints (the default one at 0 0 10 when the scene has none), or None when
+    a viewpoint moves or sits where its place cannot be worked out."""
+    eyes = []
+    for vp in scene.iter():
+        if _tag(vp) in ("Viewpoint", "OrthoViewpoint") and not vp.get("USE"):
+            if not _static_chain(vp, moving) or _has_is(vp):
+                return None
+            pos = _nums(vp.get("position")) or [0.0, 0.0, 10.0]
+            if len(pos) != 3:
+                return None
+            eyes.append(_apply(_world(vp)[0], pos))
+        elif _tag(vp) in ("GeoViewpoint", "ViewpointGroup"):
+            return None
+    return eyes or [(0.0, 0.0, 10.0)]
+
+
+# ------------------------------------------------------------------ (14) a Switch that shows nothing, for good
+def check_switch_shows_nothing(scene) -> list:
+    """Switch.whichChoice defaults to -1, which shows no child (19775-1 10.4.2). A Switch with children, no
+    whichChoice written and nothing routed to whichChoice never shows anything. Left alone: a written
+    whichChoice='-1' (a statement, often flipped by a page script) and a Switch used as a shelf, whose children
+    are DEF'd there and USEd elsewhere."""
+    out, routes = [], _routes(scene)
+    lvl = _level(scene)
+    uses = {e.get("USE") for e in scene.iter() if isinstance(e.tag, str) and e.get("USE")}
+    for sw in scene.iter():
+        if _tag(sw) != "Switch" or sw.get("USE") or _has_is(sw) or not _kids(sw):
+            continue
+        if sw.get("whichChoice") is not None or _into(routes, sw.get("DEF"), {"whichChoice"}):
+            continue                                         # a written -1 is a statement (a page script may flip it)
+        if any(d.get("DEF") in uses for d in sw.iter() if d is not sw and isinstance(d.tag, str) and d.get("DEF")):
+            continue
+        if any("placeholder" in (c.get("DEF") or "").lower() for c in sw):
+            continue
+        out.append(_diag(lvl, "switch-shows-nothing", sw,
+                         f"has no whichChoice, and the default is -1, which shows none of its {len(_kids(sw))} child(ren), and nothing in this file ROUTEs to "
+                         f"whichChoice or USEs a child elsewhere, so they are never seen. Set whichChoice='0' to show the first."))
+    return out
+
+
+# ------------------------------------------------------------------ (15) a dented face declared convex
+def check_concave_faces(scene) -> list:
+    """convex defaults to true, a promise that every face is convex that lets the browser fill each face as a fan
+    (19775-1 13.3.6). A face with a dent (an L, an arrow, a star) then fills across the dent."""
+    from validation.usd_checks import _mesh
+    out, defs = [], _defs(scene)
+    for g in scene.iter():
+        if _tag(g) != "IndexedFaceSet" or g.get("USE") or _has_is(g):
+            continue
+        if (g.get("convex") or "true").strip().lower() == "false":
+            continue
+        m = _mesh(g, defs)
+        if not m:
+            continue
+        faces, pts = m
+        bad = []
+        for f in faces:
+            if len(f) < 4 or len(set(f)) != len(f):
+                continue
+            n = [0.0, 0.0, 0.0]
+            for a, b in zip(f, f[1:] + f[:1]):
+                (x1, y1, z1), (x2, y2, z2) = pts[a], pts[b]
+                n[0] += (y1 - y2) * (z1 + z2); n[1] += (z1 - z2) * (x1 + x2); n[2] += (x1 - x2) * (y1 + y2)
+            ln = math.sqrt(sum(x * x for x in n))
+            if ln < 1e-12:
+                continue
+            c0 = [sum(pts[i][k] for i in f) / len(f) for k in range(3)]
+            size = max(math.sqrt(sum((pts[i][k] - c0[k]) ** 2 for k in range(3))) for i in f)
+            if size <= 0 or any(abs(sum((pts[i][k] - c0[k]) * n[k] for k in range(3))) / ln > 1e-3 * size for i in f):
+                continue                                     # a face that is not flat has no outline to judge
+            turns = []
+            for i in range(len(f)):
+                a, b, c = pts[f[i - 1]], pts[f[i]], pts[f[(i + 1) % len(f)]]
+                u, v = [b[k] - a[k] for k in range(3)], [c[k] - b[k] for k in range(3)]
+                cr = (u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0])
+                turns.append(sum(cr[k] * n[k] for k in range(3)) / ln)
+            scale = max(abs(t) for t in turns)
+            if scale > 0 and min(turns) < -1e-3 * scale and max(turns) > 1e-3 * scale:
+                bad.append(f)
+        if bad:
+            out.append(_diag("warning", "face-concave", g,
+                             f"has {len(bad)} face(s) with a dent (first: corners {' '.join(map(str, bad[0]))}) while convex is true "
+                             f"(the default). The browser may fill a dented face straight across the dent. Set convex='false', or "
+                             f"split the face into convex pieces."))
+    return out
+
+
+# ------------------------------------------------------------------ (16) a one-sided mesh seen only from behind
+def check_faces_away(scene) -> list:
+    """With solid true only the front of each face is drawn (19775-1 11.2.3). A flat patch (a floor, a wall, a
+    sign) whose face has its back to every Viewpoint in the file is invisible from all of them: wound the wrong way
+    round, or ccw set wrongly. Judged only for flat, still geometry and still viewpoints; the far panel of a body
+    built from several meshes faces away by nature and is not flat-patch work, so curved or folded meshes are left."""
+    from validation.usd_checks import _mesh
+    out, defs, moving = [], _defs(scene), _moving(scene)
+    if _outside(scene):
+        return out
+    eyes = _eyes(scene, moving)
+    if not eyes:
+        return out
+    for g in scene.iter():
+        if _tag(g) not in _SHAPE_SOURCES or g.get("USE") or _has_is(g):
+            continue
+        if (g.get("solid") or "true").strip().lower() == "false" or not _static_chain(g, moving):
+            continue
+        shape = g.getparent()
+        if shape is None or shape.get("DEF") and _used_elsewhere_any(scene, shape.get("DEF")) or g.get("DEF") and _used_elsewhere_any(scene, g.get("DEF")):
+            continue
+        m = _mesh(g, defs)
+        if not m:
+            continue
+        faces, pts = m
+        w, mirrored = _world(g)
+        wp = [_apply(w, p) for p in pts]
+        sign = (-1.0 if mirrored else 1.0) * (1.0 if (g.get("ccw") or "true").strip().lower() != "false" else -1.0)
+        seen, judged, first = False, 0, None
+        for f in faces:
+            n = [0.0, 0.0, 0.0]
+            for a, b in zip(f, f[1:] + f[:1]):
+                (x1, y1, z1), (x2, y2, z2) = wp[a], wp[b]
+                n[0] += (y1 - y2) * (z1 + z2); n[1] += (z1 - z2) * (x1 + x2); n[2] += (x1 - x2) * (y1 + y2)
+            if sum(x * x for x in n) < 1e-24:
+                continue
+            ln = math.sqrt(sum(x * x for x in n))
+            unit = [x / ln for x in n]
+            first = first or unit
+            if sum(unit[k] * first[k] for k in range(3)) < 0.999:
+                seen = True                                  # not one flat patch: the far side of a body faces away by nature
+                break
+            c = [sum(wp[i][k] for i in f) / len(f) for k in range(3)]
+            judged += 1
+            if any(sign * sum(n[k] * (e[k] - c[k]) for k in range(3)) > 0 for e in eyes):
+                seen = True
+                break
+        if judged and not seen:
+            out.append(_diag("info", "mesh-faces-away", g,      # a note: the far panel of a body built from flat pieces is legal
+                             f"is a flat patch with all {judged} face(s) turned away from {'every Viewpoint' if len(eyes) > 1 else 'the Viewpoint'} in this "
+                             f"file (ccw={g.get('ccw') or 'true'}, solid true), so from there it is not drawn at all. Reverse the index "
+                             f"order of the faces, flip ccw, or set solid='false' to draw both sides."))
+    return out
+
+
+def _used_elsewhere_any(scene, name) -> bool:
+    return any(e.get("USE") == name for e in scene.iter() if isinstance(e.tag, str))
+
+
+# ------------------------------------------------------------------ (17) a scoped light with nothing in its scope
+_SCOPES = {"Group", "Transform", "Anchor", "Billboard", "Collision", "LOD", "Switch", "StaticGroup", "CADAssembly", "CADLayer", "CADPart"}
+_GLOBAL_DEFAULT = {"DirectionalLight": "false", "PointLight": "true", "SpotLight": "true"}
+
+
+def check_light_scope(scene) -> list:
+    """A light with global false (the default for DirectionalLight) lights only the nodes under its parent group
+    (19775-1 17.2.1.2). Put in a group of its own, away from the shapes, it lights nothing."""
+    out, defs = [], _defs(scene)
+    routes = _routes(scene)
+    for el in scene.iter():
+        t = _tag(el)
+        if t not in _GLOBAL_DEFAULT or el.get("USE") or _has_is(el):
+            continue
+        if (el.get("global") or _GLOBAL_DEFAULT[t]).strip().lower() != "false" or (el.get("on") or "true").strip().lower() == "false":
+            continue
+        if _into(routes, el.get("DEF"), {"global"}) or _used_elsewhere_any(scene, el.get("DEF") or "\0"):
+            continue
+        parent = el.getparent()
+        if parent is None or _tag(parent) not in _SCOPES:
+            continue                                         # in Scene: lights everything
+        def has_shape(e, depth=0):
+            e = defs.get(e.get("USE")) if e.get("USE") else e
+            if e is None or depth > 40:
+                return True
+            if _tag(e) in ("Shape", "Inline", "ProtoInstance", "HAnimHumanoid", "ParticleSystem"):
+                return True
+            return any(has_shape(c, depth + 1) for c in e if isinstance(c.tag, str))
+        if not any(has_shape(c) for c in parent if c is not el and isinstance(c.tag, str)):
+            out.append(_diag("warning", "light-scope-empty", el,
+                             f"has global false{'' if el.get('global') else ' (the default for ' + t + ')'}, so it lights only what "
+                             f"sits under its parent {_tag(parent)}, and no Shape sits there: it lights nothing. Set global='true', "
+                             f"or move the light into the group that holds the shapes."))
+    return out
+
+
+# ------------------------------------------------------------------ (18) a clock stopped or paused before it began
+def check_clock_stopped(scene) -> list:
+    """stopTime and pauseTime are absolute times too. A literal stopTime later than startTime, both long past,
+    means the clock was stopped decades ago and never runs, loop or not (19775-1 8.2.4.3). A literal pauseTime
+    later than resumeTime means it is paused as soon as it starts."""
+    out, routes = [], _routes(scene)
+    lvl = _level(scene)
+    for el in scene.iter():
+        if _tag(el) != "TimeSensor" or el.get("USE") or _has_is(el):
+            continue
+        if (el.get("enabled") or "true").strip().lower() == "false":
+            continue
+        name = el.get("DEF")
+        if not any(f == name and ff in {"fraction", "time", "cycleTime", "isActive", "elapsedTime"} for f, ff, _, _ in routes):
+            continue
+        get = lambda k: (_nums(el.get(k)) or [0.0])[0]
+        st, sp, pt, rt = get("startTime"), get("stopTime"), get("pauseTime"), get("resumeTime")
+        if 0 < sp < _EPOCH_RECENT and sp > st and not _into(routes, name, {"startTime", "stopTime", "enabled"}):
+            out.append(_diag(lvl, "timesensor-stopped-in-past", el,
+                             f"has stopTime {sp:g} later than startTime {st:g}. Both are seconds after 1 January 1970, so the clock "
+                             f"was stopped long before this file loads and never runs, whatever loop says. Leave stopTime at 0 to "
+                             f"run, and ROUTE a time to set_stopTime when it should stop."))
+        elif 0 < pt < _EPOCH_RECENT and pt > rt and not _into(routes, name, {"pauseTime", "resumeTime", "enabled"}):
+            out.append(_diag(lvl, "timesensor-paused-forever", el,
+                             f"has pauseTime {pt:g} later than resumeTime {rt:g}. Both are seconds after 1 January 1970, so the clock "
+                             f"is paused as soon as it starts and nothing resumes it. Leave pauseTime at 0 and ROUTE a time to "
+                             f"set_pauseTime when it should pause."))
+    return out
+
+
+# ------------------------------------------------------------------ (19) a shape nobody can see
+def check_fully_transparent(scene) -> list:
+    """A Material with transparency 1 draws nothing. That is a known trick for an invisible thing to click on or
+    collide with, so a Shape beside a pointing sensor or in a Collision proxy is left alone; anywhere else the
+    Shape is simply never seen."""
+    out, defs, routes = [], _defs(scene), _routes(scene)
+    lvl = _level(scene)
+    for shape in scene.iter():
+        if _tag(shape) != "Shape" or shape.get("USE") or (shape.get("containerField") or "") == "proxy":
+            continue
+        app = next((c for c in shape if _tag(c) == "Appearance"), None)
+        app = defs.get(app.get("USE")) if app is not None and app.get("USE") else app
+        if app is None or any(_tag(c).endswith("Shader") for c in app):
+            continue
+        mat = next((c for c in app if _tag(c) in ("Material", "PhysicalMaterial", "UnlitMaterial")), None)
+        mat = defs.get(mat.get("USE")) if mat is not None and mat.get("USE") else mat
+        if mat is None or _has_is(mat):
+            continue
+        t = _nums(mat.get("transparency"))
+        if not t or t[0] < 1 or _into(routes, mat.get("DEF"), {"transparency"}):
+            continue
+        e, hit_area = shape, False
+        while e is not None and not hit_area:
+            parent = e.getparent()
+            if parent is not None and any(_tag(c).endswith("Sensor") for c in parent):
+                hit_area = True
+            if _tag(e) == "Collision" or (e.get("containerField") or "") == "proxy":
+                hit_area = True
+            e = parent
+        if hit_area or shape.get("DEF") and _into(routes, shape.get("DEF"), {"visible"}):
+            continue
+        out.append(_diag(lvl, "shape-fully-transparent", shape,
+                         "has a Material with transparency 1 and nothing in this file ROUTEs to that transparency, so the Shape "
+                         "is never seen. Lower the transparency (0 is opaque), or remove the Shape."))
+    return out
+
+
+# ------------------------------------------------------------------ (20) a first view of nothing
+def check_view_of_nothing(scene) -> list:
+    """The first Viewpoint in the file is the one bound at load (19775-1 23.3.1). When every piece of geometry lies
+    behind it, the scene opens on an empty screen. Judged only when all the geometry is still and can be measured."""
+    from validation.data_checks import _ident, _mat_mul, _points_under, _rot
+    if _outside(scene):
+        return []
+    defs, moving = _defs(scene), _moving(scene)
+    root = scene if _tag(scene) == "Scene" else next((e for e in scene.iter() if _tag(e) == "Scene"), None)
+    vp = next((e for e in scene.iter() if _tag(e) == "Viewpoint" and not e.get("USE")), None)
+    if root is None or vp is None or _has_is(vp) or not _static_chain(vp, moving) or vp.get("DEF") in moving:
+        return []
+    pts = _points_under(root, _ident(), False, defs, moving)
+    if not pts:
+        return []
+    pos = _nums(vp.get("position")) or [0.0, 0.0, 10.0]
+    ori = _nums(vp.get("orientation")) or [0.0, 0.0, 1.0, 0.0]
+    if len(pos) != 3 or len(ori) != 4:
+        return []
+    w = _world(vp)[0]
+    eye = _apply(w, pos)
+    r = _mat_mul(w, _rot(ori))
+    look = tuple(-r[i][2] for i in range(3))
+    ln = math.sqrt(sum(x * x for x in look))
+    if ln < 1e-9:
+        return []
+    if all(sum((p[k] - eye[k]) * look[k] for k in range(3)) <= 0 for p in pts):
+        return [_diag("warning", "viewpoint-sees-nothing", vp,
+                      f"is the first Viewpoint, so the scene opens on it, and all the geometry in this file lies behind it "
+                      f"(position {' '.join(f'{x:g}' for x in pos)}, looking along {' '.join(f'{x / ln:.2g}' for x in look)}): the "
+                      f"screen opens empty. Turn the orientation towards the scene or move the position.")]
+    return []
+
+
 PLAYS_CHECKS = [check_clock_ran_in_the_past, check_drag_limits, check_follower_passes_through, check_script_handlers,
                 check_never_loads, check_anchor_viewpoint, check_lod_levels, check_inside_out, check_proto_field_values,
-                check_cross_section, check_nurbs_knots, check_unlit_scene, check_toggle_out_of_step]
+                check_cross_section, check_nurbs_knots, check_unlit_scene, check_toggle_out_of_step,
+                check_switch_shows_nothing, check_concave_faces, check_faces_away, check_light_scope, check_clock_stopped,
+                check_fully_transparent, check_view_of_nothing]
