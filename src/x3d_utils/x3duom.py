@@ -235,6 +235,21 @@ class X3DUOM:
             "field_drift": field_drift,
         }
 
+    def get_free_text_name_nodes(self) -> frozenset:
+        """Concrete nodes whose `name` field is a plain SFString with no xs:NMTOKEN base.
+
+        On these a name is a free-text label (a CAD part's name, a metadata key), so it may hold
+        spaces, periods, hyphens and leading digits. Every other `name` in the object model is
+        typed or restricted to xs:NMTOKEN.
+        """
+        if getattr(self, "_free_text_name_nodes", None) is None:
+            self._free_text_name_nodes = frozenset(
+                node.get("name")
+                for node in self._root.iter("ConcreteNode")
+                for field in node.iter("field")
+                if field.get("name") == "name" and field.get("type") == "SFString" and not field.get("baseType"))
+        return self._free_text_name_nodes
+
     def _parse_fields(self, idef: etree._Element) -> list[dict]:
         """Extract field definitions from an InterfaceDefinition element."""
         fields = []

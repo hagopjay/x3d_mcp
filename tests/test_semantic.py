@@ -317,6 +317,42 @@ def test_clean_names_not_flagged():
     assert "naming-convention" not in report
 
 
+# A `name` the object model types as a plain SFString is a free-text label, not an XML name: the four CAD
+# product-structure nodes and the six metadata nodes. Found by x3d.loom x3d.engineering/ifc-truss (28 Nov 2026):
+# a truss of 33 CADParts that the X3D 4.0 schema accepts drew 34 whitespace errors from this check.
+
+def test_cad_and_metadata_names_are_free_text():
+    report = validate_semantic(_wrap(
+        '<CADAssembly name="Court canopy truss"><CADPart name="Column -4/1">'
+        '<MetadataSet containerField="metadata" name="IFC property set">'
+        '<MetadataString containerField="value" name="dc.title" value=\'"x"\'/>'
+        '<MetadataString containerField="value" name="3rd-party id" value=\'"y"\'/></MetadataSet>'
+        '<CADFace name="BC1 body"><Shape containerField="shape"><Appearance><Material/></Appearance><Box/></Shape></CADFace>'
+        '</CADPart></CADAssembly><CADLayer name="Level 1"/>', profile="Full"))
+    assert "naming-convention" not in report
+
+
+def test_free_text_name_nodes_are_exactly_the_ten_the_object_model_names():
+    from x3d_utils.x3duom import get_x3duom
+    assert get_x3duom().get_free_text_name_nodes() == frozenset({
+        "CADAssembly", "CADFace", "CADLayer", "CADPart", "MetadataBoolean", "MetadataDouble",
+        "MetadataFloat", "MetadataInteger", "MetadataSet", "MetadataString"})
+
+
+def test_nmtoken_names_and_every_def_are_still_checked():
+    # HAnimJoint name is SFString restricted to xs:NMTOKEN in the object model: whitespace stays an error
+    report = validate_semantic(_wrap('<HAnimHumanoid name="h"><HAnimJoint name="l hip" containerField="skeleton"/></HAnimHumanoid>'))
+    assert "naming-convention" in report and "contains whitespace" in report
+    # a DEF on a CAD node is an XML ID like any other
+    report = validate_semantic(_wrap('<CADPart DEF="my part" name="fine label"/>', profile="Full"))
+    assert "naming-convention" in report and "DEF='my part'" in report and "name='fine label'" not in report
+    # a field declaration's name is an NMTOKEN
+    report = validate_semantic(_wrap(
+        '<ProtoDeclare name="P"><ProtoInterface><field name="my.field" type="SFFloat" accessType="inputOutput" value="0"/>'
+        '</ProtoInterface><ProtoBody><Group/></ProtoBody></ProtoDeclare>'))
+    assert "naming-convention" in report and "my.field" in report
+
+
 # ---- ROUTE-aware unused-DEF ----
 
 def test_routed_def_is_not_reported_unused():
