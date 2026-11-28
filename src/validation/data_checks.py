@@ -1203,8 +1203,9 @@ def data_diagnostics(scene, base_dir=None) -> list:
     from validation.usd_checks import USD_FILE_CHECKS, USD_SCENE_CHECKS   # answers to the USD validators
     from validation.inert_checks import INERT_CHECKS                       # wired legally, does nothing
     from validation.simready_checks import SIMREADY_FILE_CHECKS, SIMREADY_SCENE_CHECKS   # opt-in SimReady profile
+    from validation.plays_checks import PLAYS_CHECKS                       # legal, plays or draws wrong
     out = []
-    for fn in SCENE_CHECKS + USD_SCENE_CHECKS + INERT_CHECKS + SIMREADY_SCENE_CHECKS:
+    for fn in SCENE_CHECKS + USD_SCENE_CHECKS + INERT_CHECKS + SIMREADY_SCENE_CHECKS + PLAYS_CHECKS:
         out.extend(fn(scene))
     if base_dir is not None:
         out.extend(check_files(scene, base_dir))
