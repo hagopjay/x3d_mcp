@@ -208,3 +208,66 @@ def test_mcap_magic_is_required(tmp_path):
     f.write_bytes(b"\x89MCAP0\r\n" + b"\0" * 20)
     with pytest.raises(ValueError):
         M.read_mcap(f)
+
+
+# ---------------- ROS 2: ros2msg schemas, CDR payloads ----------------
+JS2 = ("std_msgs/Header header\nstring[] name\nfloat64[] position\nfloat64[] velocity\nfloat64[] effort\n"
+       "================================================================================\n"
+       "MSG: std_msgs/Header\nbuiltin_interfaces/Time stamp\nstring frame_id\n"
+       "================================================================================\n"
+       "MSG: builtin_interfaces/Time\nint32 sec\nuint32 nanosec\n")
+
+
+def joint_state_cdr(little=True):
+    """sensor_msgs/JointState with two joints, padding written out by hand (offsets counted after the 4-byte header)."""
+    e = "<" if little else ">"
+    b = bytes([0, 1 if little else 0, 0, 0])
+    b += struct.pack(e + "iI", 5, 7)                                   # 0..8   stamp
+    b += struct.pack(e + "I", 5) + b"base\0"                           # 8..17  frame_id
+    b += b"\0" * 3                                                     # 17..20 pad to 4
+    b += struct.pack(e + "I", 2)                                       # 20..24 name count
+    b += struct.pack(e + "I", 3) + b"j0\0" + b"\0"                     # 24..32 "j0" + pad
+    b += struct.pack(e + "I", 3) + b"j1\0" + b"\0"                     # 32..40 "j1" + pad
+    b += struct.pack(e + "I", 2) + b"\0" * 4                           # 40..48 position count, pad to 8
+    b += struct.pack(e + "dd", 0.25, -1.5)                             # 48..64
+    b += struct.pack(e + "II", 0, 0)                                   # velocity, effort empty
+    return b
+
+
+def mcap2(payloads):
+    head = _rec(1, _s("ros2") + _s("test-writer"))
+    schema = _rec(3, struct.pack("<H", 1) + _s("sensor_msgs/msg/JointState") + _s("ros2msg") + struct.pack("<I", len(JS2)) + JS2.encode())
+    chan = _rec(4, struct.pack("<HH", 1, 1) + _s("/joint_states") + _s("cdr") + struct.pack("<I", 0))
+    msgs = b"".join(_rec(5, struct.pack("<HIQQ", 1, i, i, i) + p) for i, p in enumerate(payloads))
+    return M.MAGIC + head + schema + chan + msgs + _rec(15, struct.pack("<I", 0)) + _rec(2, struct.pack("<QQI", 0, 0, 0)) + M.MAGIC
+
+
+@pytest.mark.parametrize("little", [True, False])
+def test_ros2_joint_state_cdr_both_byte_orders(tmp_path, little):
+    f = tmp_path / "js.mcap"
+    f.write_bytes(mcap2([joint_state_cdr(little)]))
+    m = M.read_mcap(f)
+    v = M.decode_message(m, m["messages"][0])
+    assert v == {"header": {"stamp": {"sec": 5, "nanosec": 7}, "frame_id": "base"}, "name": ["j0", "j1"],
+                 "position": [0.25, -1.5], "velocity": [], "effort": []}
+
+
+def test_ros2msg_parse_bounds_defaults_constants_and_empty():
+    d = M.parse_ros2("p/msg/T", "int32 K=3\nstring<=4 s\nfloat32[<=2] b\nuint8 x 5\nInner[3] f\n===\nMSG: p/Inner\n===\nMSG: p/Empty\n")
+    assert d["p/T"] == [("string", "s", None), ("float32", "b", ("<=", 2)), ("uint8", "x", None), ("Inner", "f", 3)]
+    assert d["p/Inner"] == [] and d["p/Empty"] == []
+    # an empty message is one placeholder byte on the wire; three of them in a fixed array
+    assert M.decode_cdr(d, "p/msg/T", bytes([0, 1, 0, 0]) + struct.pack("<I", 3) + b"ab\0" + b"\0" + struct.pack("<I", 1)
+                        + struct.pack("<f", 0.5) + b"\x05" + b"\0\0\0") == {"s": "ab", "b": [0.5], "x": 5, "f": [{}, {}, {}]}
+
+
+def test_ros2_cdr_refusals():
+    d = M.parse_ros2("p/T", "float32[<=1] b\n")
+    with pytest.raises(ValueError, match="exceeds bound"):
+        M.decode_cdr(d, "p/T", bytes([0, 1, 0, 0]) + struct.pack("<Iff", 2, 1, 2))
+    with pytest.raises(ValueError, match="XCDR2"):
+        M.decode_cdr(d, "p/T", bytes([0, 7, 0, 0]) + struct.pack("<I", 0))
+    with pytest.raises(ValueError, match="wstring"):
+        M.decode_cdr(M.parse_ros2("p/W", "wstring w\n"), "p/W", bytes([0, 1, 0, 0, 1, 0, 0, 0, 65, 0, 0, 0]))
+    with pytest.raises(ValueError, match="past its record"):
+        M.decode_cdr(M.parse_ros2("p/D", "float64 x\n"), "p/D", bytes([0, 1, 0, 0]) + b"\0" * 4)
