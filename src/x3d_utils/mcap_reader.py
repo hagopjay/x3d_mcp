@@ -1,8 +1,9 @@
-"""Minimal standard-library MCAP reader (https://mcap.dev/spec, format version 0) and a ROS 1 message decoder.
+"""Minimal standard-library MCAP reader (https://mcap.dev/spec, format version 0) and ROS 1 and ROS 2 message decoders.
 
 Read-only and defensive: every record length is bounds-checked; a record that does not fit is counted in `problems` and
 the walk stops instead of trusting it. Chunks with compression "" are read; zstd / lz4 chunks are decompressed only if
-the stdlib can (Python 3.14 compression.zstd), otherwise they are counted as skipped (no external program is run).
+the stdlib can (Python 3.14 compression.zstd) or an installed backports.zstd / zstandard / lz4 module can, otherwise
+they are counted as skipped (no external program is run). ROS 1 (ros1msg) and ROS 2 (ros2msg + CDR) payloads decode.
 
 Record layout: opcode u8, length u64 LE, content. Strings: u32 length + UTF-8. Byte arrays: u32 (or u64 for chunk
 records) length + bytes. Maps: u32 byte length, then key/value strings.
@@ -96,10 +97,19 @@ def _records(buf, off, end, out, problems, depth=0):
 
 
 def _decompress(comp, data, usz):
-    if comp == "zstd":
+    """zstd through the stdlib (Python 3.14 compression.zstd) or, if installed, the backports.zstd / zstandard /
+    lz4 Python modules. ROS 2 recorders write zstd chunks by default, so without one of these a real bag reads as
+    skipped chunks, which read_mcap reports. No external program is run."""
+    mods = {"zstd": ("compression.zstd", "backports.zstd", "zstandard"), "lz4": ("lz4.frame",)}.get(comp, ())
+    for name in mods:
         try:
-            from compression import zstd   # Python 3.14+
-            return zstd.decompress(data)
+            mod = __import__(name, fromlist=["decompress"])
+        except ImportError:
+            continue
+        try:
+            if name == "zstandard":
+                return mod.ZstdDecompressor().decompress(data, max_output_size=usz)
+            return mod.decompress(data)
         except Exception:
             return None
     return None
@@ -188,3 +198,128 @@ def decode_ros1(defs, typ, data, maxlen=4096):
             return {"_count": cnt}
         return [one(ft, scope) for _ in range(cnt)]
     return one(typ, typ)
+
+
+# ---------- ROS 2 message decoding: ros2msg schema text, CDR payloads ----------
+# CDR (OMG CDR as written by ROS 2 rmw, XCDR1): a 4-byte encapsulation header (0x00 0x01 little endian, 0x00 0x00 big
+# endian, then 2 option bytes), then each primitive aligned to its own size (at most 8) counted from the end of the
+# header. string: u32 length that includes the NUL, the bytes, the NUL. Sequence: u32 count, then elements. Fixed
+# array: elements only. A message with no fields is serialised as one uint8. XCDR2, wstring and ros2idl schemas are
+# refused (ValueError), not guessed.
+PRIM2 = {"bool": "?", "byte": "B", "char": "B", "int8": "b", "uint8": "B", "int16": "h", "uint16": "H", "int32": "i",
+         "uint32": "I", "int64": "q", "uint64": "Q", "float32": "f", "float64": "d"}
+
+
+def _ros2_name(t):
+    """'sensor_msgs/msg/JointState' and 'sensor_msgs/JointState' are the same type."""
+    p = t.split("/")
+    return p[0] + "/" + p[-1] if len(p) == 3 else t
+
+
+def parse_ros2(schema_name, text):
+    """ros2msg schema (main definition, then '=====' separated 'MSG: pkg/Name' dependencies) ->
+    {type: [(ftype, name, array, bound)]}; array is None (scalar), -1 (sequence), N (fixed) or ('<=', N) (bounded)."""
+    cur = _ros2_name(schema_name)
+    defs = {cur: []}
+    for raw in text.splitlines():
+        line = raw.split("#", 1)[0].strip()
+        if not line or line.startswith("==="):
+            continue
+        if line.startswith("MSG:"):
+            cur = _ros2_name(line[4:].strip())
+            defs[cur] = []
+            continue
+        parts = line.split()
+        if len(parts) < 2 or "=" in parts[1] or (len(parts) > 2 and parts[2].startswith("=")):
+            continue            # constant
+        t, name = parts[0], parts[1]      # a third part is a default value: not on the wire
+        arr = None
+        if "[" in t:
+            t, a = t.split("[", 1)
+            a = a.rstrip("]")
+            arr = -1 if a == "" else (("<=", int(a[2:])) if a.startswith("<=") else int(a))
+        if "<=" in t:           # bounded string: string<=N, same wire format as string
+            t = t.split("<=")[0]
+        defs[cur].append((t, name, arr))
+    return defs
+
+
+def _resolve2(t, scope, defs):
+    if t in PRIM2 or t in ("string", "wstring"):
+        return t
+    t = _ros2_name(t)
+    if "/" in t:
+        return t
+    pkg = scope.split("/")[0]
+    return pkg + "/" + t if pkg + "/" + t in defs else next((k for k in defs if k.endswith("/" + t)), t)
+
+
+def decode_cdr(defs, typ, data, maxlen=4096):
+    """One CDR payload -> dict. Byte-like arrays come back as {'_bytes': n}; primitive arrays longer than maxlen as
+    {'_count': n}, as in decode_ros1."""
+    if len(data) < 4:
+        raise ValueError("CDR payload shorter than its 4-byte header")
+    if data[0] != 0 or data[1] not in (0, 1):
+        raise ValueError(f"CDR encapsulation {data[0]:#04x} {data[1]:#04x} not handled (only CDR_BE/CDR_LE, not XCDR2): refused")
+    end = "<" if data[1] == 1 else ">"
+    r = R(data, 4)
+
+    def align(n):
+        pad = (-(r.o - 4)) % n
+        r.take(pad)
+
+    def prim(t):
+        f = PRIM2[t]
+        n = struct.calcsize(f)
+        align(min(n, 8))
+        return struct.unpack(end + f, r.take(n))[0]
+
+    def u32():
+        align(4)
+        return struct.unpack(end + "I", r.take(4))[0]
+
+    def one(t, scope):
+        t = _resolve2(t, scope, defs)
+        if t in PRIM2:
+            return prim(t)
+        if t == "string":
+            n = u32()
+            b = r.take(n)
+            return b[:-1].decode("utf-8", "replace") if n else ""
+        if t == "wstring":
+            raise ValueError("wstring not handled: refused")
+        if t not in defs:
+            raise ValueError("unknown type " + t)
+        if not defs[t]:
+            prim("uint8")       # empty message: one placeholder byte
+            return {}
+        return {n: field(ft, n, a, t) for ft, n, a in defs[t]}
+
+    def field(ft, n, a, scope):
+        if a is None:
+            return one(ft, scope)
+        cnt = a if isinstance(a, int) and a >= 0 else u32()
+        if isinstance(a, tuple) and cnt > a[1]:
+            raise ValueError(f"{n}: {cnt} elements exceeds bound {a[1]}")
+        rt = _resolve2(ft, scope, defs)
+        if rt in ("uint8", "byte", "char", "int8"):
+            return {"_bytes": len(r.take(cnt))}
+        if cnt > maxlen and rt in PRIM2:
+            align(min(struct.calcsize(PRIM2[rt]), 8))
+            r.take(cnt * struct.calcsize(PRIM2[rt]))
+            return {"_count": cnt}
+        return [one(ft, scope) for _ in range(cnt)]
+    return one(_ros2_name(typ), _ros2_name(typ))
+
+
+def decode_message(m, msg):
+    """Decode one message of read_mcap() output by its channel/schema encoding: ros1 (ros1msg) or cdr (ros2msg)."""
+    ch = m["channels"][msg["channel"]]
+    sc = m["schemas"].get(ch["schema_id"])
+    if sc is None:
+        raise ValueError("channel has no schema")
+    if ch["encoding"] == "ros1" and sc["encoding"] == "ros1msg":
+        return decode_ros1(parse_ros1(sc["name"], sc["data"].decode()), sc["name"], msg["data"])
+    if ch["encoding"] == "cdr" and sc["encoding"] == "ros2msg":
+        return decode_cdr(parse_ros2(sc["name"], sc["data"].decode()), sc["name"], msg["data"])
+    raise ValueError(f"message encoding {ch['encoding']} / schema {sc['encoding']} not handled: refused")
