@@ -885,14 +885,22 @@ def _check_naming_conventions(scene: etree._Element) -> list[Diagnostic]:
     NMTOKEN check rejects periods on the construction path, but hyphens
     pass it, and content edited as raw XML never reaches x3d.py at all --
     this check is the only guard covering both paths.
+
+    A `name` is checked only where the object model makes it an XML name. On the
+    four CAD product-structure nodes and the six metadata nodes it is a plain
+    SFString, a free-text label ("Column -4/1", "dc.title"), and the XSD accepts
+    it; DEF and USE on those nodes are still checked.
     """
     diagnostics: list[Diagnostic] = []
     seen: set[tuple[str, str]] = set()
+    free_text_name = get_x3duom().get_free_text_name_nodes()
     for el in scene.iter():
         tag = _local_tag(el)
         if not tag:
             continue
         for attr in ("DEF", "USE", "name"):
+            if attr == "name" and tag in free_text_name:
+                continue
             value = el.get(attr)
             if not value or (attr, value) in seen:
                 continue
