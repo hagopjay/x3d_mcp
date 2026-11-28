@@ -202,6 +202,8 @@ x3d_mcp/
       usd_checks.py        # Mesh, physics and file checks answering OpenUSD, Omniverse Asset Validator and SimReady rules
       simready_checks.py   # The X3D SimReady profile (opt-in): provenance, thumbnail, metres, mesh form, body counts, semantic labels
       simready_vocab.py    # Closed label vocabularies for it, generated from the pinned SimReady rulebook (tests/build_simready_vocab.py)
+      inert_checks.py      # Wired legally, does nothing: sensors with nothing to sense, clocks that never start, outputs routed nowhere
+      plays_checks.py      # Legal, plays or draws wrong: swapped drag limits, uncalled Script functions, inside-out meshes, unlit scenes, ...
       semantic.py          # Layer 4 semantic checks (DEF/USE, ROUTE validity and order, colour range, H-Anim names, containerField, naming, ...)
       listvalues.py        # Linear-time reading of numeric field values, for when libxml2's pattern engine gives up
       oversize.py          # What validate_xml does when libxml2's 10 MB start-tag limit stops a scene
